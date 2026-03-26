@@ -4,4 +4,5 @@ export interface PaginatedAggregatorResponse<T> {
   totalPages: number;
   totalCount: number;
   pageSize: number;
+  
 }
