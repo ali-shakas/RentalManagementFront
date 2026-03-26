@@ -1,17 +1,18 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 
+import { PaginatedAggregatorResponse } from '../../../../core/interfaces';
 import {
   ApiResponse,
   PrivilegeTypeLookup,
   PrivilegeTypeCreateRequest,
   PrivilegeTypeUpdateRequest,
   PrivilegeRoleItem,
-  PaginatedResponse,
   PaginatedRequest,
 } from '../../models';
 import { BaseService } from '../../../../shared/services/base/base.service';
-import { normalizePaginatedResponse, normalizePrivilege } from '../../../../shared/utils/api-normalizers';
+import { normalizePaginatedResponse } from '../../../../shared/utils/paginated-response.normalizer';
+import { normalizePrivilege } from '../../models/privileges/privilege.normalizer';
 
 @Injectable({
   providedIn: 'root',
@@ -31,7 +32,7 @@ export class PrivilegeService {
     return this.api.getData<unknown>(`${this.base}/by-id`, { id }).pipe(map(normalizePrivilege));
   }
 
-  getPaginated(params: PaginatedRequest): Observable<ApiResponse<PaginatedResponse<PrivilegeTypeLookup>>> {
+  getPaginated(params: PaginatedRequest): Observable<ApiResponse<PaginatedAggregatorResponse<PrivilegeTypeLookup>>> {
     return this.api.getData<unknown>(`${this.base}/Paginated`, {
       PageNumber: params.pageNumber,
       PageSize: params.pageSize,

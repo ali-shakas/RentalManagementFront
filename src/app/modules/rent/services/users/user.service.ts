@@ -1,9 +1,11 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 
-import { User, UserCreateRequest, UserUpdateRequest, UserPrivilegesRequest, PaginatedResponse, PaginatedRequest } from '../../models';
+import { PaginatedAggregatorResponse } from '../../../../core/interfaces';
+import { User, UserCreateRequest, UserUpdateRequest, UserPrivilegesRequest, PaginatedRequest } from '../../models';
 import { BaseService } from '../../../../shared/services/base/base.service';
-import { normalizePaginatedResponse, normalizeUser } from '../../../../shared/utils/api-normalizers';
+import { normalizePaginatedResponse } from '../../../../shared/utils/paginated-response.normalizer';
+import { normalizeUser } from '../../models/users/user.normalizer';
 
 @Injectable({
   providedIn: 'root',
@@ -20,7 +22,7 @@ export class UserService {
     }).pipe(map(items => (items ?? []).map(normalizeUser)));
   }
 
-  getPaginated(params: PaginatedRequest): Observable<PaginatedResponse<User>> {
+  getPaginated(params: PaginatedRequest): Observable<PaginatedAggregatorResponse<User>> {
     return this.api.getData<unknown>(`${this.base}/Paginated`, {
       PageNumber: params.pageNumber,
       PageSize: params.pageSize,

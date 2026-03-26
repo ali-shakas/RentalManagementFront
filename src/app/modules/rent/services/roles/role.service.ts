@@ -1,16 +1,17 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 
+import { PaginatedAggregatorResponse } from '../../../../core/interfaces';
 import {
   ApiResponse,
   RoleLookup,
   RoleCreateRequest,
   RoleUpdateRequest,
-  PaginatedResponse,
   PaginatedRequest,
 } from '../../models';
 import { BaseService } from '../../../../shared/services/base/base.service';
-import { normalizePaginatedResponse, normalizeRole } from '../../../../shared/utils/api-normalizers';
+import { normalizePaginatedResponse } from '../../../../shared/utils/paginated-response.normalizer';
+import { normalizeRole } from '../../models/roles/role.normalizer';
 
 @Injectable({
   providedIn: 'root',
@@ -30,7 +31,7 @@ export class RoleService {
     return this.api.getData<unknown>(`${this.base}/by-id`, { id }).pipe(map(normalizeRole));
   }
 
-  getPaginated(params: PaginatedRequest): Observable<ApiResponse<PaginatedResponse<RoleLookup>>> {
+  getPaginated(params: PaginatedRequest): Observable<ApiResponse<PaginatedAggregatorResponse<RoleLookup>>> {
     return this.api.get<unknown>(`${this.base}/Paginated`, {
       PageNumber: params.pageNumber,
       PageSize: params.pageSize,

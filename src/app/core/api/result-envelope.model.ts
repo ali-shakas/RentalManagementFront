@@ -9,11 +9,3 @@ export interface ResultEnvelope<T> {
   propertyErrors?: PropertyErrorMap | null;
   httpStatusCode?: number | null;
 }
-
-export interface PaginatedResponse<T> {
-  items: T[];
-  pageNumber: number;
-  pageSize: number;
-  totalCount: number;
-  totalPages?: number;
-}
