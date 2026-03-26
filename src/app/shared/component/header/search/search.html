@@ -1,0 +1,56 @@
+<form
+  class="col-auto form-inline search-full"
+  action="#"
+  method="get"
+  (clickOutside)="clickOutside()"
+>
+  <div class="form-group w-100">
+    <div class="Typeahead Typeahead--twitterUsers">
+      <div class="u-posRelative d-flex">
+        <svg class="search-bg svg-color me-2">
+          <use href="assets/svg/icon-sprite.svg#fill-search"></use>
+        </svg>
+        <input
+          class="demo-input py-0 Typeahead-input form-control-plaintext w-100"
+          [class.open]="open"
+          [(ngModel)]="text"
+          [ngModelOptions]="{ standalone: true }"
+          (keyup)="searchTerm(text)"
+          type="text"
+          placeholder="Search Dunzo .."
+          name="q"
+          title=""
+          autocomplete="off"
+        />
+      </div>
+      @if(menuItems.length){
+      <div
+        class="Typeahead-menu custom-scrollbar"
+        [class.is-open]="searchResult"
+        id="search-outer"
+        [class.open]="open"
+      >
+        @for(menuItem of menuItems | slice : 0 : 8; track menuItem){
+        <div class="ProfileCard u-cf">
+          <div class="ProfileCard-details">
+            <div class="ProfileCard-realName">
+              <div class="ProfileCard-avatar">
+                <app-svg-icon [icon]="menuItem.icon" />
+              </div>
+              <a [routerLink]="menuItem.path" class="realname" (click)="removeFix()"
+                >{{ menuItem.title }}</a
+              >
+            </div>
+          </div>
+        </div>
+        }
+      </div>
+      }
+      <div class="Typeahead-menu is-open" [class.is-open]="searchResultEmpty">
+        <div class="tt-dataset tt-dataset-0">
+          <div class="EmptyMessage">Opps!! There are no result found.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>

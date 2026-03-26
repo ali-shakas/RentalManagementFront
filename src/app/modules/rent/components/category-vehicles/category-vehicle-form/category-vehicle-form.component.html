@@ -1,0 +1,110 @@
+<div class="container-fluid">
+  <app-page-header
+    [title]="(isEdit() ? 'Edit Vehicle Category' : 'Create Vehicle Category') | translate"
+    [subtitle]="'Define reusable vehicle pricing records for bookings and fleet operations.' | translate"
+  >
+    <a class="btn btn-outline-secondary" routerLink="/category-vehicles">{{ 'Back' | translate }}</a>
+  </app-page-header>
+
+  <div class="card">
+    <div class="card-body">
+      <form [formGroup]="form" (ngSubmit)="save()">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">{{ 'FleetId' | translate }} <span class="text-danger">*</span></label>
+            <input class="form-control" formControlName="fleetId" [placeholder]="'Example Fleet ID' | translate" />
+            <div class="form-text">{{ 'Hint Fleet ID' | translate }}</div>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">{{ 'Name (AR)' | translate }} <span class="text-danger">*</span></label>
+            <input class="form-control" formControlName="nameAr" maxlength="255" [placeholder]="'Example Category Arabic Name' | translate" />
+            <div class="form-text">{{ 'Hint Category Arabic Name' | translate }}</div>
+            @if (form.get('nameAr')?.invalid && form.get('nameAr')?.touched) {
+              <div class="text-danger small">{{ 'Category Arabic name is required and must be valid.' | translate }}</div>
+            }
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">{{ 'Name (EN)' | translate }}</label>
+            <input class="form-control" formControlName="nameEn" maxlength="255" [placeholder]="'Example Category English Name' | translate" />
+            <div class="form-text">{{ 'Hint Category English Name' | translate }}</div>
+            @if (form.get('nameEn')?.invalid && form.get('nameEn')?.touched) {
+              <div class="text-danger small">{{ 'Category English name must be valid.' | translate }}</div>
+            }
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">{{ 'Daily Price (Low)' | translate }} <span class="text-danger">*</span></label>
+            <input type="number" min="0" step="0.01" class="form-control" formControlName="price_day_low" [placeholder]="'Example Daily Price Low' | translate" />
+            <div class="form-text">{{ 'Hint Daily Price Low' | translate }}</div>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">{{ 'Daily Price (High)' | translate }} <span class="text-danger">*</span></label>
+            <input type="number" min="0" step="0.01" class="form-control" formControlName="price_day_high" [placeholder]="'Example Daily Price High' | translate" />
+            <div class="form-text">{{ 'Hint Daily Price High' | translate }}</div>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">{{ 'Monthly Price (Low)' | translate }} <span class="text-danger">*</span></label>
+            <input type="number" min="0" step="0.01" class="form-control" formControlName="price_month_low" [placeholder]="'Example Monthly Price Low' | translate" />
+            <div class="form-text">{{ 'Hint Monthly Price Low' | translate }}</div>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">{{ 'Monthly Price (High)' | translate }} <span class="text-danger">*</span></label>
+            <input type="number" min="0" step="0.01" class="form-control" formControlName="price_month_high" [placeholder]="'Example Monthly Price High' | translate" />
+            <div class="form-text">{{ 'Hint Monthly Price High' | translate }}</div>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">{{ 'Extra Hour Price (Low)' | translate }} <span class="text-danger">*</span></label>
+            <input type="number" min="0" step="0.01" class="form-control" formControlName="priceHoureExtraLow" [placeholder]="'Example Extra Hour Price Low' | translate" />
+            <div class="form-text">{{ 'Hint Extra Hour Price Low' | translate }}</div>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">{{ 'Extra Hour Price (High)' | translate }} <span class="text-danger">*</span></label>
+            <input type="number" min="0" step="0.01" class="form-control" formControlName="priceHoureExtraHigh" [placeholder]="'Example Extra Hour Price High' | translate" />
+            <div class="form-text">{{ 'Hint Extra Hour Price High' | translate }}</div>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">{{ 'Extra KM Price (Low)' | translate }} <span class="text-danger">*</span></label>
+            <input type="number" min="0" step="0.01" class="form-control" formControlName="countKMExtraLow" [placeholder]="'Example Extra KM Price Low' | translate" />
+            <div class="form-text">{{ 'Hint Extra KM Price Low' | translate }}</div>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">{{ 'Extra KM Price (High)' | translate }} <span class="text-danger">*</span></label>
+            <input type="number" min="0" step="0.01" class="form-control" formControlName="countKMExtraHigh" [placeholder]="'Example Extra KM Price High' | translate" />
+            <div class="form-text">{{ 'Hint Extra KM Price High' | translate }}</div>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">{{ 'Allowed Limit (Low)' | translate }} <span class="text-danger">*</span></label>
+            <input type="number" min="0" step="0.01" class="form-control" formControlName="allowToLow" [placeholder]="'Example Allowed Limit Low' | translate" />
+            <div class="form-text">{{ 'Hint Allowed Limit Low' | translate }}</div>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">{{ 'Allowed Limit (High)' | translate }} <span class="text-danger">*</span></label>
+            <input type="number" min="0" step="0.01" class="form-control" formControlName="allowToHigh" [placeholder]="'Example Allowed Limit High' | translate" />
+            <div class="form-text">{{ 'Hint Allowed Limit High' | translate }}</div>
+          </div>
+        </div>
+
+        <div class="mt-4 d-flex gap-2">
+          <button class="btn btn-primary" type="submit" [disabled]="form.invalid || loading()">
+            @if (loading()) {
+              <span class="spinner-border spinner-border-sm me-2"></span>
+            }
+            {{ (isEdit() ? 'Update' : 'Create') | translate }}
+          </button>
+          <a class="btn btn-outline-secondary" routerLink="/category-vehicles">{{ 'Cancel' | translate }}</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

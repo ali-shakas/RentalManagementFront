@@ -1,0 +1,134 @@
+import { CommonModule } from '@angular/common';
+import { Component, OnInit, inject, signal } from '@angular/core';
+import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+
+import { AuthStateService } from '../../../../../core/auth/auth-state.service';
+import { CategoryVehicleUpsertRequest } from '../../../models';
+import { CategoryVehicleService } from '../../../services/category-vehicles/category-vehicle.service';
+import { ToastService } from '../../../../../shared/services/toast.service';
+import { PageHeaderComponent } from '../../../../../shared/ui/page-header/page-header.component';
+
+@Component({
+  selector: 'app-category-vehicle-form',
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, TranslateModule, PageHeaderComponent],
+  templateUrl: './category-vehicle-form.component.html',
+  styleUrl: './category-vehicle-form.component.scss',
+})
+export class CategoryVehicleFormComponent implements OnInit {
+  private static readonly ARABIC_NAME_REGEX = /^[\u0600-\u06FF0-9\s.'-]{2,255}$/;
+  private static readonly ENGLISH_NAME_REGEX = /^[A-Za-z0-9\s.'-]{0,255}$/;
+
+  private fb = inject(NonNullableFormBuilder);
+  private authState = inject(AuthStateService);
+  private categoryVehicleService = inject(CategoryVehicleService);
+  private toast = inject(ToastService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private translate = inject(TranslateService);
+
+  isEdit = signal(false);
+  categoryId = signal<string | null>(null);
+  loading = signal(false);
+
+  form = this.fb.group({
+    fleetId: ['', [Validators.required]],
+    nameAr: ['', [Validators.required, Validators.maxLength(255), Validators.pattern(CategoryVehicleFormComponent.ARABIC_NAME_REGEX)]],
+    nameEn: ['', [Validators.maxLength(255), Validators.pattern(CategoryVehicleFormComponent.ENGLISH_NAME_REGEX)]],
+    price_day_low: [0, [Validators.required, Validators.min(0)]],
+    price_day_high: [0, [Validators.required, Validators.min(0)]],
+    price_month_low: [0, [Validators.required, Validators.min(0)]],
+    price_month_high: [0, [Validators.required, Validators.min(0)]],
+    priceHoureExtraLow: [0, [Validators.required, Validators.min(0)]],
+    priceHoureExtraHigh: [0, [Validators.required, Validators.min(0)]],
+    countKMExtraLow: [0, [Validators.required, Validators.min(0)]],
+    countKMExtraHigh: [0, [Validators.required, Validators.min(0)]],
+    allowToLow: [0, [Validators.required, Validators.min(0)]],
+    allowToHigh: [0, [Validators.required, Validators.min(0)]],
+  });
+
+  ngOnInit(): void {
+    this.form.controls.fleetId.setValue(this.authState.fleetId() ?? '');
+
+    const id = this.route.snapshot.paramMap.get('id');
+    if (!id) return;
+
+    this.isEdit.set(true);
+    this.categoryId.set(id);
+    this.loading.set(true);
+    this.categoryVehicleService.getById(id, this.authState.fleetId() ?? '').subscribe({
+      next: category => {
+        this.form.patchValue({
+          fleetId: category.fleetId,
+          nameAr: category.nameAr,
+          nameEn: category.nameEn || '',
+          price_day_low: category.price_day_low ?? 0,
+          price_day_high: category.price_day_high ?? 0,
+          price_month_low: category.price_month_low ?? 0,
+          price_month_high: category.price_month_high ?? 0,
+          priceHoureExtraLow: category.priceHoureExtraLow ?? 0,
+          priceHoureExtraHigh: category.priceHoureExtraHigh ?? 0,
+          countKMExtraLow: category.countKMExtraLow ?? 0,
+          countKMExtraHigh: category.countKMExtraHigh ?? 0,
+          allowToLow: category.allowToLow ?? 0,
+          allowToHigh: category.allowToHigh ?? 0,
+        });
+      },
+      error: err => {
+        this.toast.error(err?.message ?? this.translate.instant('Failed to load vehicle category'));
+        this.loading.set(false);
+      },
+      complete: () => this.loading.set(false),
+    });
+  }
+
+  save(): void {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
+
+    const raw = this.form.getRawValue();
+    const payload: CategoryVehicleUpsertRequest = {
+      id: this.categoryId() ?? undefined,
+      fleetId: raw.fleetId.trim(),
+      nameAr: raw.nameAr.trim(),
+      nameEn: raw.nameEn.trim() || undefined,
+      price_day_low: raw.price_day_low,
+      price_day_high: raw.price_day_high,
+      price_month_low: raw.price_month_low,
+      price_month_high: raw.price_month_high,
+      priceHoureExtraLow: raw.priceHoureExtraLow,
+      priceHoureExtraHigh: raw.priceHoureExtraHigh,
+      countKMExtraLow: raw.countKMExtraLow,
+      countKMExtraHigh: raw.countKMExtraHigh,
+      allowToLow: raw.allowToLow,
+      allowToHigh: raw.allowToHigh,
+    };
+
+    this.loading.set(true);
+    const request$ = this.isEdit()
+      ? this.categoryVehicleService.update(payload)
+      : this.categoryVehicleService.create(payload);
+
+    request$.subscribe({
+      next: () => {
+        this.toast.success(this.translate.instant(this.isEdit() ? 'Vehicle category updated' : 'Vehicle category created'));
+        this.router.navigate(['/category-vehicles']);
+      },
+      error: err => {
+        this.toast.error(err?.message ?? this.translate.instant('Failed to save vehicle category'));
+        this.loading.set(false);
+      },
+      complete: () => this.loading.set(false),
+    });
+  }
+}
+
+
+
+
+
+

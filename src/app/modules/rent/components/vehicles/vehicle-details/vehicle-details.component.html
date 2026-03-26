@@ -1,0 +1,42 @@
+<div class="container-fluid">
+  <app-page-header title="Vehicle Details" subtitle="Detailed operational view for the selected vehicle.">
+    <div class="d-flex gap-2">
+      <a class="btn btn-outline-secondary" routerLink="/vehicles">Back</a>
+      @if (vehicle(); as item) {
+        <a class="btn btn-primary" [routerLink]="['/vehicles', item.id, 'edit']">Edit Vehicle</a>
+      }
+    </div>
+  </app-page-header>
+
+  <div class="card">
+    <div class="card-body">
+      @if (loading()) {
+        <div class="text-center py-5"><div class="spinner-border text-primary"></div></div>
+      } @else if (vehicle(); as item) {
+        <div class="row g-4">
+          <div class="col-lg-4">
+            @if (imageUrl()) {
+              <img class="img-fluid rounded border" [src]="imageUrl()" alt="vehicle" />
+            }
+          </div>
+          <div class="col-lg-8">
+            <div class="row g-3">
+              <div class="col-md-6"><strong>Vehicle:</strong> {{ item.make }} {{ item.model }}</div>
+              <div class="col-md-6"><strong>Year:</strong> {{ item.year }}</div>
+              <div class="col-md-6"><strong>Plate:</strong> {{ item.plateNumber }}</div>
+              <div class="col-md-6"><strong>Branch:</strong> {{ item.branchName || '-' }}</div>
+              <div class="col-md-6"><strong>Daily Rate:</strong> {{ item.dailyRate ?? 0 }}</div>
+              <div class="col-md-6"><strong>Status:</strong> <app-status-badge [label]="item.status" [tone]="item.status === 'Available' ? 'success' : item.status === 'Booked' ? 'warning' : item.status === 'Maintenance' ? 'danger' : 'secondary'" /></div>
+              <div class="col-md-6"><strong>Transmission:</strong> {{ item.transmission || '-' }}</div>
+              <div class="col-md-6"><strong>Fuel:</strong> {{ item.fuelType || '-' }}</div>
+              <div class="col-md-6"><strong>Mileage:</strong> {{ item.mileage ?? 0 }}</div>
+              <div class="col-md-6"><strong>VIN:</strong> {{ item.vin || '-' }}</div>
+              <div class="col-12"><strong>Notes:</strong> {{ item.notes || '-' }}</div>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div>
+

@@ -1,0 +1,149 @@
+<div class="container-fluid">
+  <app-page-header
+    [title]="(isEdit() ? 'Edit User' : 'Create User') | translate"
+    [subtitle]="'Create and manage user accounts, expiration dates, and assigned roles.' | translate"
+  >
+    <a class="btn btn-outline-secondary" routerLink="/users">{{ 'Back' | translate }}</a>
+  </app-page-header>
+
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+          <form [formGroup]="form" (ngSubmit)="onSubmit()">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">{{ 'Username' | translate }} <span class="text-danger">*</span></label>
+                <input
+                  type="text"
+                  class="form-control"
+                  formControlName="userName"
+                  maxlength="255"
+                  [placeholder]="'Example Username' | translate"
+                  [class.is-invalid]="form.get('userName')?.invalid && form.get('userName')?.touched"
+                />
+                <div class="form-text">{{ 'Hint Username' | translate }}</div>
+                @if (form.get('userName')?.invalid && form.get('userName')?.touched) {
+                  <div class="invalid-feedback">{{ 'Username is required' | translate }}</div>
+                }
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">{{ 'Email' | translate }} <span class="text-danger">*</span></label>
+                <input
+                  type="email"
+                  class="form-control"
+                  formControlName="email"
+                  maxlength="255"
+                  [placeholder]="'Example User Email' | translate"
+                  [class.is-invalid]="form.get('email')?.invalid && form.get('email')?.touched"
+                />
+                <div class="form-text">{{ 'Hint User Email' | translate }}</div>
+                @if (form.get('email')?.invalid && form.get('email')?.touched) {
+                  <div class="invalid-feedback">{{ 'Valid email is required' | translate }}</div>
+                }
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">
+                  {{ 'Password' | translate }}
+                  @if (!isEdit()) {
+                    <span class="text-danger">*</span>
+                  }
+                </label>
+                <input
+                  type="password"
+                  class="form-control"
+                  formControlName="password"
+                  [attr.placeholder]="isEdit() ? ('Leave blank to keep' | translate) : ('Example User Password' | translate)"
+                  [class.is-invalid]="form.get('password')?.invalid && form.get('password')?.touched"
+                />
+                <div class="form-text">{{ 'Hint User Password' | translate }}</div>
+                @if (form.get('password')?.invalid && form.get('password')?.touched) {
+                  <div class="invalid-feedback">{{ 'Password is required' | translate }}</div>
+                }
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">{{ 'Expiration Date' | translate }}</label>
+                <input type="date" class="form-control" formControlName="expirationDate" />
+                <div class="form-text">{{ 'Hint User Expiration Date' | translate }}</div>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">{{ 'Name (Ar)' | translate }} <span class="text-danger">*</span></label>
+                <input
+                  type="text"
+                  class="form-control"
+                  formControlName="nameAr"
+                  maxlength="255"
+                  [placeholder]="'Example User Arabic Name' | translate"
+                  [class.is-invalid]="form.get('nameAr')?.invalid && form.get('nameAr')?.touched"
+                />
+                <div class="form-text">{{ 'Hint User Arabic Name' | translate }}</div>
+                @if (form.get('nameAr')?.invalid && form.get('nameAr')?.touched) {
+                  <div class="invalid-feedback">{{ 'Arabic user name is required and must be valid.' | translate }}</div>
+                }
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">{{ 'Name (En)' | translate }}</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  formControlName="nameEn"
+                  maxlength="255"
+                  [placeholder]="'Example User English Name' | translate"
+                  [class.is-invalid]="form.get('nameEn')?.invalid && form.get('nameEn')?.touched"
+                />
+                <div class="form-text">{{ 'Hint User English Name' | translate }}</div>
+                @if (form.get('nameEn')?.invalid && form.get('nameEn')?.touched) {
+                  <div class="invalid-feedback">{{ 'English user name must be valid.' | translate }}</div>
+                }
+              </div>
+
+              <div class="col-12">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" formControlName="isActive" id="isActive" />
+                  <label class="form-check-label" for="isActive">{{ 'Active' | translate }}</label>
+                </div>
+                <div class="form-text">{{ 'Hint User Active' | translate }}</div>
+              </div>
+
+              <div class="col-12">
+                <label class="form-label">{{ 'Roles' | translate }}</label>
+                <div class="form-text mb-2">{{ 'Hint User Roles' | translate }}</div>
+                <div class="d-flex flex-wrap gap-3">
+                  @for (role of roles(); track role.id) {
+                    <div class="form-check">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        [id]="'role-' + role.id"
+                        [checked]="isRoleSelected(role.id)"
+                        (change)="toggleRole(role.id)"
+                      />
+                      <label class="form-check-label" [for]="'role-' + role.id">
+                        {{ role.displayName || role.displayNameEn || role.name }}
+                      </label>
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-4 d-flex gap-2">
+              <button type="submit" class="btn btn-primary" [disabled]="loading()">
+                @if (loading()) {
+                  <span class="spinner-border spinner-border-sm me-2"></span>
+                }
+                {{ (isEdit() ? 'Update' : 'Create') | translate }}
+              </button>
+              <a class="btn btn-secondary" routerLink="/users">{{ 'Cancel' | translate }}</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

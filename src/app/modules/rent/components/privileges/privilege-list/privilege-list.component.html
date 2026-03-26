@@ -1,0 +1,60 @@
+<div class="container-fluid">
+  <app-page-header [title]="'Privileges' | translate" [subtitle]="'Manage privilege records used across routes, actions, and security policies.' | translate">
+    <a class="btn btn-primary" routerLink="/privileges/create">{{ 'Create Privilege' | translate }}</a>
+  </app-page-header>
+
+  <div class="card">
+    <div class="card-body">
+      <div class="row g-3 mb-3">
+        <div class="col-md-6">
+          <div class="input-group">
+            <input
+              type="text"
+              class="form-control"
+              [placeholder]="'Search privileges...' | translate"
+              [ngModel]="search()"
+              (ngModelChange)="search.set($event)"
+              (keyup.enter)="onSearch()"
+            />
+            <button class="btn btn-outline-secondary" type="button" (click)="onSearch()">{{ 'Search' | translate }}</button>
+          </div>
+        </div>
+      </div>
+
+      @if (loading()) {
+        <div class="text-center py-5">
+          <div class="spinner-border text-primary"></div>
+        </div>
+      } @else if (!privileges().length) {
+        <app-empty-state [title]="'No privileges found' | translate" [description]="'Privileges define what parts of the system users can access.' | translate" />
+      } @else {
+        <div class="table-responsive">
+          <table class="table table-striped align-middle">
+            <thead>
+              <tr>
+                <th>{{ 'Name' | translate }}</th>
+                <th>{{ 'Display Name' | translate }}</th>
+                <th>{{ 'Order' | translate }}</th>
+                <th>{{ 'Editable' | translate }}</th>
+                <th class="text-end">{{ 'Actions' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (privilege of privileges(); track privilege.id) {
+                <tr>
+                  <td>{{ privilege.name || privilege.privilegeName || '-' }}</td>
+                  <td>{{ privilege.displayName || privilege.displayNameEn || '-' }}</td>
+                  <td>{{ privilege.order ?? '-' }}</td>
+                  <td>{{ privilege.editable ? ('Yes' | translate) : ('No' | translate) }}</td>
+                  <td class="text-end">
+                    <a class="btn btn-sm btn-outline-primary" [routerLink]="['/privileges/edit', privilege.id]">{{ 'Edit' | translate }}</a>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  </div>
+</div>

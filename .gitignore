@@ -1,0 +1,19 @@
+node_modules/
+dist/
+.angular/cache/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE and local tooling
+.vs/
+.vscode/
+.idea/
+.codex/
+
+# OS files
+.DS_Store
+Thumbs.db

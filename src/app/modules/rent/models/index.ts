@@ -1,0 +1,14 @@
+export * from '../../../shared/models/base/api-response.model';
+export * from './users/account-manager.model';
+export * from './booking/booking.model';
+export * from './branches/branch.model';
+export * from './category-vehicles/category-vehicle.model';
+export * from './customers/customer.model';
+export * from './dashboard/dashboard.model';
+export * from './fleet/fleet.model';
+export * from './privileges/privilege.model';
+export * from './roles/role.model';
+export * from './users/user.model';
+export * from './vehicles/vehicle.model';
+
+

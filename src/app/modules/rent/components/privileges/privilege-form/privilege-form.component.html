@@ -1,0 +1,71 @@
+<div class="container-fluid">
+  <app-page-header
+    [title]="(isEdit() ? 'Edit Privilege' : 'Create Privilege') | translate"
+    [subtitle]="'Define the security privilege used in guards, buttons, and navigation.' | translate"
+  >
+    <a class="btn btn-outline-secondary" routerLink="/privileges">{{ 'Back to Privileges' | translate }}</a>
+  </app-page-header>
+
+  <div class="card">
+    <div class="card-body">
+      <form [formGroup]="form" (ngSubmit)="save()">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label">{{ 'Privilege Name' | translate }} <span class="text-danger">*</span></label>
+            <input
+              class="form-control"
+              formControlName="name"
+              maxlength="255"
+              [placeholder]="'Example Privilege Arabic Name' | translate"
+            />
+            <div class="form-text">{{ 'Hint Privilege Arabic Name' | translate }}</div>
+            @if (form.get('name')?.invalid && form.get('name')?.touched) {
+              <div class="text-danger small">{{ 'Privilege Arabic name is required and must be valid.' | translate }}</div>
+            }
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">{{ 'Name (EN)' | translate }} <span class="text-danger">*</span></label>
+            <input
+              class="form-control"
+              formControlName="nameEn"
+              maxlength="255"
+              [placeholder]="'Example Privilege English Name' | translate"
+            />
+            <div class="form-text">{{ 'Hint Privilege English Name' | translate }}</div>
+            @if (form.get('nameEn')?.invalid && form.get('nameEn')?.touched) {
+              <div class="text-danger small">{{ 'Privilege English name is required and must be valid.' | translate }}</div>
+            }
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">{{ 'Privilege Code' | translate }} <span class="text-danger">*</span></label>
+            <input
+              class="form-control"
+              formControlName="privilegeName"
+              maxlength="500"
+              [placeholder]="'Example Privilege Code' | translate"
+            />
+            <div class="form-text">{{ 'Hint Privilege Code' | translate }}</div>
+            @if (form.get('privilegeName')?.invalid && form.get('privilegeName')?.touched) {
+              <div class="text-danger small">{{ 'Privilege code is required and must be valid.' | translate }}</div>
+            }
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">{{ 'Order' | translate }} <span class="text-danger">*</span></label>
+            <input class="form-control" type="number" min="0" formControlName="order" />
+            <div class="form-text">{{ 'Hint Privilege Order' | translate }}</div>
+            @if (form.get('order')?.invalid && form.get('order')?.touched) {
+              <div class="text-danger small">{{ 'Privilege order is required and must be zero or greater.' | translate }}</div>
+            }
+          </div>
+        </div>
+
+        <div class="mt-4 d-flex gap-2">
+          <button class="btn btn-primary" type="submit" [disabled]="loading()">
+            {{ (isEdit() ? 'Update Privilege' : 'Create Privilege') | translate }}
+          </button>
+          <a class="btn btn-light" routerLink="/privileges">{{ 'Cancel' | translate }}</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

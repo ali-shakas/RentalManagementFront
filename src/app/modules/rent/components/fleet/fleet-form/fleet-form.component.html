@@ -1,0 +1,67 @@
+<div class="container-fluid">
+  <app-page-header
+    [title]="isEdit() ? ('Edit Fleet' | translate) : ('Create Fleet' | translate)"
+    [subtitle]="'Manage fleet master data without changing the current design system.' | translate"
+  >
+    <a class="btn btn-outline-secondary" routerLink="/fleet">{{ 'Back to Fleets' | translate }}</a>
+  </app-page-header>
+
+  <div class="card">
+    <div class="card-body">
+      <form [formGroup]="form" (ngSubmit)="save()">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label">{{ 'Fleet Name' | translate }}</label>
+            <input class="form-control" formControlName="name" maxlength="255" [placeholder]="'Example Fleet Name' | translate" />
+            <div class="form-text">{{ 'Hint Fleet Name' | translate }}</div>
+            @if (form.controls.name.invalid && form.controls.name.touched) {
+              <div class="text-danger small mt-1">{{ 'Fleet name is required and must be valid.' | translate }}</div>
+            }
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">{{ 'Fleet Code' | translate }}</label>
+            <input class="form-control" formControlName="fleetCode" maxlength="100" [placeholder]="'Example Fleet Code' | translate" />
+            <div class="form-text">{{ 'Hint Fleet Code' | translate }}</div>
+            @if (form.controls.fleetCode.invalid && form.controls.fleetCode.touched) {
+              <div class="text-danger small mt-1">{{ 'Fleet code must be valid.' | translate }}</div>
+            }
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">{{ 'Location' | translate }}</label>
+            <input class="form-control" formControlName="location" maxlength="255" [placeholder]="'Example Fleet Location' | translate" />
+            <div class="form-text">{{ 'Hint Fleet Location' | translate }}</div>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">{{ 'Contact Number' | translate }}</label>
+            <input class="form-control" formControlName="contactNumber" maxlength="50" inputmode="tel" [placeholder]="'Example Fleet Contact Number' | translate" />
+            <div class="form-text">{{ 'Hint Fleet Contact Number' | translate }}</div>
+            @if (form.controls.contactNumber.invalid && form.controls.contactNumber.touched) {
+              <div class="text-danger small mt-1">{{ 'Fleet contact number must be valid.' | translate }}</div>
+            }
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">{{ 'Email' | translate }}</label>
+            <input class="form-control" type="email" formControlName="email" maxlength="255" [placeholder]="'Example Fleet Email' | translate" />
+            <div class="form-text">{{ 'Hint Fleet Email' | translate }}</div>
+            @if (form.controls.email.invalid && form.controls.email.touched) {
+              <div class="text-danger small mt-1">{{ 'Fleet email must be valid.' | translate }}</div>
+            }
+          </div>
+          <div class="col-12">
+            <label class="form-label">{{ 'Description' | translate }}</label>
+            <textarea class="form-control" rows="4" formControlName="description" maxlength="1000" [placeholder]="'Example Fleet Description' | translate"></textarea>
+            <div class="form-text">{{ 'Hint Fleet Description' | translate }}</div>
+          </div>
+        </div>
+
+        <div class="mt-4 d-flex gap-2">
+          <button class="btn btn-primary" type="submit" [disabled]="loading()">
+            {{ isEdit() ? ('Update Fleet' | translate) : ('Create Fleet' | translate) }}
+          </button>
+          <a class="btn btn-light" routerLink="/fleet">{{ 'Cancel' | translate }}</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+

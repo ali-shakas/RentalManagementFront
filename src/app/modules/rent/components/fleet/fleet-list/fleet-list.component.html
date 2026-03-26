@@ -1,0 +1,99 @@
+<div class="container-fluid">
+  <app-page-header
+    [title]="'Fleets' | translate"
+    [subtitle]="'Master fleet records used across branches, vehicles, and bookings.' | translate"
+  >
+    <a class="btn btn-primary" routerLink="/fleet/create">{{ 'Create Fleet' | translate }}</a>
+  </app-page-header>
+
+  <div class="row mb-3">
+    <div class="col-md-4">
+      <input
+        type="text"
+        class="form-control"
+        [placeholder]="'Search fleets...' | translate"
+        [ngModel]="search()"
+        (ngModelChange)="search.set($event); onSearch()"
+      />
+    </div>
+    <div class="col-md-2">
+      <select class="form-select" [ngModel]="pageSize()" (ngModelChange)="changePageSize($event)">
+        <option [ngValue]="5">5</option>
+        <option [ngValue]="10">10</option>
+        <option [ngValue]="20">20</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-12">
+      @if (!loading() && fleets().length === 0) {
+        <app-empty-state
+          [title]="'No fleets found' | translate"
+          [description]="'Create a fleet to start organizing branches and vehicles.' | translate"
+        />
+      } @else {
+      <div class="table-responsive">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>{{ 'Name' | translate }}</th>
+              <th>{{ 'Fleet Code' | translate }}</th>
+              <th>{{ 'Location' | translate }}</th>
+              <th>{{ 'Contact Number' | translate }}</th>
+              <th>{{ 'Email' | translate }}</th>
+              <th>{{ 'Active' | translate }}</th>
+              <th class="text-end">{{ 'Actions' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (fleets().length === 0 && !loading()) {
+              <tr>
+                <td colspan="7" class="text-center">{{ 'No fleets found' | translate }}</td>
+              </tr>
+            } @else {
+              @for (f of fleets(); track f.id) {
+                <tr>
+                  <td>{{ f.name || '-' }}</td>
+                  <td>{{ f.fleetCode || '-' }}</td>
+                  <td>{{ f.location || '-' }}</td>
+                  <td>{{ f.contactNumber || '-' }}</td>
+                  <td>{{ f.email || '-' }}</td>
+                  <td>
+                    <app-status-badge
+                      [label]="f.isActive ? ('Active' | translate) : ('Inactive' | translate)"
+                      [tone]="f.isActive ? 'success' : 'secondary'"
+                    />
+                  </td>
+                  <td class="text-end">
+                    <a class="btn btn-sm btn-outline-primary" [routerLink]="['/fleet', f.id, 'edit']">
+                      {{ 'Edit' | translate }}
+                    </a>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+      }
+    </div>
+  </div>
+
+  @if (totalPages() > 1) {
+    <div class="row mt-3">
+      <div class="col-12 d-flex justify-content-center">
+        <nav>
+          <ul class="pagination mb-0">
+            @for (p of pageNumbers(); track p) {
+              <li class="page-item" [class.active]="p === pageNumber()">
+                <button class="page-link" (click)="goToPage(p)">{{ p }}</button>
+              </li>
+            }
+          </ul>
+        </nav>
+      </div>
+    </div>
+  }
+</div>
+

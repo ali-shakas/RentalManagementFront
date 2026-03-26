@@ -1,0 +1,41 @@
+<div class="cart-box" (click)="cart()">
+  <svg>
+    <use href="assets/svg/icon-sprite.svg#fill-Buy"></use>
+  </svg>
+</div>
+<div class="cart-dropdown onhover-show-div" [class.active]="products === true">
+  <h6 class="f-18 mb-0 dropdown-title">Cart</h6>
+  <ul>
+    <li>
+      <div class="d-flex">
+        <img class="img-fluid b-r-5 img-60" src="assets/images/ecommerce/06.jpg" alt="" />
+        <div class="flex-grow-1">
+          <span>Winter T-shirt</span>
+          <h6>1 X $ 299.00</h6>
+        </div>
+        <div class="close-circle">
+          <a href="javascript:void(0);"><i class="fa fa-times"></i></a>
+        </div>
+      </div>
+    </li>
+    <li>
+      <div class="d-flex">
+        <img class="img-fluid b-r-5 img-60" src="assets/images/ecommerce/02.jpg" alt="" />
+        <div class="flex-grow-1">
+          <span>Men Shirt</span>
+          <h6>1 X $ 299.00</h6>
+        </div>
+        <div class="close-circle">
+          <a href="javascript:void(0);"><i class="fa fa-times"></i></a>
+        </div>
+      </div>
+    </li>
+    <li class="total">
+      <h5 class="mb-0">Subtotal :<span class="f-right">$299.00</span></h5>
+    </li>
+    <li>
+      <a class="view-cart" href="javascript:void(0)">View Cart</a>
+      <a class="view-checkout f-right" href="javascript:void(0)">Checkout</a>
+    </li>
+  </ul>
+</div>

@@ -1,0 +1,65 @@
+<div class="container-fluid">
+  <app-page-header [title]="'Roles' | translate" [subtitle]="'Manage security roles, role names, and attached privileges.' | translate">
+    <a class="btn btn-primary" routerLink="/roles/create">{{ 'Create Role' | translate }}</a>
+  </app-page-header>
+
+  <div class="card">
+    <div class="card-body">
+      <div class="row g-3 mb-3">
+        <div class="col-md-6">
+          <div class="input-group">
+            <input
+              type="text"
+              class="form-control"
+              [placeholder]="'Search roles...' | translate"
+              [ngModel]="search()"
+              (ngModelChange)="search.set($event)"
+              (keyup.enter)="onSearch()"
+            />
+            <button class="btn btn-outline-secondary" type="button" (click)="onSearch()">{{ 'Search' | translate }}</button>
+          </div>
+        </div>
+        <div class="col-md-2">
+          <select class="form-select" [ngModel]="pageSize()" (ngModelChange)="changePageSize(+$event)">
+            <option [ngValue]="10">10</option>
+            <option [ngValue]="25">25</option>
+            <option [ngValue]="50">50</option>
+          </select>
+        </div>
+      </div>
+
+      @if (loading()) {
+        <div class="text-center py-5">
+          <div class="spinner-border text-primary" role="status"></div>
+        </div>
+      } @else if (!roles().length) {
+        <app-empty-state [title]="'No roles found' | translate" [description]="'Create your first role to assign security permissions.' | translate" />
+      } @else {
+        <div class="table-responsive">
+          <table class="table table-striped align-middle">
+            <thead>
+              <tr>
+                <th>{{ 'Role Name' | translate }}</th>
+                <th>{{ 'Display Name' | translate }}</th>
+                <th>{{ 'Privileges' | translate }}</th>
+                <th class="text-end">{{ 'Actions' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (role of roles(); track role.id) {
+                <tr>
+                  <td>{{ role.name }}</td>
+                  <td>{{ role.displayName || role.displayNameEn || '-' }}</td>
+                  <td>{{ role.privilegeTypeIds?.length ?? role.privilegeTypeRoles?.length ?? 0 }}</td>
+                  <td class="text-end">
+                    <a class="btn btn-sm btn-outline-primary" [routerLink]="['/roles/edit', role.id]">{{ 'Edit' | translate }}</a>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  </div>
+</div>

@@ -1,0 +1,6 @@
+@for (t of toastService.toasts(); track t.id) {
+  <div class="alert alert-dismissible fade show" [ngClass]="t.cssClass" role="alert">
+    {{ t.message }}
+    <button type="button" class="btn-close" (click)="toastService.remove(t.id)" aria-label="Close"></button>
+  </div>
+}

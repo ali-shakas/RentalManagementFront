@@ -1,0 +1,71 @@
+<div class="auth-shell">
+  <div class="auth-panel">
+    <div class="brand-block">
+      <img
+        class="brand-logo"
+        src="assets/images/logo/logo-icon.png"
+        alt="Vehicle Rental Management"
+      />
+      <div class="brand-copy">
+        <p class="brand-kicker">Vehicle Rental Management</p>
+        <h1>تسجيل الدخول</h1>
+        <p class="brand-subtitle">
+          ادخل إلى لوحة الإدارة لمتابعة الأسطول والعملاء والحجوزات بشكل واضح وسريع.
+        </p>
+      </div>
+    </div>
+
+    <form class="auth-form" [formGroup]="form" (ngSubmit)="onSubmit()">
+      <div class="field-group">
+        <label class="form-label" for="username">اسم المستخدم</label>
+        <input
+          id="username"
+          type="text"
+          class="form-control"
+          #usernameInput
+          formControlName="username"
+          placeholder="مثال: admin"
+          [class.is-invalid]="form.get('username')?.invalid && form.get('username')?.touched"
+          autocomplete="username"
+        />
+        @if (form.get('username')?.invalid && form.get('username')?.touched) {
+          <div class="invalid-feedback">اسم المستخدم مطلوب</div>
+        }
+      </div>
+
+      <div class="field-group">
+        <label class="form-label" for="password">كلمة المرور</label>
+        <input
+          id="password"
+          type="password"
+          class="form-control"
+          formControlName="password"
+          placeholder="ادخل كلمة المرور"
+          [class.is-invalid]="form.get('password')?.invalid && form.get('password')?.touched"
+          autocomplete="current-password"
+        />
+        @if (form.get('password')?.invalid && form.get('password')?.touched) {
+          <div class="invalid-feedback">كلمة المرور مطلوبة</div>
+        }
+      </div>
+
+      @if (errorMessage) {
+        <div class="auth-alert" role="alert">
+          {{ errorMessage }}
+        </div>
+      }
+
+      <button type="submit" class="btn btn-primary auth-submit" [disabled]="loading || loginDisabled">
+        @if (loading) {
+          <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+        }
+        دخول
+      </button>
+    </form>
+
+    <div class="auth-note">
+      <span>بيئة إدارة داخلية</span>
+      <strong>استخدم بيانات الدخول المصرح بها فقط</strong>
+    </div>
+  </div>
+</div>

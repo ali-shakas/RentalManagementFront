@@ -1,0 +1,22 @@
+<div class="left-menu-header">
+  <ul class="app-list">
+    <app-app-list />
+  </ul>
+  <ul class="header-left">
+    @for(item of horizantalList; track item){
+    <li class="onhover-dropdown">
+      <span class="f-w-500">
+        <app-svg-icon [icon]="item.icon" />
+        {{item.title! | translate }}</span
+      >
+      <ul class="onhover-show-div left-dropdown">
+        @for( datas of item.children; track datas){
+        <li>
+          <a [routerLink]="datas.path">{{datas.title! | translate }}</a>
+        </li>
+        }
+      </ul>
+    </li>
+    }
+  </ul>
+</div>

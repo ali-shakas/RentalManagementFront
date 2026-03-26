@@ -1,0 +1,19 @@
+<div class="translate_wrapper" [class.active]="navServices.language">
+  <div class="current_lang">
+    <div class="lang">
+      <i class="flag-icon flag-icon-{{selectedLanguage.icon}}"></i>
+    </div>
+  </div>
+  <div class="more_lang" [class.active]="navServices.language">
+    @for(lang of languages; track lang){
+    <div class="lang" [attr.data-value]="lang.code" (click)="changeLanguage(lang)">
+      <i class="flag-icon flag-icon-{{lang.icon}}"></i>
+      <span class="lang-txt"
+        >{{lang.language}} @if(lang.type){
+        <span>({{lang.type}})</span>
+        }
+      </span>
+    </div>
+    }
+  </div>
+</div>

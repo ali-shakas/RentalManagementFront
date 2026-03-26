@@ -1,0 +1,78 @@
+<div class="container-fluid">
+  <app-page-header
+    [title]="(isEdit() ? 'Edit Role' : 'Create Role') | translate"
+    [subtitle]="'Define a role and control which privileges it grants.' | translate"
+  >
+    <a class="btn btn-outline-secondary" routerLink="/roles">{{ 'Back to Roles' | translate }}</a>
+  </app-page-header>
+
+  <div class="card">
+    <div class="card-body">
+      <form [formGroup]="form" (ngSubmit)="save()">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label">{{ 'Role Name' | translate }} <span class="text-danger">*</span></label>
+            <input class="form-control" formControlName="name" maxlength="255" [placeholder]="'Example Role Name' | translate" />
+            <div class="form-text">{{ 'Hint Role Name' | translate }}</div>
+            @if (form.get('name')?.invalid && form.get('name')?.touched) {
+              <div class="text-danger small">{{ 'Role name is required and must be valid.' | translate }}</div>
+            }
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">{{ 'Display Name (AR)' | translate }} <span class="text-danger">*</span></label>
+            <input class="form-control" formControlName="displayName" maxlength="255" [placeholder]="'Example Role Arabic Name' | translate" />
+            <div class="form-text">{{ 'Hint Role Arabic Name' | translate }}</div>
+            @if (form.get('displayName')?.invalid && form.get('displayName')?.touched) {
+              <div class="text-danger small">{{ 'Role Arabic display name is required and must be valid.' | translate }}</div>
+            }
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">{{ 'Display Name (EN)' | translate }} <span class="text-danger">*</span></label>
+            <input class="form-control" formControlName="displayNameEn" maxlength="255" [placeholder]="'Example Role English Name' | translate" />
+            <div class="form-text">{{ 'Hint Role English Name' | translate }}</div>
+            @if (form.get('displayNameEn')?.invalid && form.get('displayNameEn')?.touched) {
+              <div class="text-danger small">{{ 'Role English display name is required and must be valid.' | translate }}</div>
+            }
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <label class="form-label d-block">{{ 'Privileges' | translate }} <span class="text-danger">*</span></label>
+          <div class="form-text mb-2">{{ 'Hint Role Privileges' | translate }}</div>
+          <div class="row g-3">
+            @for (privilege of privileges(); track privilege.id) {
+              <div class="col-md-4">
+                <label class="card h-100 border">
+                  <div class="card-body d-flex align-items-start gap-2">
+                    <input
+                      class="form-check-input mt-1"
+                      type="checkbox"
+                      [checked]="isPrivilegeSelected(privilege.id)"
+                      (change)="togglePrivilege(privilege.id)"
+                    />
+                    <div>
+                      <div class="fw-semibold">{{ privilege.name || '-' }}</div>
+                      <div class="text-muted small">{{ privilege.privilegeName || privilege.nameEn || '' }}</div>
+                    </div>
+                  </div>
+                </label>
+              </div>
+            }
+          </div>
+          @if (form.get('privilegeTypeIds')?.invalid && form.get('privilegeTypeIds')?.touched) {
+            <div class="text-danger small mt-2">{{ 'At least one privilege is required.' | translate }}</div>
+          }
+        </div>
+
+        <div class="mt-4 d-flex gap-2">
+          <button class="btn btn-primary" type="submit" [disabled]="loading()">
+            {{ (isEdit() ? 'Update Role' : 'Create Role') | translate }}
+          </button>
+          <a class="btn btn-light" routerLink="/roles">{{ 'Cancel' | translate }}</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

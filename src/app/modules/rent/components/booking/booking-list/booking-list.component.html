@@ -1,0 +1,66 @@
+<div class="container-fluid">
+  <app-page-header [title]="'Bookings' | translate" [subtitle]="'Reservations across fleets, branches, customers, and vehicles.' | translate">
+    <a class="btn btn-primary" routerLink="/booking/create">{{ 'Create Booking' | translate }}</a>
+  </app-page-header>
+
+  <div class="card">
+    <div class="card-body">
+      <div class="row g-3 mb-3">
+        <div class="col-md-4">
+          <input class="form-control" [placeholder]="'Search booking/customer/vehicle...' | translate" [ngModel]="search()" (ngModelChange)="search.set($event)" />
+        </div>
+        <div class="col-md-2">
+          <select class="form-select" [ngModel]="status()" (ngModelChange)="status.set($event)">
+            <option [ngValue]="''">{{ 'All statuses' | translate }}</option>
+            <option [ngValue]="'Draft'">{{ 'Draft' | translate }}</option>
+            <option [ngValue]="'Confirmed'">{{ 'Confirmed' | translate }}</option>
+            <option [ngValue]="'Active'">{{ 'Active' | translate }}</option>
+            <option [ngValue]="'Completed'">{{ 'Completed' | translate }}</option>
+            <option [ngValue]="'Cancelled'">{{ 'Cancelled' | translate }}</option>
+          </select>
+        </div>
+        <div class="col-md-2"><input class="form-control" type="date" [ngModel]="dateFrom()" (ngModelChange)="dateFrom.set($event)" /></div>
+        <div class="col-md-2"><input class="form-control" type="date" [ngModel]="dateTo()" (ngModelChange)="dateTo.set($event)" /></div>
+        <div class="col-md-2"><button class="btn btn-outline-secondary w-100" type="button" (click)="load()">{{ 'Apply' | translate }}</button></div>
+      </div>
+
+      @if (loading()) {
+        <div class="text-center py-5"><div class="spinner-border text-primary"></div></div>
+      } @else if (!bookings().length) {
+        <app-empty-state [title]="'No bookings found' | translate" [description]="'Create a booking after selecting a customer and an available vehicle.' | translate" />
+      } @else {
+        <div class="table-responsive">
+          <table class="table table-striped align-middle">
+            <thead>
+              <tr>
+                <th>{{ 'Booking' | translate }}</th>
+                <th>{{ 'Customer' | translate }}</th>
+                <th>{{ 'Vehicle' | translate }}</th>
+                <th>{{ 'Dates' | translate }}</th>
+                <th>{{ 'Total' | translate }}</th>
+                <th>{{ 'Status' | translate }}</th>
+                <th class="text-end">{{ 'Actions' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (booking of bookings(); track booking.id) {
+                <tr>
+                  <td>{{ booking.bookingNumber || booking.id }}</td>
+                  <td>{{ booking.customerName || booking.customerId }}</td>
+                  <td>{{ booking.vehicleName || booking.vehicleId }}</td>
+                  <td>{{ booking.startDate | date:'shortDate' }} - {{ booking.endDate | date:'shortDate' }}</td>
+                  <td>{{ booking.totalAmount ?? 0 }}</td>
+                  <td><app-status-badge [label]="booking.status" [tone]="booking.status === 'Completed' ? 'success' : booking.status === 'Active' ? 'warning' : booking.status === 'Cancelled' ? 'danger' : 'info'" /></td>
+                  <td class="text-end">
+                    <a class="btn btn-sm btn-outline-info" [routerLink]="['/booking', booking.id, 'details']">{{ 'Details' | translate }}</a>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  </div>
+</div>
+

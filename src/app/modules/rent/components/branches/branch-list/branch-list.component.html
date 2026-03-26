@@ -1,0 +1,133 @@
+<div class="container-fluid">
+  <app-page-header
+    [title]="'Branches' | translate"
+    [subtitle]="'Branch operations, availability, and fleet distribution.' | translate"
+  >
+    <a class="btn btn-primary" routerLink="/branches/create" hasPrivilege="CreateBranch">
+      {{ 'Create Branch' | translate }}
+    </a>
+  </app-page-header>
+
+  <div class="row mb-3">
+    <div class="col-md-6">
+      <div class="input-group">
+        <input
+          type="text"
+          class="form-control"
+          [placeholder]="'Search branches...' | translate"
+          [ngModel]="search()"
+          (ngModelChange)="search.set($event)"
+          (keyup.enter)="onSearch()"
+        />
+        <button class="btn btn-outline-secondary" type="button" (click)="onSearch()">
+          {{ 'Search' | translate }}
+        </button>
+      </div>
+    </div>
+    <div class="col-md-2">
+      <select class="form-select" [ngModel]="pageSize()" (ngModelChange)="changePageSize(+$event)">
+        <option [ngValue]="5">5</option>
+        <option [ngValue]="10">10</option>
+        <option [ngValue]="25">25</option>
+        <option [ngValue]="50">50</option>
+      </select>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="text-center py-5">
+      <div class="spinner-border text-primary" role="status"></div>
+    </div>
+  } @else if (!branches().length) {
+    <app-empty-state
+      [title]="'No branches found' | translate"
+      [description]="'Create a branch to assign staff, vehicles, and bookings to operational locations.' | translate"
+    />
+  } @else {
+    <div class="table-responsive">
+      <table class="table table-striped align-middle">
+        <thead>
+          <tr>
+            <th>{{ 'Name (AR)' | translate }}</th>
+            <th>{{ 'Name (EN)' | translate }}</th>
+            <th>{{ 'Code' | translate }}</th>
+            <th>{{ 'Active' | translate }}</th>
+            <th class="text-end">{{ 'Actions' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (branch of branches(); track branch.id) {
+            <tr>
+              <td>{{ branch.nameAr || '-' }}</td>
+              <td>{{ branch.nameEn || '-' }}</td>
+              <td>{{ branch.code || '-' }}</td>
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  <app-status-badge
+                    [label]="branch.isActive ? ('Active' | translate) : ('Inactive' | translate)"
+                    [tone]="branch.isActive ? 'success' : 'secondary'"
+                  />
+                  @if (isStatusLoading(branch.id)) {
+                    <span class="spinner-border spinner-border-sm" role="status"></span>
+                  }
+                </div>
+              </td>
+              <td class="text-end">
+                <button
+                  class="btn btn-sm btn-outline-secondary me-2"
+                  type="button"
+                  [disabled]="isStatusLoading(branch.id)"
+                  (click)="toggleStatus(branch)"
+                  hasPrivilege="UpdateBranch"
+                >
+                  {{ branch.isActive ? ('Deactivate' | translate) : ('Activate' | translate) }}
+                </button>
+                <a
+                  class="btn btn-sm btn-outline-primary me-2"
+                  [routerLink]="['/branches', branch.id, 'edit']"
+                  hasPrivilege="UpdateBranch"
+                >
+                  {{ 'Edit' | translate }}
+                </a>
+                <button
+                  class="btn btn-sm btn-outline-danger"
+                  type="button"
+                  (click)="delete(branch)"
+                  [disabled]="isDeleting(branch.id)"
+                  hasPrivilege="DeleteBranch"
+                >
+                  @if (isDeleting(branch.id)) {
+                    <span class="spinner-border spinner-border-sm me-2"></span>
+                  }
+                  {{ 'Delete' | translate }}
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (totalPages() > 1) {
+      <nav class="mt-3">
+        <ul class="pagination justify-content-center">
+          <li class="page-item" [class.disabled]="pageNumber() <= 1">
+            <button class="page-link" type="button" (click)="goToPage(pageNumber() - 1)">
+              {{ 'Previous' | translate }}
+            </button>
+          </li>
+          @for (page of pageNumbers(); track page) {
+            <li class="page-item" [class.active]="page === pageNumber()">
+              <button class="page-link" type="button" (click)="goToPage(page)">{{ page }}</button>
+            </li>
+          }
+          <li class="page-item" [class.disabled]="pageNumber() >= totalPages()">
+            <button class="page-link" type="button" (click)="goToPage(pageNumber() + 1)">
+              {{ 'Next' | translate }}
+            </button>
+          </li>
+        </ul>
+      </nav>
+    }
+  }
+</div>

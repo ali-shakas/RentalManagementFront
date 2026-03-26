@@ -1,0 +1,83 @@
+<div class="container-fluid">
+  <app-page-header [title]="'Vehicle Categories' | translate" [subtitle]="'Manage reusable vehicle classes used across fleet inventory and booking flows.' | translate">
+    <a class="btn btn-primary" routerLink="/category-vehicles/create">{{ 'Create Category' | translate }}</a>
+  </app-page-header>
+
+  <div class="card">
+    <div class="card-body">
+      <div class="row g-3 mb-3">
+        <div class="col-md-6">
+          <div class="input-group">
+            <input
+              class="form-control"
+              [placeholder]="'Search categories...' | translate"
+              [ngModel]="search()"
+              (ngModelChange)="search.set($event)"
+              (keyup.enter)="onSearch()"
+            />
+            <button class="btn btn-outline-secondary" type="button" (click)="onSearch()">{{ 'Search' | translate }}</button>
+          </div>
+        </div>
+        <div class="col-md-2">
+          <select class="form-select" [ngModel]="pageSize()" (ngModelChange)="changePageSize(+$event)">
+            <option [ngValue]="5">5</option>
+            <option [ngValue]="10">10</option>
+            <option [ngValue]="25">25</option>
+          </select>
+        </div>
+      </div>
+
+      @if (loading()) {
+        <div class="text-center py-5"><div class="spinner-border text-primary"></div></div>
+      } @else if (!categories().length) {
+        <app-empty-state [title]="'No categories found' | translate" [description]="'Create categories to classify sedans, SUVs, vans, and other rental vehicle types.' | translate" />
+      } @else {
+        <div class="table-responsive">
+          <table class="table table-striped align-middle">
+            <thead>
+              <tr>
+                <th>{{ 'Name (AR)' | translate }}</th>
+                <th>{{ 'Name (EN)' | translate }}</th>
+                <th>{{ 'Code' | translate }}</th>
+                <th>{{ 'Status' | translate }}</th>
+                <th class="text-end">{{ 'Actions' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (category of categories(); track category.id) {
+                <tr>
+                  <td>{{ category.nameAr }}</td>
+                  <td>{{ category.nameEn || '-' }}</td>
+                  <td>{{ category.code || '-' }}</td>
+                  <td>
+                    <app-status-badge [label]="category.isActive ? ('Active' | translate) : ('Inactive' | translate)" [tone]="category.isActive ? 'success' : 'secondary'" />
+                  </td>
+                  <td class="text-end">
+                    <a class="btn btn-sm btn-outline-primary" [routerLink]="['/category-vehicles', category.id, 'edit']">{{ 'Edit' | translate }}</a>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  </div>
+
+  @if (totalPages() > 1) {
+    <div class="row mt-3">
+      <div class="col-12 d-flex justify-content-center">
+        <nav>
+          <ul class="pagination mb-0">
+            @for (page of pageNumbers(); track page) {
+              <li class="page-item" [class.active]="page === pageNumber()">
+                <button class="page-link" type="button" (click)="goToPage(page)">{{ page }}</button>
+              </li>
+            }
+          </ul>
+        </nav>
+      </div>
+    </div>
+  }
+</div>
+

@@ -1,0 +1,26 @@
+<div class="container-fluid">
+  <app-page-header title="Booking Details" subtitle="Inspect reservation dates, customer, vehicle, and payment summary.">
+    <a class="btn btn-outline-secondary" routerLink="/booking">Back to Bookings</a>
+  </app-page-header>
+
+  <div class="card">
+    <div class="card-body">
+      @if (loading()) {
+        <div class="text-center py-5"><div class="spinner-border text-primary"></div></div>
+      } @else if (booking(); as item) {
+        <div class="row g-3">
+          <div class="col-md-6"><strong>Booking #:</strong> {{ item.bookingNumber || item.id }}</div>
+          <div class="col-md-6"><strong>Status:</strong> <app-status-badge [label]="item.status" [tone]="item.status === 'Completed' ? 'success' : item.status === 'Cancelled' ? 'danger' : 'info'" /></div>
+          <div class="col-md-6"><strong>Customer:</strong> {{ item.customerName || item.customerId }}</div>
+          <div class="col-md-6"><strong>Vehicle:</strong> {{ item.vehicleName || item.vehicleId }}</div>
+          <div class="col-md-6"><strong>Branch:</strong> {{ item.branchName || '-' }}</div>
+          <div class="col-md-6"><strong>Dates:</strong> {{ item.startDate | date:'mediumDate' }} - {{ item.endDate | date:'mediumDate' }}</div>
+          <div class="col-md-6"><strong>Total Amount:</strong> {{ item.totalAmount ?? 0 }}</div>
+          <div class="col-md-6"><strong>Paid Amount:</strong> {{ item.paidAmount ?? 0 }}</div>
+          <div class="col-md-12"><strong>Notes:</strong> {{ item.notes || '-' }}</div>
+        </div>
+      }
+    </div>
+  </div>
+</div>
+

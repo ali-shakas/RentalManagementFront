@@ -1,0 +1,8 @@
+<li class="onhover-dropdown">
+  <div class="app-menu" (click)="openmenu()">
+    <i data-feather="folder-plus"></i>
+  </div>
+  <ul class="onhover-show-div left-dropdown" [class.active]="open">
+    <li><a [routerLink]="['/dashboard']">Sample Page</a></li>
+  </ul>
+</li>

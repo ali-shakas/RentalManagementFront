@@ -1,0 +1,38 @@
+<div class="container-fluid">
+  <app-page-header title="Customer Details" subtitle="Review profile, contact, and license information.">
+    <div class="d-flex gap-2">
+      <a class="btn btn-outline-secondary" routerLink="/customers">Back</a>
+      @if (customer(); as item) {
+        <a class="btn btn-primary" [routerLink]="['/customers', item.id, 'edit']">Edit Customer</a>
+      }
+    </div>
+  </app-page-header>
+
+  <div class="card">
+    <div class="card-body">
+      @if (loading()) {
+        <div class="text-center py-5"><div class="spinner-border text-primary"></div></div>
+      } @else if (customer(); as item) {
+        <div class="row g-4">
+          <div class="col-lg-4">
+            @if (imageUrl()) {
+              <img class="img-fluid rounded border" [src]="imageUrl()" alt="customer" />
+            }
+          </div>
+          <div class="col-lg-8">
+            <div class="row g-3">
+              <div class="col-md-6"><strong>Name:</strong> {{ item.fullName }}</div>
+              <div class="col-md-6"><strong>Email:</strong> {{ item.email || '-' }}</div>
+              <div class="col-md-6"><strong>Phone:</strong> {{ item.phoneNumber || '-' }}</div>
+              <div class="col-md-6"><strong>Identity:</strong> {{ item.identityNumber || '-' }}</div>
+              <div class="col-md-6"><strong>License:</strong> {{ item.drivingLicenseNumber || '-' }}</div>
+              <div class="col-md-6"><strong>Nationality:</strong> {{ item.nationality || '-' }}</div>
+              <div class="col-md-12"><strong>Address:</strong> {{ item.address || '-' }}</div>
+              <div class="col-md-12"><strong>Status:</strong> <app-status-badge [label]="item.isActive ? 'Active' : 'Inactive'" [tone]="item.isActive ? 'success' : 'secondary'" /></div>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div>

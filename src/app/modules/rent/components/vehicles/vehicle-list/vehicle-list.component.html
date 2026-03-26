@@ -1,0 +1,65 @@
+<div class="container-fluid">
+  <app-page-header [title]="'Vehicles' | translate" [subtitle]="'Operational fleet vehicles with status, pricing, assignment, and media support.' | translate">
+    <a class="btn btn-primary" routerLink="/vehicles/create">{{ 'Create Vehicle' | translate }}</a>
+  </app-page-header>
+
+  <div class="card">
+    <div class="card-body">
+      <div class="row g-3 mb-3">
+        <div class="col-md-6">
+          <div class="input-group">
+            <input class="form-control" [placeholder]="'Search vehicles...' | translate" [ngModel]="search()" (ngModelChange)="search.set($event)" (keyup.enter)="load()" />
+            <button class="btn btn-outline-secondary" type="button" (click)="load()">{{ 'Search' | translate }}</button>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <select class="form-select" [ngModel]="status()" (ngModelChange)="status.set($event); load()">
+            <option [ngValue]="''">{{ 'All statuses' | translate }}</option>
+            <option [ngValue]="'Available'">{{ 'Available' | translate }}</option>
+            <option [ngValue]="'Booked'">{{ 'Booked' | translate }}</option>
+            <option [ngValue]="'Maintenance'">{{ 'Maintenance' | translate }}</option>
+            <option [ngValue]="'Inactive'">{{ 'Inactive' | translate }}</option>
+          </select>
+        </div>
+      </div>
+
+      @if (loading()) {
+        <div class="text-center py-5"><div class="spinner-border text-primary"></div></div>
+      } @else if (!vehicles().length) {
+        <app-empty-state [title]="'No vehicles found' | translate" [description]="'Add vehicles to start managing bookings and fleet availability.' | translate" />
+      } @else {
+        <div class="table-responsive">
+          <table class="table table-striped align-middle">
+            <thead>
+              <tr>
+                <th>{{ 'Vehicle' | translate }}</th>
+                <th>{{ 'Plate' | translate }}</th>
+                <th>{{ 'Branch' | translate }}</th>
+                <th>{{ 'Daily Rate' | translate }}</th>
+                <th>{{ 'Status' | translate }}</th>
+                <th class="text-end">{{ 'Actions' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (vehicle of vehicles(); track vehicle.id) {
+                <tr>
+                  <td>{{ vehicle.make }} {{ vehicle.model }} ({{ vehicle.year }})</td>
+                  <td>{{ vehicle.plateNumber }}</td>
+                  <td>{{ vehicle.branchName || '-' }}</td>
+                  <td>{{ vehicle.dailyRate ?? 0 }}</td>
+                  <td><app-status-badge [label]="vehicle.status | translate" [tone]="vehicle.status === 'Available' ? 'success' : vehicle.status === 'Booked' ? 'warning' : vehicle.status === 'Maintenance' ? 'danger' : 'secondary'" /></td>
+                  <td class="text-end">
+                    <a class="btn btn-sm btn-outline-info me-2" [routerLink]="['/vehicles', vehicle.id, 'details']">{{ 'Details' | translate }}</a>
+                    <a class="btn btn-sm btn-outline-primary me-2" [routerLink]="['/vehicles', vehicle.id, 'edit']">{{ 'Edit' | translate }}</a>
+                    <a class="btn btn-sm btn-outline-secondary" [routerLink]="['/vehicles', vehicle.id, 'gallery']">{{ 'Gallery' | translate }}</a>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  </div>
+</div>
+

@@ -1,0 +1,169 @@
+<div class="container-fluid">
+  <app-page-header [title]="'Dashboard' | translate" [subtitle]="'Operational overview for admins, fleet managers, and staff.' | translate">
+    <div class="d-flex flex-wrap gap-2">
+      <a class="btn btn-primary" routerLink="/users/create">{{ 'New User' | translate }}</a>
+      <a class="btn btn-light" routerLink="/booking/create">{{ 'New Booking' | translate }}</a>
+      <a class="btn btn-light" routerLink="/vehicles/create">{{ 'Add Vehicle' | translate }}</a>
+    </div>
+  </app-page-header>
+
+  @if (loadIssue()) {
+    <div class="alert alert-warning mb-4" role="alert">
+      {{ loadIssue() }}
+    </div>
+  }
+
+  <div class="row g-3 mb-4">
+    <div class="col-xl-2 col-md-4 col-sm-6">
+      <div class="card h-100"><div class="card-body"><div class="text-muted small">{{ 'Users' | translate }}</div><div class="fs-4 fw-semibold">{{ counts().users }}</div></div></div>
+    </div>
+    <div class="col-xl-2 col-md-4 col-sm-6">
+      <div class="card h-100"><div class="card-body"><div class="text-muted small">{{ 'Roles' | translate }}</div><div class="fs-4 fw-semibold">{{ counts().roles }}</div></div></div>
+    </div>
+    <div class="col-xl-2 col-md-4 col-sm-6">
+      <div class="card h-100"><div class="card-body"><div class="text-muted small">{{ 'Privileges' | translate }}</div><div class="fs-4 fw-semibold">{{ counts().privileges }}</div></div></div>
+    </div>
+    <div class="col-xl-2 col-md-4 col-sm-6">
+      <div class="card h-100"><div class="card-body"><div class="text-muted small">{{ 'Fleets' | translate }}</div><div class="fs-4 fw-semibold">{{ counts().fleets }}</div></div></div>
+    </div>
+    <div class="col-xl-2 col-md-4 col-sm-6">
+      <div class="card h-100"><div class="card-body"><div class="text-muted small">{{ 'Branches' | translate }}</div><div class="fs-4 fw-semibold">{{ counts().branches }}</div></div></div>
+    </div>
+    <div class="col-xl-2 col-md-4 col-sm-6">
+      <div class="card h-100"><div class="card-body"><div class="text-muted small">{{ 'Vehicles' | translate }}</div><div class="fs-4 fw-semibold">{{ totalVehicles() }}</div></div></div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-lg-4">
+      <div class="card h-100">
+        <div class="card-header pb-0">
+          <h4>{{ 'Latest Users' | translate }}</h4>
+          <span>{{ 'Recent user records from the seeded environment' | translate }}</span>
+        </div>
+        <div class="card-body">
+          @if (loading()) {
+            <div class="text-center py-4"><div class="spinner-border text-primary"></div></div>
+          } @else {
+            <div class="list-group list-group-flush">
+              @for (user of latestUsers(); track user.id) {
+                <a class="list-group-item list-group-item-action px-0" [routerLink]="['/users/edit', user.id]">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                      <div class="fw-semibold">{{ user.userName }}</div>
+                      <div class="text-muted small">{{ user.email || user.nameAr || '-' }}</div>
+                    </div>
+                    <app-status-badge [label]="(user.isActive ? 'Active' : 'Inactive') | translate" [tone]="user.isActive ? 'success' : 'secondary'" />
+                  </div>
+                </a>
+              } @empty {
+                <div class="text-muted">{{ 'No users available.' | translate }}</div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card h-100">
+        <div class="card-header pb-0">
+          <h4>{{ 'User Distribution' | translate }}</h4>
+          <span>{{ 'Active versus inactive users in the current dataset' | translate }}</span>
+        </div>
+        <div class="card-body">
+          <div class="d-flex justify-content-between border rounded p-3 mb-3">
+            <span>{{ 'Active Users' | translate }}</span>
+            <strong>{{ userDistribution().active }}</strong>
+          </div>
+          <div class="d-flex justify-content-between border rounded p-3">
+            <span>{{ 'Inactive Users' | translate }}</span>
+            <strong>{{ userDistribution().inactive }}</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card h-100">
+        <div class="card-header pb-0">
+          <h4>{{ 'Quick Actions' | translate }}</h4>
+          <span>{{ 'Common operational shortcuts' | translate }}</span>
+        </div>
+        <div class="card-body d-grid gap-2">
+          <a class="btn btn-outline-primary text-start" routerLink="/users/create">{{ 'Create user' | translate }}</a>
+          <a class="btn btn-outline-primary text-start" routerLink="/roles/create">{{ 'Create role' | translate }}</a>
+          <a class="btn btn-outline-primary text-start" routerLink="/vehicles/create">{{ 'Add vehicle' | translate }}</a>
+          <a class="btn btn-outline-primary text-start" routerLink="/customers/create">{{ 'Add customer' | translate }}</a>
+          <a class="btn btn-outline-primary text-start" routerLink="/booking/create">{{ 'Create booking' | translate }}</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mb-3">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header pb-0">
+          <h3>{{ 'Dashboard' | translate }}</h3>
+          <span>{{ 'Vehicle group summary' | translate }}</span>
+        </div>
+        <div class="card-body">
+          @if (loading()) {
+            <p class="mb-0">{{ 'Loading summary...' | translate }}</p>
+          } @else {
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <div class="border rounded p-3 h-100">
+                  <div class="text-muted small">{{ 'Active Groups' | translate }}</div>
+                  <div class="fs-4 fw-semibold">{{ totalGroups() }}</div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="border rounded p-3 h-100">
+                  <div class="text-muted small">{{ 'Total Vehicles' | translate }}</div>
+                  <div class="fs-4 fw-semibold">{{ totalVehicles() }}</div>
+                </div>
+              </div>
+            </div>
+
+            @if (groups().length === 0) {
+              <p class="mb-0">{{ 'No active groups found.' | translate }}</p>
+            } @else {
+              <div class="table-responsive">
+                <table class="table table-striped mb-0">
+                  <thead>
+                    <tr>
+                      <th>{{ 'Group' | translate }}</th>
+                      <th>{{ 'Category' | translate }}</th>
+                      <th class="text-end">{{ 'Count' | translate }}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (group of groups(); track group.groupName) {
+                      @if (group.categories.length === 0) {
+                        <tr>
+                          <td>{{ group.groupName || '-' }}</td>
+                          <td>-</td>
+                          <td class="text-end">0</td>
+                        </tr>
+                      } @else {
+                        @for (category of group.categories; track category.categoryName) {
+                          <tr>
+                            <td>{{ group.groupName || '-' }}</td>
+                            <td>{{ category.categoryName || ('Uncategorized' | translate) }}</td>
+                            <td class="text-end">{{ category.vehicleCount || 0 }}</td>
+                          </tr>
+                        }
+                      }
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

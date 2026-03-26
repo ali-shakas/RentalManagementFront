@@ -1,0 +1,119 @@
+import { Injectable } from '@angular/core';
+import { BehaviorSubject } from 'rxjs';
+
+import { ADMIN_ROLES, APP_PRIVILEGES } from '../../../core/auth/access.constants';
+
+export interface Menu {
+  headTitle1?: string;
+  level?: number;
+  path?: string;
+  title?: string;
+  icon?: string;
+  imageIcon?: string;
+  type?: string;
+  active?: boolean;
+  id?: number;
+  bookmark?: boolean;
+  children?: Menu[];
+  horizontalList?: boolean;
+  items?: Menu[];
+  roles?: string[];
+  privileges?: string[];
+  badge?: number;
+}
+
+@Injectable({
+  providedIn: 'root',
+})
+export class NavMenuService {
+  public isDisplay: boolean = false;
+  public language: boolean = false;
+  public isShow: boolean = false;
+  public search!: boolean;
+
+  MENUITEMS: Menu[] = [
+    { headTitle1: 'Dashboard' },
+    {
+      level: 1,
+      path: '/dashboard',
+      title: 'Dashboard',
+      icon: 'sample-page',
+      imageIcon: 'assets/images/rent_icon/dashboard.png',
+      type: 'link',
+      bookmark: true,
+    },
+    { headTitle1: 'Operations' },
+    {
+      level: 1,
+      path: '/booking',
+      title: 'Booking',
+      icon: 'sample-page',
+      imageIcon: 'assets/images/rent_icon/Booking.png',
+      type: 'link',
+      privileges: [APP_PRIVILEGES.booking],
+    },
+    {
+      level: 1,
+      path: '/customers',
+      title: 'Customers',
+      icon: 'sample-page',
+      imageIcon: 'assets/images/rent_icon/Customers.png',
+      type: 'link',
+      privileges: [APP_PRIVILEGES.customer],
+    },
+    { headTitle1: 'Management' },
+    {
+      level: 1,
+      path: '/vehicles',
+      title: 'Vehicles',
+      icon: 'sample-page',
+      imageIcon: 'assets/images/rent_icon/Vehicles.png',
+      type: 'link',
+      privileges: [APP_PRIVILEGES.vehicle],
+    },
+    {
+      level: 1,
+      path: '/fleet',
+      title: 'Fleet',
+      icon: 'sample-page',
+      imageIcon: 'assets/images/rent_icon/Fleet.png',
+      type: 'link',
+      privileges: [APP_PRIVILEGES.vehicle],
+    },
+    {
+      level: 1,
+      path: '/branches',
+      title: 'Branches',
+      icon: 'sample-page',
+      imageIcon: 'assets/images/rent_icon/Branches.png',
+      type: 'link',
+      privileges: [APP_PRIVILEGES.vehicle],
+    },
+    {
+      level: 1,
+      path: '/category-vehicles',
+      title: 'Category Vehicles',
+      icon: 'sample-page',
+      imageIcon: 'assets/images/rent_icon/car-rent.png',
+      type: 'link',
+      privileges: [APP_PRIVILEGES.vehicle],
+    },
+    { headTitle1: 'Security' },
+    {
+      level: 1,
+      title: 'Security',
+      icon: 'sample-page',
+      imageIcon: 'assets/images/rent_icon/Security.png',
+      type: 'sub',
+      roles: ADMIN_ROLES,
+      children: [
+        { path: '/users', title: 'Users', type: 'link', icon: 'sample-page', imageIcon: 'assets/images/rent_icon/users.png', roles: ADMIN_ROLES },
+        { path: '/roles', title: 'Roles', type: 'link', icon: 'sample-page', imageIcon: 'assets/images/rent_icon/Roles.png', roles: ADMIN_ROLES },
+        { path: '/privileges', title: 'Privileges', type: 'link', icon: 'sample-page', imageIcon: 'assets/images/rent_icon/Privileges.png', roles: ADMIN_ROLES },
+        { path: '/security', title: 'My Access', type: 'link', icon: 'sample-page', imageIcon: 'assets/images/rent_icon/My_Access.png', roles: ADMIN_ROLES },
+      ],
+    },
+  ];
+
+  item = new BehaviorSubject<Menu[]>(this.MENUITEMS);
+}

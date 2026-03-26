@@ -1,0 +1,324 @@
+/* You can add global styles to this file, and also import other style files */
+@import '../public/assets/scss/app.scss';
+
+:root {
+  --app-font-family: 'Cairo', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-size-h1: 1.75rem;
+  --font-size-h2: 1.375rem;
+  --font-size-h3: 1.125rem;
+  --font-size-body: 0.9375rem;
+  --font-size-body-sm: 0.8125rem;
+  --font-size-button: 0.9375rem;
+  --font-size-sidebar: 0.875rem;
+  --line-height-body: 1.65;
+  --line-height-heading: 1.45;
+  --letter-spacing-body: 0.01em;
+  --letter-spacing-heading: 0;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+}
+
+html {
+  font-size: 16px;
+}
+
+body,
+button,
+input,
+select,
+textarea,
+table,
+th,
+td,
+.btn,
+.form-control,
+.form-select,
+.dropdown-item,
+.nav-link,
+.breadcrumb,
+.card,
+.page-body,
+.sidebar-wrapper,
+.page-header,
+.modal-content,
+.swal2-popup {
+  font-family: var(--app-font-family) !important;
+}
+
+body {
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-body);
+  letter-spacing: var(--letter-spacing-body);
+  font-weight: var(--font-weight-regular);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: 'kern' 1, 'liga' 1, 'tnum' 1;
+}
+
+h1,
+.h1,
+.page-title h3,
+.page-header h1 {
+  font-size: var(--font-size-h1);
+  line-height: var(--line-height-heading);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-heading);
+}
+
+h2,
+.h2,
+.card-header h4,
+.modal-title {
+  font-size: var(--font-size-h2);
+  line-height: var(--line-height-heading);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-heading);
+}
+
+h3,
+.h3,
+h4,
+.h4,
+h5,
+.h5,
+h6,
+.h6,
+.card-header h5,
+.page-header .breadcrumb {
+  font-size: var(--font-size-h3);
+  line-height: 1.5;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-heading);
+}
+
+p,
+span,
+label,
+.form-label,
+.form-check-label,
+.form-text,
+.text-muted,
+.dropdown-item,
+.page-body,
+.card-body,
+.table,
+.breadcrumb-item,
+.nav-link {
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-body);
+}
+
+small,
+.small,
+.form-text,
+.text-small,
+.badge {
+  font-size: var(--font-size-body-sm);
+  line-height: 1.55;
+}
+
+.btn,
+button,
+input,
+select,
+textarea {
+  font-size: var(--font-size-button);
+  line-height: 1.5;
+}
+
+.btn {
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0.01em;
+}
+
+.form-label,
+th,
+thead th,
+.table thead th {
+  font-weight: var(--font-weight-semibold);
+}
+
+.table,
+.table td,
+.table th {
+  font-size: var(--font-size-body);
+  line-height: 1.6;
+  vertical-align: middle;
+}
+
+.table thead th {
+  font-size: 0.875rem;
+  letter-spacing: 0.015em;
+}
+
+.sidebar-wrapper .sidebar-link,
+.sidebar-wrapper .submenu-title,
+.sidebar-wrapper .sidebar-main-title h6,
+.sidebar-wrapper .sidebar-submenu a,
+.sidebar-wrapper .according-menu {
+  font-family: var(--app-font-family) !important;
+}
+
+.sidebar-wrapper .sidebar-link,
+.sidebar-wrapper .submenu-title,
+.sidebar-wrapper .sidebar-submenu a {
+  font-size: var(--font-size-sidebar);
+  line-height: 1.6;
+}
+
+.sidebar-wrapper .sidebar-link span,
+.sidebar-wrapper .sidebar-submenu a {
+  font-weight: var(--font-weight-medium);
+}
+
+.sidebar-wrapper .sidebar-main-title h6 {
+  font-size: 0.75rem;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.04em;
+}
+
+.page-header .header-wrapper .nav-right > ul > li,
+.page-header .header-wrapper .nav-right > ul > li span,
+.page-header .header-wrapper .profile-media .flex-grow-1 span,
+.page-header .header-wrapper .profile-media .flex-grow-1 p {
+  font-size: var(--font-size-body);
+}
+
+.card-header h4,
+.card-header h5,
+.card-header h6,
+.page-header h4,
+.page-header h5 {
+  margin-bottom: 0.25rem;
+}
+
+html[dir='rtl'] body {
+  font-feature-settings: 'kern' 1, 'liga' 1, 'tnum' 1;
+}
+
+html[dir='rtl'] body {
+  direction: rtl;
+}
+
+html[dir='rtl'] .page-body,
+html[dir='rtl'] .card,
+html[dir='rtl'] .table,
+html[dir='rtl'] .breadcrumb,
+html[dir='rtl'] .modal-body,
+html[dir='rtl'] .modal-title,
+html[dir='rtl'] .form-label,
+html[dir='rtl'] .form-control,
+html[dir='rtl'] .form-select,
+html[dir='rtl'] input,
+html[dir='rtl'] textarea,
+html[dir='rtl'] select,
+html[dir='rtl'] th,
+html[dir='rtl'] td {
+  text-align: right;
+}
+
+html[dir='ltr'] .form-control,
+html[dir='ltr'] .form-select,
+html[dir='ltr'] input,
+html[dir='ltr'] textarea,
+html[dir='ltr'] select,
+html[dir='ltr'] th,
+html[dir='ltr'] td {
+  text-align: left;
+}
+
+.page-header .header-wrapper .nav-right .nav-menus > li.theme-nav {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.page-header .header-wrapper .nav-right .nav-menus > li.theme-nav app-theme {
+  display: inline-flex !important;
+}
+
+body.dark-only {
+  .table,
+  .table td,
+  .table th,
+  .table thead th,
+  .table tbody tr,
+  .table-striped > tbody > tr > td,
+  .table-striped > tbody > tr > th {
+    color: rgba(255, 255, 255, 0.92) !important;
+  }
+
+  .table thead th {
+    color: #ffffff !important;
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .table td .text-muted,
+  .table th .text-muted,
+  .table .text-muted,
+  .table small,
+  .table .small {
+    color: rgba(255, 255, 255, 0.72) !important;
+  }
+
+  .table-striped > tbody > tr:nth-of-type(odd) > * {
+    color: rgba(255, 255, 255, 0.94) !important;
+  }
+
+  .table-striped > tbody > tr:nth-of-type(even) > * {
+    color: rgba(255, 255, 255, 0.9) !important;
+  }
+
+  .table-hover > tbody > tr:hover > * {
+    color: #ffffff !important;
+  }
+
+  .table-responsive {
+    border-radius: 12px;
+  }
+}
+
+@media (max-width: 991.98px) {
+  :root {
+    --font-size-h1: 1.5rem;
+    --font-size-h2: 1.25rem;
+    --font-size-h3: 1.0625rem;
+    --font-size-body: 0.875rem;
+    --font-size-sidebar: 0.84375rem;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .page-header .header-wrapper .nav-right.right-header {
+    display: block !important;
+    width: auto;
+    min-width: 0;
+  }
+
+  .page-header .header-wrapper .nav-right .nav-menus {
+    display: flex !important;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: nowrap;
+  }
+
+  .page-header .header-wrapper .nav-right .nav-menus > li.language-nav {
+    display: flex !important;
+    align-items: center;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  .page-header .header-wrapper .nav-right .nav-menus > li.language-nav .translate_wrapper {
+    display: block !important;
+  }
+
+  .page-header .header-wrapper .nav-right .nav-menus > li.theme-nav {
+    display: inline-flex !important;
+  }
+}

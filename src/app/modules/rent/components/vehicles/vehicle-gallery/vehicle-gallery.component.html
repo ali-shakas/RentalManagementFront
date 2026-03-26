@@ -1,0 +1,16 @@
+<div class="container-fluid">
+  <app-page-header title="Vehicle Gallery" subtitle="Image review area for the selected vehicle.">
+    <a class="btn btn-outline-secondary" routerLink="/vehicles">Back</a>
+  </app-page-header>
+
+  <div class="card">
+    <div class="card-body text-center">
+      @if (imageUrl()) {
+        <img class="img-fluid rounded border" [src]="imageUrl()" alt="vehicle gallery" />
+      } @else {
+        <div class="text-muted">No image available for this vehicle.</div>
+      }
+    </div>
+  </div>
+</div>
+

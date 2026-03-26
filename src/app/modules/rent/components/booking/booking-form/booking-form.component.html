@@ -1,0 +1,161 @@
+<div class="container-fluid">
+  <app-page-header [title]="'Create Booking' | translate" [subtitle]="'Select customer and vehicle, validate dates, then confirm the reservation.' | translate">
+    <a class="btn btn-outline-primary" routerLink="/customers/create">{{ 'Create Customer' | translate }}</a>
+    <a class="btn btn-outline-primary" routerLink="/vehicles/create">{{ 'Create Vehicle' | translate }}</a>
+    <a class="btn btn-outline-secondary" routerLink="/booking">{{ 'Back to Bookings' | translate }}</a>
+  </app-page-header>
+
+  <div class="card">
+    <div class="card-body">
+      <form [formGroup]="form" (ngSubmit)="save()">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">{{ 'Customer' | translate }} <span class="text-danger">*</span></label>
+            <select class="form-select" formControlName="customerId">
+              <option value="">{{ 'Select customer' | translate }}</option>
+              @for (customer of customers(); track customer.id) {
+                <option [value]="customer.id">{{ customer.fullName }}</option>
+              }
+            </select>
+            <div class="form-text">{{ 'Hint Booking Customer' | translate }}</div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">{{ 'Vehicle' | translate }} <span class="text-danger">*</span></label>
+            <select class="form-select" formControlName="vehicleId">
+              <option value="">{{ 'Select vehicle' | translate }}</option>
+              @for (vehicle of vehicles(); track vehicle.id) {
+                <option [value]="vehicle.id">{{ vehicle.make }} {{ vehicle.model }} - {{ vehicle.plateNumber }}</option>
+              }
+            </select>
+            <div class="form-text">{{ 'Hint Booking Vehicle' | translate }}</div>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">{{ 'Branch ID' | translate }} <span class="text-danger">*</span></label>
+            <input class="form-control" type="number" min="1" formControlName="branchId" />
+            <div class="form-text">{{ 'Hint Booking Branch' | translate }}</div>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">{{ 'Start Date' | translate }} <span class="text-danger">*</span></label>
+            <input class="form-control" type="date" formControlName="startDate" />
+            <div class="form-text">{{ 'Hint Booking Start Date' | translate }}</div>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">{{ 'End Date' | translate }} <span class="text-danger">*</span></label>
+            <input class="form-control" type="date" formControlName="endDate" />
+            <div class="form-text">{{ 'Hint Booking End Date' | translate }}</div>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">{{ 'Vehicle Return Date' | translate }} <span class="text-danger">*</span></label>
+            <input class="form-control" type="date" formControlName="dateReturnVehical" />
+            <div class="form-text">{{ 'Hint Booking Return Date' | translate }}</div>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">{{ 'Total Amount' | translate }}</label>
+            <input class="form-control" type="number" min="0" formControlName="total" [placeholder]="'Example Amount Zero' | translate" />
+            <div class="form-text">{{ 'Hint Booking Total' | translate }}</div>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">{{ 'Daily Price' | translate }}</label>
+            <input class="form-control" type="number" min="0" formControlName="priceInDay" [placeholder]="'Example Amount Zero' | translate" />
+            <div class="form-text">{{ 'Hint Booking Daily Price' | translate }}</div>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">{{ 'Monthly Price' | translate }}</label>
+            <input class="form-control" type="number" min="0" formControlName="priceInMonth" [placeholder]="'Example Amount Zero' | translate" />
+            <div class="form-text">{{ 'Hint Booking Monthly Price' | translate }}</div>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">{{ 'Discount' | translate }}</label>
+            <input class="form-control" type="number" min="0" formControlName="discount" [placeholder]="'Example Amount Zero' | translate" />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">{{ 'Allowed Distance' | translate }}</label>
+            <input class="form-control" type="number" min="0" formControlName="allowTo" [placeholder]="'Example Distance Zero' | translate" />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">{{ 'Extra KM Count' | translate }}</label>
+            <input class="form-control" type="number" min="0" formControlName="countKMExtra" [placeholder]="'Example Distance Zero' | translate" />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">{{ 'Extra Hour Price' | translate }}</label>
+            <input class="form-control" type="number" min="0" formControlName="priceHoureExtra" [placeholder]="'Example Amount Zero' | translate" />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">{{ 'Extra KM Price' | translate }}</label>
+            <input class="form-control" type="number" min="0" formControlName="priceKmExtra" [placeholder]="'Example Amount Zero' | translate" />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">{{ 'Other Expenses' | translate }}</label>
+            <input class="form-control" type="number" min="0" formControlName="otherExpenses" [placeholder]="'Example Amount Zero' | translate" />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">{{ 'Traffic Total' | translate }}</label>
+            <input class="form-control" type="number" min="0" formControlName="totalTrafic" [placeholder]="'Example Amount Zero' | translate" />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">{{ 'Maintenance Total' | translate }}</label>
+            <input class="form-control" type="number" min="0" formControlName="totalMaintance" [placeholder]="'Example Amount Zero' | translate" />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">{{ 'Received Vehicle Total' | translate }}</label>
+            <input class="form-control" type="number" min="0" formControlName="totalReceivedVehicle" [placeholder]="'Example Amount Zero' | translate" />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">{{ 'Transportation Fees' | translate }}</label>
+            <input class="form-control" type="number" min="0" formControlName="transportationFees" [placeholder]="'Example Amount Zero' | translate" />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">{{ 'Total Tax' | translate }}</label>
+            <input class="form-control" type="number" min="0" formControlName="totaltax" [placeholder]="'Example Amount Zero' | translate" />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">{{ 'Travelled Distance GPS' | translate }}</label>
+            <input class="form-control" formControlName="distancetraveledgps" maxlength="100" [placeholder]="'Example GPS Distance' | translate" />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">{{ 'Checkout Counter' | translate }}</label>
+            <input class="form-control" type="number" min="0" formControlName="checkoutCounter" [placeholder]="'Example Distance Zero' | translate" />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">{{ 'Checkin Counter' | translate }}</label>
+            <input class="form-control" type="number" min="0" formControlName="checkinCounter" [placeholder]="'Example Distance Zero' | translate" />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">{{ 'Count Of Days' | translate }}</label>
+            <input class="form-control" type="number" min="0" formControlName="countOfDay" [placeholder]="'Example Count Zero' | translate" />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">{{ 'Excess Hours Count' | translate }}</label>
+            <input class="form-control" type="number" min="0" formControlName="numberOfHoursExcess" [placeholder]="'Example Count Zero' | translate" />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">{{ 'Excess KM Count' | translate }}</label>
+            <input class="form-control" type="number" min="0" formControlName="numberKmExcess" [placeholder]="'Example Count Zero' | translate" />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">{{ 'Excess Days Count' | translate }}</label>
+            <input class="form-control" type="number" min="0" formControlName="dayExcess" [placeholder]="'Example Count Zero' | translate" />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">{{ 'Usage Place' | translate }}</label>
+            <input class="form-control" formControlName="placeUSE" maxlength="200" [placeholder]="'Example Usage Place' | translate" />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">{{ 'Basame Booking Number' | translate }}</label>
+            <input class="form-control" formControlName="numberBookingINBasame" maxlength="10" [placeholder]="'Example Basame Booking Number' | translate" />
+          </div>
+          <div class="col-12">
+            <label class="form-label">{{ 'Notes' | translate }}</label>
+            <textarea class="form-control" rows="4" formControlName="note" [placeholder]="'Example Booking Notes' | translate"></textarea>
+          </div>
+        </div>
+
+        <div class="mt-4 d-flex gap-2">
+          <button class="btn btn-primary" type="submit" [disabled]="loading()">{{ 'Create Booking' | translate }}</button>
+          <a class="btn btn-light" routerLink="/booking">{{ 'Cancel' | translate }}</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+

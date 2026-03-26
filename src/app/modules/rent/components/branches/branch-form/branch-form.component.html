@@ -1,0 +1,74 @@
+<div class="container-fluid">
+  <app-page-header
+    [title]="isEdit() ? ('Edit Branch' | translate) : ('Create Branch' | translate)"
+    [subtitle]="'Maintain branch identity, code, and operational activation status.' | translate"
+  >
+    <a class="btn btn-outline-secondary" routerLink="/branches">{{ 'Back' | translate }}</a>
+  </app-page-header>
+
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+          <form [formGroup]="form" (ngSubmit)="onSubmit()">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">{{ 'FleetId' | translate }} <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" formControlName="fleetId" [placeholder]="'Example Fleet ID' | translate" />
+                <div class="form-text">{{ 'Hint Fleet ID' | translate }}</div>
+                @if (form.get('fleetId')?.invalid && form.get('fleetId')?.touched) {
+                  <div class="text-danger small">{{ 'FleetId is required' | translate }}</div>
+                }
+              </div>
+
+              <div class="col-md-6 d-flex align-items-end">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="isActive" formControlName="isActive" />
+                  <label class="form-check-label" for="isActive">{{ 'Active' | translate }}</label>
+                </div>
+                <div class="form-text ms-3">{{ 'Hint Branch Active' | translate }}</div>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">{{ 'Name (AR)' | translate }} <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" formControlName="nameAr" maxlength="255" [placeholder]="'Example Branch Arabic Name' | translate" />
+                <div class="form-text">{{ 'Hint Branch Arabic Name' | translate }}</div>
+                @if (form.get('nameAr')?.invalid && form.get('nameAr')?.touched) {
+                  <div class="text-danger small">{{ 'Arabic branch name is required and must be valid.' | translate }}</div>
+                }
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">{{ 'Name (EN)' | translate }}</label>
+                <input type="text" class="form-control" formControlName="nameEn" maxlength="255" [placeholder]="'Example Branch English Name' | translate" />
+                <div class="form-text">{{ 'Hint Branch English Name' | translate }}</div>
+                @if (form.get('nameEn')?.invalid && form.get('nameEn')?.touched) {
+                  <div class="text-danger small">{{ 'English branch name must be valid.' | translate }}</div>
+                }
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">{{ 'Code' | translate }}</label>
+                <input type="text" class="form-control" formControlName="code" maxlength="100" [placeholder]="'Example Branch Code' | translate" />
+                <div class="form-text">{{ 'Hint Branch Code' | translate }}</div>
+                @if (form.get('code')?.invalid && form.get('code')?.touched) {
+                  <div class="text-danger small">{{ 'Branch code must be valid.' | translate }}</div>
+                }
+              </div>
+            </div>
+
+            <div class="mt-4 d-flex gap-2">
+              <button class="btn btn-primary" type="submit" [disabled]="form.invalid || loading()">
+                @if (loading()) {
+                  <span class="spinner-border spinner-border-sm me-2"></span>
+                }
+                {{ isEdit() ? ('Update' | translate) : ('Create' | translate) }}
+              </button>
+              <a class="btn btn-outline-secondary" routerLink="/branches">{{ 'Cancel' | translate }}</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

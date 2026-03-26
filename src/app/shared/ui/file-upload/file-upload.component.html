@@ -1,0 +1,12 @@
+<div class="card upload-card">
+  <div class="card-body">
+    <label class="form-label d-block">{{ label }}</label>
+    <input class="form-control" type="file" [accept]="accept" (change)="onFileChange($event)" />
+
+    @if (localPreview() || previewUrl) {
+      <div class="upload-preview mt-3">
+        <img [src]="localPreview() || previewUrl" alt="preview" />
+      </div>
+    }
+  </div>
+</div>
