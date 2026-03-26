@@ -1,0 +1,40 @@
+html[dir='rtl'] .page-wrapper.compact-wrapper {
+  .sidebar-wrapper {
+    text-align: right;
+
+    .logo-wrapper,
+    .logo-icon-wrapper {
+      padding-inline: 16px;
+    }
+
+    .logo-wrapper a,
+    .logo-icon-wrapper a {
+      justify-content: center;
+    }
+  }
+}
+
+@media (max-width: 991.98px) {
+  html[dir='rtl'] .page-wrapper.compact-wrapper {
+    .page-body-wrapper {
+      .sidebar-wrapper {
+        inset-inline-start: auto;
+        inset-inline-end: 0;
+      }
+
+      .sidebar-wrapper.close_icon {
+        transform: translateX(100%);
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
+
+      .sidebar-wrapper:not(.close_icon) {
+        transform: translateX(0);
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+      }
+    }
+  }
+}

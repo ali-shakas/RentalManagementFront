@@ -68,8 +68,24 @@
                       </td>
                       <td>{{ rolesDisplay(user) }}</td>
                       <td>
-                        <a [routerLink]="['/users/edit', user.id]" class="btn btn-sm btn-outline-primary me-1">{{ 'Edit' | translate }}</a>
-                        <a [routerLink]="['/users', user.id, 'privileges']" class="btn btn-sm btn-outline-info">{{ 'Privileges' | translate }}</a>
+                        <div class="table-actions">
+                          <a
+                            [routerLink]="['/users/edit', user.id]"
+                            class="table-action-icon table-action-icon--primary"
+                            [attr.aria-label]="'Edit' | translate"
+                            [title]="'Edit' | translate"
+                          >
+                            <i class="fa-solid fa-pen-to-square"></i>
+                          </a>
+                          <a
+                            [routerLink]="['/users', user.id, 'privileges']"
+                            class="table-action-icon table-action-icon--info"
+                            [attr.aria-label]="'Privileges' | translate"
+                            [title]="'Privileges' | translate"
+                          >
+                            <i class="fa-solid fa-user-shield"></i>
+                          </a>
+                        </div>
                       </td>
                     </tr>
                   } @empty {

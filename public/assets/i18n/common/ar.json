@@ -206,6 +206,15 @@
   "Create Booking": "إضافة حجز",
   "Security": "الأمان",
   "My Access": "صلاحياتي",
+  "Footer.SystemName": "نظام إدارة تأجير المركبات",
+  "Footer.Copyright": "جميع الحقوق محفوظة",
+  "Footer.ProductArea": "لوحة الإدارة",
+  "Access Matrix": "مصفوفة الوصول",
+  "Operational Units": "الوحدات التشغيلية",
+  "Service Points": "نقاط الخدمة",
+  "Live Inventory": "المخزون الحالي",
+  "Currently available for operations": "متاحون حاليًا للتشغيل",
+  "Require review or activation": "تحتاج إلى مراجعة أو تفعيل",
 
   "Unknown": "غير معروف"
 }

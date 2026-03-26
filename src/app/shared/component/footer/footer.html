@@ -1,14 +1,17 @@
 <footer class="footer">
   <div class="container-fluid">
-    <div class="row align-items-center">
+    <div class="row align-items-center footer-shell">
       <div class="col-md-6 p-0 footer-copyright">
-        <div class="d-flex align-items-center gap-2">
-          <img src="assets/images/logo/logo-icon.png" alt="Vehicle Rental Management System" height="24" />
-          <p class="mb-0">Copyright {{ year }} © Vehicle Rental Management System</p>
+        <div class="footer-brand d-flex align-items-center gap-2">
+          <img src="assets/images/logo/logo-icon.png" [alt]="'Footer.SystemName' | translate" height="24" />
+          <div class="footer-copy">
+            <p class="mb-0">{{ 'Footer.SystemName' | translate }}</p>
+            <span>{{ 'Footer.Copyright' | translate }} {{ year }} ©</span>
+          </div>
         </div>
       </div>
-      <div class="col-md-6 p-0">
-        <p class="heart mb-0 text-md-end">Admin Dashboard</p>
+      <div class="col-md-6 p-0 footer-meta">
+        <p class="heart mb-0 text-md-end">{{ 'Footer.ProductArea' | translate }}</p>
       </div>
     </div>
   </div>

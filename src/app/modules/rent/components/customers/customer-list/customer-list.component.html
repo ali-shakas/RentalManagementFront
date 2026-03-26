@@ -47,8 +47,24 @@
                   <td>{{ customer.email || '-' }}</td>
                   <td><app-status-badge [label]="customer.isActive ? ('Active' | translate) : ('Inactive' | translate)" [tone]="customer.isActive ? 'success' : 'secondary'" /></td>
                   <td class="text-end">
-                    <a class="btn btn-sm btn-outline-info me-2" [routerLink]="['/customers', customer.id, 'details']">{{ 'Details' | translate }}</a>
-                    <a class="btn btn-sm btn-outline-primary" [routerLink]="['/customers', customer.id, 'edit']">{{ 'Edit' | translate }}</a>
+                    <div class="table-actions">
+                      <a
+                        class="table-action-icon table-action-icon--info"
+                        [routerLink]="['/customers', customer.id, 'details']"
+                        [attr.aria-label]="'Details' | translate"
+                        [title]="'Details' | translate"
+                      >
+                        <i class="fa-solid fa-eye"></i>
+                      </a>
+                      <a
+                        class="table-action-icon table-action-icon--primary"
+                        [routerLink]="['/customers', customer.id, 'edit']"
+                        [attr.aria-label]="'Edit' | translate"
+                        [title]="'Edit' | translate"
+                      >
+                        <i class="fa-solid fa-pen-to-square"></i>
+                      </a>
+                    </div>
                   </td>
                 </tr>
               }

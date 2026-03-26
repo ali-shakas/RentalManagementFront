@@ -146,6 +146,10 @@ export class Sidebar implements OnInit {
     }
 
     this.router.navigateByUrl(item.path);
+
+    if (window.innerWidth < 992) {
+      this.navServices.isDisplay = true;
+    }
   }
 
   isRouteActive(path?: string): boolean {
