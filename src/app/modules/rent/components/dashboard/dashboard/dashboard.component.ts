@@ -5,8 +5,9 @@ import { RouterLink } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { catchError, forkJoin, of } from 'rxjs';
 
+import { PaginatedAggregatorResponse } from '../../../../../core/interfaces';
 import { AuthStateService } from '../../../../../core/auth/auth-state.service';
-import { Branch, PaginatedResponse, User, Vehicle, VehicleGroupSummary } from '../../../models';
+import { Branch, User, Vehicle, VehicleGroupSummary } from '../../../models';
 import { BranchService } from '../../../services/branches/branch.service';
 import { FleetService } from '../../../services/fleet/fleet.service';
 import { PrivilegeService } from '../../../services/privileges/privilege.service';
@@ -63,7 +64,7 @@ export class DashboardComponent implements OnInit {
     this.loading.set(true);
     this.loadIssue.set(null);
     const fleetId = this.authState.fleetId() ?? '';
-    const emptyPage = <T>(items: T[] = []): PaginatedResponse<T> => ({
+    const emptyPage = <T>(items: T[] = []): PaginatedAggregatorResponse<T> => ({
       items,
       totalCount: items.length,
       pageNumber: 1,

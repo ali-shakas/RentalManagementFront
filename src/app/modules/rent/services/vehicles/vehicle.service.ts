@@ -1,9 +1,11 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 
+import { PaginatedAggregatorResponse } from '../../../../core/interfaces';
 import { BaseService } from '../../../../shared/services/base/base.service';
-import { Vehicle, VehicleFilters, VehicleUpsertRequest, PaginatedResponse } from '../../models';
-import { normalizePaginatedResponse, normalizeVehicle } from '../../../../shared/utils/api-normalizers';
+import { Vehicle, VehicleFilters, VehicleUpsertRequest } from '../../models';
+import { normalizePaginatedResponse } from '../../../../shared/utils/paginated-response.normalizer';
+import { normalizeVehicle } from '../../models/vehicles/vehicle.normalizer';
 import { appendFormDataValue } from '../../../../shared/utils/form-data.utils';
 
 @Injectable({
@@ -13,7 +15,7 @@ export class VehicleService {
   private api = inject(BaseService);
   private readonly base = 'Vehicle';
 
-  getPaginated(params: VehicleFilters): Observable<PaginatedResponse<Vehicle>> {
+  getPaginated(params: VehicleFilters): Observable<PaginatedAggregatorResponse<Vehicle>> {
     return this.api.getData<unknown>(`${this.base}/Paginated`, {
       FleetId: params.fleetId,
       Fleetid: params.fleetId,

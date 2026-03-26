@@ -1,9 +1,11 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 
+import { PaginatedAggregatorResponse } from '../../../../core/interfaces';
 import { BaseService } from '../../../../shared/services/base/base.service';
-import { Booking, BookingFilters, BookingUpsertRequest, PaginatedResponse } from '../../models';
-import { normalizeBooking, normalizePaginatedResponse } from '../../../../shared/utils/api-normalizers';
+import { Booking, BookingFilters, BookingUpsertRequest } from '../../models';
+import { normalizePaginatedResponse } from '../../../../shared/utils/paginated-response.normalizer';
+import { normalizeBooking } from '../../models/booking/booking.normalizer';
 
 @Injectable({
   providedIn: 'root',
@@ -12,7 +14,7 @@ export class BookingService {
   private api = inject(BaseService);
   private readonly base = 'Booking';
 
-  getPaginated(params: BookingFilters): Observable<PaginatedResponse<Booking>> {
+  getPaginated(params: BookingFilters): Observable<PaginatedAggregatorResponse<Booking>> {
     return this.api.getData<unknown>(`${this.base}/Paginated`, {
       FleetId: params.fleetId,
       fleetId: params.fleetId,

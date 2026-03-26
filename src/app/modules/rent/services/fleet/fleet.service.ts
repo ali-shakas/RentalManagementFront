@@ -1,9 +1,11 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 
+import type { PaginatedAggregatorResponse } from '../../../../core/interfaces';
 import { BaseService } from '../../../../shared/services/base/base.service';
-import type { Fleet, FleetUpsertRequest, PaginatedRequest, PaginatedResponse } from '../../models';
-import { normalizeFleet, normalizePaginatedResponse } from '../../../../shared/utils/api-normalizers';
+import type { Fleet, FleetUpsertRequest, PaginatedRequest } from '../../models';
+import { normalizePaginatedResponse } from '../../../../shared/utils/paginated-response.normalizer';
+import { normalizeFleet } from '../../models/fleet/fleet.normalizer';
 
 @Injectable({
   providedIn: 'root',
@@ -13,7 +15,7 @@ export class FleetService {
 
   private readonly base = 'Fleet';
 
-  getPaginated(params: PaginatedRequest): Observable<PaginatedResponse<Fleet>> {
+  getPaginated(params: PaginatedRequest): Observable<PaginatedAggregatorResponse<Fleet>> {
     return this.api.getData<unknown>(`${this.base}/Paginated`, {
       PageNumber: params.pageNumber,
       PageSize: params.pageSize,
