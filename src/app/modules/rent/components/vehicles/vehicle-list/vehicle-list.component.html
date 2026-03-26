@@ -49,9 +49,32 @@
                   <td>{{ vehicle.dailyRate ?? 0 }}</td>
                   <td><app-status-badge [label]="vehicle.status | translate" [tone]="vehicle.status === 'Available' ? 'success' : vehicle.status === 'Booked' ? 'warning' : vehicle.status === 'Maintenance' ? 'danger' : 'secondary'" /></td>
                   <td class="text-end">
-                    <a class="btn btn-sm btn-outline-info me-2" [routerLink]="['/vehicles', vehicle.id, 'details']">{{ 'Details' | translate }}</a>
-                    <a class="btn btn-sm btn-outline-primary me-2" [routerLink]="['/vehicles', vehicle.id, 'edit']">{{ 'Edit' | translate }}</a>
-                    <a class="btn btn-sm btn-outline-secondary" [routerLink]="['/vehicles', vehicle.id, 'gallery']">{{ 'Gallery' | translate }}</a>
+                    <div class="table-actions">
+                      <a
+                        class="table-action-icon table-action-icon--info"
+                        [routerLink]="['/vehicles', vehicle.id, 'details']"
+                        [attr.aria-label]="'Details' | translate"
+                        [title]="'Details' | translate"
+                      >
+                        <i class="fa-solid fa-eye"></i>
+                      </a>
+                      <a
+                        class="table-action-icon table-action-icon--primary"
+                        [routerLink]="['/vehicles', vehicle.id, 'edit']"
+                        [attr.aria-label]="'Edit' | translate"
+                        [title]="'Edit' | translate"
+                      >
+                        <i class="fa-solid fa-pen-to-square"></i>
+                      </a>
+                      <a
+                        class="table-action-icon table-action-icon--secondary"
+                        [routerLink]="['/vehicles', vehicle.id, 'gallery']"
+                        [attr.aria-label]="'Gallery' | translate"
+                        [title]="'Gallery' | translate"
+                      >
+                        <i class="fa-solid fa-images"></i>
+                      </a>
+                    </div>
                   </td>
                 </tr>
               }

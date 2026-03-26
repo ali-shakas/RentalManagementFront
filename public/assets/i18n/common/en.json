@@ -206,6 +206,15 @@
   "Create Booking": "Create Booking",
   "Security": "Security",
   "My Access": "My Access",
+  "Footer.SystemName": "Vehicle Rental Management System",
+  "Footer.Copyright": "Copyright",
+  "Footer.ProductArea": "Admin Dashboard",
+  "Access Matrix": "Access Matrix",
+  "Operational Units": "Operational Units",
+  "Service Points": "Service Points",
+  "Live Inventory": "Live Inventory",
+  "Currently available for operations": "Currently available for operations",
+  "Require review or activation": "Require review or activation",
 
   "Unknown": "Unknown"
 }

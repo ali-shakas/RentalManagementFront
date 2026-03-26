@@ -53,7 +53,16 @@
                     <app-status-badge [label]="category.isActive ? ('Active' | translate) : ('Inactive' | translate)" [tone]="category.isActive ? 'success' : 'secondary'" />
                   </td>
                   <td class="text-end">
-                    <a class="btn btn-sm btn-outline-primary" [routerLink]="['/category-vehicles', category.id, 'edit']">{{ 'Edit' | translate }}</a>
+                    <div class="table-actions">
+                      <a
+                        class="table-action-icon table-action-icon--primary"
+                        [routerLink]="['/category-vehicles', category.id, 'edit']"
+                        [attr.aria-label]="'Edit' | translate"
+                        [title]="'Edit' | translate"
+                      >
+                        <i class="fa-solid fa-pen-to-square"></i>
+                      </a>
+                    </div>
                   </td>
                 </tr>
               }

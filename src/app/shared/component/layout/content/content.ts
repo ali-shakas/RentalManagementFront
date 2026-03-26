@@ -24,7 +24,7 @@ export class Content {
 
   @HostListener('window:resize')
   onResize() {
-    const isMobile = window.innerWidth < 1200;
+    const isMobile = window.innerWidth < 992;
     this.navmenu.isDisplay = isMobile;
 
     if (isMobile) {
@@ -35,5 +35,6 @@ export class Content {
   ngOnInit(): void {
     this.router.url;
     this.innerWidth = window.innerWidth;
+    this.onResize();
   }
 }

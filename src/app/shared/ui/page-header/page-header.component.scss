@@ -1,9 +1,54 @@
 .page-header-card {
+  border-radius: 20px;
+  overflow: hidden;
+
   .card-body {
-    padding: 1.25rem 1.5rem;
+    padding: 1.4rem 1.6rem;
+  }
+
+  .page-header-copy {
+    flex: 1 1 320px;
+    min-width: 0;
+  }
+
+  .page-header-actions {
+    display: flex;
+    flex: 0 1 auto;
+    align-items: center;
+    justify-content: flex-end;
+    min-width: 0;
   }
 
   h3 {
-    font-size: 1.35rem;
+    font-size: 1.55rem;
+    line-height: 1.15;
+  }
+
+  p {
+    max-width: 52ch;
+    line-height: 1.65;
+  }
+}
+
+html[dir='rtl'] .page-header-card {
+  .card-body {
+    text-align: right;
+  }
+
+  .page-header-actions {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .page-header-card {
+    .card-body {
+      padding: 1.15rem 1rem 1.2rem;
+    }
+
+    .page-header-actions {
+      width: 100%;
+      justify-content: stretch;
+    }
   }
 }

@@ -1,5 +1,7 @@
 /* You can add global styles to this file, and also import other style files */
 @import '../public/assets/scss/app.scss';
+@import './styles/sidebar-layout-overrides';
+@import './styles/sidebar-rtl-overrides';
 
 :root {
   --app-font-family: 'Cairo', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -56,6 +58,103 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-feature-settings: 'kern' 1, 'liga' 1, 'tnum' 1;
+}
+
+.table-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.table-action-icon {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: transparent;
+  color: inherit;
+  text-decoration: none;
+  transition:
+    transform 0.18s ease,
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    opacity 0.18s ease;
+  cursor: pointer;
+
+  i {
+    font-size: 0.95rem;
+    line-height: 1;
+  }
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+
+  &:disabled,
+  &[aria-disabled='true'] {
+    opacity: 0.55;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+}
+
+.table-action-icon--primary {
+  color: var(--theme-default);
+  border-color: rgba(25, 118, 210, 0.22);
+}
+
+.table-action-icon--primary:hover {
+  background: rgba(25, 118, 210, 0.08);
+}
+
+.table-action-icon--info {
+  color: #3b82f6;
+  border-color: rgba(59, 130, 246, 0.24);
+}
+
+.table-action-icon--info:hover {
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.table-action-icon--secondary {
+  color: rgba(15, 23, 42, 0.74);
+}
+
+.table-action-icon--secondary:hover {
+  background: rgba(15, 23, 42, 0.06);
+}
+
+.table-action-icon--danger {
+  color: #dc3545;
+  border-color: rgba(220, 53, 69, 0.24);
+}
+
+.table-action-icon--danger:hover {
+  background: rgba(220, 53, 69, 0.08);
+}
+
+html[dir='rtl'] .table-actions {
+  justify-content: flex-start;
+}
+
+body.dark-only {
+  .table-action-icon {
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+
+  .table-action-icon--secondary {
+    color: rgba(255, 255, 255, 0.78);
+  }
+
+  .table-action-icon--secondary:hover {
+    background: rgba(255, 255, 255, 0.06);
+  }
 }
 
 h1,
