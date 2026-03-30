@@ -6,7 +6,6 @@ import { catchError, forkJoin, of } from 'rxjs';
 
 import { PaginatedAggregatorResponse } from '../../../../../core/interfaces';
 import { AuthStateService } from '../../../../../core/auth/auth-state.service';
-import { BaseRequestOptions } from '../../../../../shared/services/base/base.service';
 import { Menu, NavMenuService } from '../../../../../shared/services/layout/nav-menu.service';
 import { Branch, User, Vehicle, VehicleGroupSummary } from '../../../models';
 import { BranchService } from '../../../services/branches/branch.service';
@@ -66,9 +65,6 @@ export class DashboardComponent implements OnInit {
     }, 0),
   );
   navigationSections = computed(() => this.buildNavigationSections());
-  private readonly quietRequestOptions: BaseRequestOptions = {
-    suppressErrorToast: true,
-  };
 
   ngOnInit(): void {
     this.loadDashboard();
@@ -91,22 +87,22 @@ export class DashboardComponent implements OnInit {
             fleetId,
             pageNumber: 1,
             pageSize: 1000,
-          }, this.quietRequestOptions).pipe(catchError(error => of(this.handleDashboardError(error, emptyPage<Vehicle>()))))
+          }).pipe(catchError(error => of(this.handleDashboardError(error, emptyPage<Vehicle>()))))
         : of(emptyPage<Vehicle>()),
-      usersPage: this.userService.getPaginated({ pageNumber: 1, pageSize: 100 }, this.quietRequestOptions).pipe(
+      usersPage: this.userService.getPaginated({ pageNumber: 1, pageSize: 100 }).pipe(
         catchError(error => of(this.handleDashboardError(error, emptyPage<User>()))),
       ),
-      roles: this.roleService.getList(this.quietRequestOptions).pipe(
+      roles: this.roleService.getList().pipe(
         catchError(error => of(this.handleDashboardError(error, [] as never[]))),
       ),
-      privileges: this.privilegeService.getList(this.quietRequestOptions).pipe(
+      privileges: this.privilegeService.getList().pipe(
         catchError(error => of(this.handleDashboardError(error, [] as never[]))),
       ),
-      fleets: this.fleetService.getPaginated({ pageNumber: 1, pageSize: 1 }, this.quietRequestOptions).pipe(
+      fleets: this.fleetService.getPaginated({ pageNumber: 1, pageSize: 1 }).pipe(
         catchError(error => of(this.handleDashboardError(error, emptyPage()))),
       ),
       branches: fleetId
-        ? this.branchService.getPaginated({ fleetId, pageNumber: 1, pageSize: 1 }, this.quietRequestOptions).pipe(
+        ? this.branchService.getPaginated({ fleetId, pageNumber: 1, pageSize: 1 }).pipe(
             catchError(error => of(this.handleDashboardError(error, emptyPage<Branch>()))),
           )
         : of(emptyPage<Branch>()),
@@ -118,9 +114,9 @@ export class DashboardComponent implements OnInit {
         if (paginatedUsers.length > 0 || (usersPage.totalCount ?? 0) > 0) {
           this.applyUsersSnapshot(paginatedUsers, usersPage.totalCount ?? paginatedUsers.length);
         } else {
-          this.userService.getList('Default', this.quietRequestOptions).pipe(
+          this.userService.getList('Default').pipe(
             catchError(() =>
-              this.userService.getList(undefined, this.quietRequestOptions).pipe(
+              this.userService.getList(undefined).pipe(
                 catchError(error => of(this.handleDashboardError(error, []))),
               ),
             ),
