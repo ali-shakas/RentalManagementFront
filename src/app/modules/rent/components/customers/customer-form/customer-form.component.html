@@ -6,141 +6,184 @@
     <a class="btn btn-outline-secondary" routerLink="/customers">{{ 'Back to Customers' | translate }}</a>
   </app-page-header>
 
-  <div class="row g-4">
-    <div class="col-lg-8">
-      <div class="card">
+  <div class="row g-4 customer-form-layout">
+    <div class="col-xl-8">
+      <div class="card customer-form-card">
         <div class="card-body">
           <form [formGroup]="form" (ngSubmit)="save()">
-            <div class="row g-3">
-              <div class="col-md-6">
-                <label class="form-label">{{ 'Full Name' | translate }}</label>
-                <input class="form-control" formControlName="nameAr" maxlength="200" [placeholder]="'Example Customer Arabic Name' | translate" />
-                <div class="form-text">{{ 'Hint Customer Arabic Name' | translate }}</div>
-                @if (form.controls.nameAr.invalid && form.controls.nameAr.touched) {
-                  <div class="text-danger small mt-1">{{ 'Customer Arabic name is required and must contain Arabic characters only.' | translate }}</div>
-                }
+            <div class="customer-form-section">
+              <div class="customer-form-section__header">
+                <h6 class="mb-1">{{ 'Customer Section Identity Title' | translate }}</h6>
+                <p class="mb-0">{{ 'Customer Section Identity Subtitle' | translate }}</p>
               </div>
-              <div class="col-md-6">
-                <label class="form-label">{{ 'Name (En)' | translate }}</label>
-                <input class="form-control" formControlName="nameEn" maxlength="200" [placeholder]="'Example Customer English Name' | translate" />
-                <div class="form-text">{{ 'Hint Customer English Name' | translate }}</div>
-                @if (form.controls.nameEn.invalid && form.controls.nameEn.touched) {
-                  <div class="text-danger small mt-1">{{ 'English name must contain English letters only.' | translate }}</div>
-                }
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label">{{ 'Full Name' | translate }}</label>
+                  <input class="form-control" formControlName="nameAr" maxlength="200" [placeholder]="'Example Customer Arabic Name' | translate" />
+                  <div class="form-text">{{ 'Hint Customer Arabic Name' | translate }}</div>
+                  @if (form.controls.nameAr.invalid && form.controls.nameAr.touched) {
+                    <div class="text-danger small mt-1">{{ 'Customer Arabic name is required and must contain Arabic characters only.' | translate }}</div>
+                  }
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">{{ 'Name (En)' | translate }}</label>
+                  <input class="form-control" formControlName="nameEn" maxlength="200" [placeholder]="'Example Customer English Name' | translate" />
+                  <div class="form-text">{{ 'Hint Customer English Name' | translate }}</div>
+                  @if (form.controls.nameEn.invalid && form.controls.nameEn.touched) {
+                    <div class="text-danger small mt-1">{{ 'English name must contain English letters only.' | translate }}</div>
+                  }
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">{{ 'Nationality' | translate }}</label>
+                  <input
+                    class="form-control"
+                    formControlName="nationality"
+                    maxlength="100"
+                    list="customer-nationalities-list"
+                    [placeholder]="'Example Nationality' | translate"
+                  />
+                  <div class="form-text">{{ 'Hint Nationality' | translate }}</div>
+                  @if (form.controls.nationality.invalid && form.controls.nationality.touched) {
+                    <div class="text-danger small mt-1">{{ 'Nationality is required.' | translate }}</div>
+                  }
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">{{ 'Date of Birth' | translate }}</label>
+                  <input class="form-control" type="date" formControlName="birthDay" />
+                  <div class="form-text">{{ 'Hint Date of Birth' | translate }}</div>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">{{ 'Identity Number' | translate }}</label>
+                  <input class="form-control" formControlName="idNationality" maxlength="50" inputmode="text" [placeholder]="'Example Identity Number' | translate" />
+                  <div class="form-text">{{ 'Hint Identity Number' | translate }}</div>
+                  @if (form.controls.idNationality.invalid && form.controls.idNationality.touched) {
+                    <div class="text-danger small mt-1">{{ 'Identity number is required and must be valid.' | translate }}</div>
+                  }
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">{{ 'Identity Issue Date' | translate }}</label>
+                  <input class="form-control" type="date" formControlName="dateIdNationality" />
+                  <div class="form-text">{{ 'Hint Identity Issue Date' | translate }}</div>
+                  @if (form.controls.dateIdNationality.invalid && form.controls.dateIdNationality.touched) {
+                    <div class="text-danger small mt-1">{{ 'Identity issue date is required.' | translate }}</div>
+                  }
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">{{ 'Identity Issue Place' | translate }}</label>
+                  <input
+                    class="form-control"
+                    formControlName="plaseIdNationality"
+                    maxlength="150"
+                    list="customer-issue-places-list"
+                    [placeholder]="'Example Identity Issue Place' | translate"
+                  />
+                  <div class="form-text">{{ 'Hint Identity Issue Place' | translate }}</div>
+                </div>
               </div>
-              <div class="col-md-6">
-                <label class="form-label">{{ 'Email' | translate }}</label>
-                <input class="form-control" type="email" formControlName="email" maxlength="150" [placeholder]="'Example Customer Email' | translate" />
-                <div class="form-text">{{ 'Hint Customer Email' | translate }}</div>
+            </div>
+
+            <div class="customer-form-section">
+              <div class="customer-form-section__header">
+                <h6 class="mb-1">{{ 'Customer Section Contact Title' | translate }}</h6>
+                <p class="mb-0">{{ 'Customer Section Contact Subtitle' | translate }}</p>
               </div>
-              <div class="col-md-6">
-                <label class="form-label">{{ 'Primary Mobile Number' | translate }}</label>
-                <input class="form-control" formControlName="firstMobileNumber" maxlength="20" inputmode="tel" [placeholder]="'Example Primary Mobile Number' | translate" />
-                <div class="form-text">{{ 'Hint Primary Mobile Number' | translate }}</div>
-                @if (form.controls.firstMobileNumber.invalid && form.controls.firstMobileNumber.touched) {
-                  <div class="text-danger small mt-1">{{ 'Primary mobile number is required and must be valid.' | translate }}</div>
-                }
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label">{{ 'Primary Mobile Number' | translate }}</label>
+                  <input class="form-control" formControlName="firstMobileNumber" maxlength="20" inputmode="tel" [placeholder]="'Example Primary Mobile Number' | translate" />
+                  <div class="form-text">{{ 'Hint Primary Mobile Number' | translate }}</div>
+                  @if (form.controls.firstMobileNumber.invalid && form.controls.firstMobileNumber.touched) {
+                    <div class="text-danger small mt-1">{{ 'Primary mobile number is required and must be valid.' | translate }}</div>
+                  }
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">{{ 'Email' | translate }}</label>
+                  <input class="form-control" type="email" formControlName="email" maxlength="150" [placeholder]="'Example Customer Email' | translate" />
+                  <div class="form-text">{{ 'Hint Customer Email' | translate }}</div>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">{{ 'Secondary Mobile Number' | translate }}</label>
+                  <input class="form-control" formControlName="secondMobileNumber" maxlength="20" inputmode="tel" [placeholder]="'Example Secondary Mobile Number' | translate" />
+                  <div class="form-text">{{ 'Hint Secondary Mobile Number' | translate }}</div>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">{{ 'Third Mobile Number' | translate }}</label>
+                  <input class="form-control" formControlName="thirdMobileNumber" maxlength="20" inputmode="tel" [placeholder]="'Example Third Mobile Number' | translate" />
+                  <div class="form-text">{{ 'Hint Third Mobile Number' | translate }}</div>
+                </div>
+                <div class="col-12">
+                  <label class="form-label">{{ 'Address' | translate }}</label>
+                  <textarea class="form-control" rows="3" formControlName="address" [placeholder]="'Example Address' | translate"></textarea>
+                  <div class="form-text">{{ 'Hint Address' | translate }}</div>
+                </div>
               </div>
-              <div class="col-md-6">
-                <label class="form-label">{{ 'Secondary Mobile Number' | translate }}</label>
-                <input class="form-control" formControlName="secondMobileNumber" maxlength="20" inputmode="tel" [placeholder]="'Example Secondary Mobile Number' | translate" />
-                <div class="form-text">{{ 'Hint Secondary Mobile Number' | translate }}</div>
+            </div>
+
+            <div class="customer-form-section">
+              <div class="customer-form-section__header">
+                <h6 class="mb-1">{{ 'Customer Section License Title' | translate }}</h6>
+                <p class="mb-0">{{ 'Customer Section License Subtitle' | translate }}</p>
               </div>
-              <div class="col-md-6">
-                <label class="form-label">{{ 'Third Mobile Number' | translate }}</label>
-                <input class="form-control" formControlName="thirdMobileNumber" maxlength="20" inputmode="tel" [placeholder]="'Example Third Mobile Number' | translate" />
-                <div class="form-text">{{ 'Hint Third Mobile Number' | translate }}</div>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label">{{ 'Driving License Number' | translate }}</label>
+                  <input class="form-control" formControlName="licenceNo" maxlength="50" inputmode="text" [placeholder]="'Example Driving License Number' | translate" />
+                  <div class="form-text">{{ 'Hint Driving License Number' | translate }}</div>
+                  @if (form.controls.licenceNo.invalid && form.controls.licenceNo.touched) {
+                    <div class="text-danger small mt-1">{{ 'Driving license number is required and must be valid.' | translate }}</div>
+                  }
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">{{ 'License Expiry Date' | translate }}</label>
+                  <input class="form-control" type="date" formControlName="dateDrivinglicense" />
+                  <div class="form-text">{{ 'Hint License Expiry Date' | translate }}</div>
+                  @if (form.controls.dateDrivinglicense.invalid && form.controls.dateDrivinglicense.touched) {
+                    <div class="text-danger small mt-1">{{ 'License expiry date is required.' | translate }}</div>
+                  }
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">{{ 'License Hijri Date' | translate }}</label>
+                  <input class="form-control" formControlName="dateDrivinglicenseHajri" maxlength="20" [placeholder]="'Example License Hijri Date' | translate" />
+                  <div class="form-text">{{ 'Hint License Hijri Date' | translate }}</div>
+                  @if (form.controls.dateDrivinglicenseHajri.invalid && form.controls.dateDrivinglicenseHajri.touched) {
+                    <div class="text-danger small mt-1">{{ 'Hijri license date is required.' | translate }}</div>
+                  }
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">{{ 'License Issue Place' | translate }}</label>
+                  <input
+                    class="form-control"
+                    formControlName="plaseDrivinglicense"
+                    maxlength="150"
+                    list="customer-issue-places-list"
+                    [placeholder]="'Example License Issue Place' | translate"
+                  />
+                  <div class="form-text">{{ 'Hint License Issue Place' | translate }}</div>
+                </div>
               </div>
-              <div class="col-md-6">
-                <label class="form-label">{{ 'Identity Number' | translate }}</label>
-                <input class="form-control" formControlName="idNationality" maxlength="50" inputmode="text" [placeholder]="'Example Identity Number' | translate" />
-                <div class="form-text">{{ 'Hint Identity Number' | translate }}</div>
-                @if (form.controls.idNationality.invalid && form.controls.idNationality.touched) {
-                  <div class="text-danger small mt-1">{{ 'Identity number is required and must be valid.' | translate }}</div>
-                }
+            </div>
+
+            <div class="customer-form-section">
+              <div class="customer-form-section__header">
+                <h6 class="mb-1">{{ 'Customer Section Extra Title' | translate }}</h6>
+                <p class="mb-0">{{ 'Customer Section Extra Subtitle' | translate }}</p>
               </div>
-              <div class="col-md-6">
-                <label class="form-label">{{ 'Driving License Number' | translate }}</label>
-                <input class="form-control" formControlName="licenceNo" maxlength="50" inputmode="text" [placeholder]="'Example Driving License Number' | translate" />
-                <div class="form-text">{{ 'Hint Driving License Number' | translate }}</div>
-                @if (form.controls.licenceNo.invalid && form.controls.licenceNo.touched) {
-                  <div class="text-danger small mt-1">{{ 'Driving license number is required and must be valid.' | translate }}</div>
-                }
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">{{ 'Identity Issue Date' | translate }}</label>
-                <input class="form-control" type="date" formControlName="dateIdNationality" />
-                <div class="form-text">{{ 'Hint Identity Issue Date' | translate }}</div>
-                @if (form.controls.dateIdNationality.invalid && form.controls.dateIdNationality.touched) {
-                  <div class="text-danger small mt-1">{{ 'Identity issue date is required.' | translate }}</div>
-                }
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">{{ 'License Expiry Date' | translate }}</label>
-                <input class="form-control" type="date" formControlName="dateDrivinglicense" />
-                <div class="form-text">{{ 'Hint License Expiry Date' | translate }}</div>
-                @if (form.controls.dateDrivinglicense.invalid && form.controls.dateDrivinglicense.touched) {
-                  <div class="text-danger small mt-1">{{ 'License expiry date is required.' | translate }}</div>
-                }
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">{{ 'License Hijri Date' | translate }}</label>
-                <input class="form-control" formControlName="dateDrivinglicenseHajri" maxlength="20" [placeholder]="'Example License Hijri Date' | translate" />
-                <div class="form-text">{{ 'Hint License Hijri Date' | translate }}</div>
-                @if (form.controls.dateDrivinglicenseHajri.invalid && form.controls.dateDrivinglicenseHajri.touched) {
-                  <div class="text-danger small mt-1">{{ 'Hijri license date is required.' | translate }}</div>
-                }
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">{{ 'Nationality' | translate }}</label>
-                <input class="form-control" formControlName="nationality" maxlength="100" [placeholder]="'Example Nationality' | translate" />
-                <div class="form-text">{{ 'Hint Nationality' | translate }}</div>
-                @if (form.controls.nationality.invalid && form.controls.nationality.touched) {
-                  <div class="text-danger small mt-1">{{ 'Nationality is required.' | translate }}</div>
-                }
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">{{ 'Date of Birth' | translate }}</label>
-                <input class="form-control" type="date" formControlName="birthDay" />
-                <div class="form-text">{{ 'Hint Date of Birth' | translate }}</div>
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">{{ 'Identity Issue Place' | translate }}</label>
-                <input class="form-control" formControlName="plaseIdNationality" maxlength="150" [placeholder]="'Example Identity Issue Place' | translate" />
-                <div class="form-text">{{ 'Hint Identity Issue Place' | translate }}</div>
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">{{ 'License Issue Place' | translate }}</label>
-                <input class="form-control" formControlName="plaseDrivinglicense" maxlength="150" [placeholder]="'Example License Issue Place' | translate" />
-                <div class="form-text">{{ 'Hint License Issue Place' | translate }}</div>
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">{{ 'Subscription ID' | translate }}</label>
-                <input class="form-control" type="number" min="1" formControlName="idSubscriptionsOfCustomer" [placeholder]="'Example Subscription ID' | translate" />
-                <div class="form-text">{{ 'Hint Subscription ID' | translate }}</div>
-                @if (form.controls.idSubscriptionsOfCustomer.invalid && form.controls.idSubscriptionsOfCustomer.touched) {
-                  <div class="text-danger small mt-1">{{ 'Subscription ID is required.' | translate }}</div>
-                }
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">{{ 'Tax Record' | translate }}</label>
-                <input class="form-control" type="number" min="0" formControlName="taxRecord" [placeholder]="'Example Tax Record' | translate" />
-                <div class="form-text">{{ 'Hint Tax Record' | translate }}</div>
-              </div>
-              <div class="col-12">
-                <label class="form-label">{{ 'Address' | translate }}</label>
-                <textarea class="form-control" rows="3" formControlName="address" [placeholder]="'Example Address' | translate"></textarea>
-                <div class="form-text">{{ 'Hint Address' | translate }}</div>
-              </div>
-              <div class="col-12">
-                <label class="form-label">{{ 'Notes' | translate }}</label>
-                <textarea class="form-control" rows="3" formControlName="notes" [placeholder]="'Example Customer Notes' | translate"></textarea>
-                <div class="form-text">{{ 'Hint Customer Notes' | translate }}</div>
-              </div>
-              <div class="col-12">
-                <div class="form-check form-switch">
-                  <input class="form-check-input" type="checkbox" formControlName="isActive" />
-                  <label class="form-check-label">{{ 'Active customer' | translate }}</label>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label">{{ 'Tax Record' | translate }}</label>
+                  <input class="form-control" type="number" min="0" formControlName="taxRecord" [placeholder]="'Example Tax Record' | translate" />
+                  <div class="form-text">{{ 'Hint Tax Record' | translate }}</div>
+                </div>
+                <div class="col-12">
+                  <label class="form-label">{{ 'Notes' | translate }}</label>
+                  <textarea class="form-control" rows="3" formControlName="notes" [placeholder]="'Example Customer Notes' | translate"></textarea>
+                  <div class="form-text">{{ 'Hint Customer Notes' | translate }}</div>
+                </div>
+                <div class="col-12">
+                  <div class="form-check form-switch customer-active-switch">
+                    <input class="form-check-input" type="checkbox" formControlName="isActive" />
+                    <label class="form-check-label">{{ 'Active customer' | translate }}</label>
+                  </div>
                 </div>
               </div>
             </div>
@@ -151,14 +194,30 @@
               </button>
               <a class="btn btn-light" routerLink="/customers">{{ 'Cancel' | translate }}</a>
             </div>
+
+            <datalist id="customer-nationalities-list">
+              @for (nationality of nationalitySuggestions(); track nationality) {
+                <option [value]="nationality"></option>
+              }
+            </datalist>
+
+            <datalist id="customer-issue-places-list">
+              @for (city of issuePlaceSuggestions(); track city) {
+                <option [value]="city"></option>
+              }
+            </datalist>
           </form>
         </div>
       </div>
     </div>
 
-    <div class="col-lg-4">
-      <app-file-upload [label]="'Customer Image' | translate" [previewUrl]="previewUrl()" (fileSelected)="onImageSelected($event)" />
-      <div class="form-text mt-2">{{ 'Hint Customer Image' | translate }}</div>
+    <div class="col-xl-4">
+      <div class="card customer-form-card customer-form-card--side">
+        <div class="card-body">
+          <app-file-upload [label]="'Customer Image' | translate" [previewUrl]="previewUrl()" (fileSelected)="onImageSelected($event)" />
+          <div class="form-text mt-2">{{ 'Hint Customer Image' | translate }}</div>
+        </div>
+      </div>
     </div>
   </div>
 </div>

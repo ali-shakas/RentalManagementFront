@@ -30,6 +30,8 @@
   --app-table-row-hover: rgba(37, 99, 235, 0.06);
   --app-table-shadow: 0 18px 40px -32px rgba(15, 23, 42, 0.26);
   --app-table-action-surface: rgba(255, 255, 255, 0.72);
+  --app-form-hint-size: 0.75rem;
+  --app-form-hint-color: rgba(71, 85, 105, 0.9);
   --app-sidebar-logo-filter: brightness(1.08) contrast(1.04) saturate(1.02);
   --app-sidebar-logo-opacity: 0.98;
 }
@@ -167,6 +169,7 @@ body.dark-only {
   --app-table-row-hover: rgba(59, 130, 246, 0.14);
   --app-table-shadow: 0 22px 48px -30px rgba(2, 6, 23, 0.8);
   --app-table-action-surface: rgba(255, 255, 255, 0.04);
+  --app-form-hint-color: rgba(203, 213, 225, 0.94);
   --app-sidebar-logo-filter: brightness(1.16) contrast(1.06) saturate(1.03);
   --app-sidebar-logo-opacity: 0.99;
 
@@ -182,6 +185,13 @@ body.dark-only {
   .table-action-icon--secondary:hover {
     background: var(--app-table-row-hover);
   }
+}
+
+.form-text {
+  font-size: var(--app-form-hint-size) !important;
+  line-height: 1.4;
+  color: var(--app-form-hint-color) !important;
+  opacity: 1;
 }
 
 h1,
@@ -449,6 +459,7 @@ html[dir='ltr'] td {
     --font-size-h3: 1.0625rem;
     --font-size-body: 0.875rem;
     --font-size-sidebar: 0.84375rem;
+    --app-form-hint-size: 0.72rem;
   }
 }
 

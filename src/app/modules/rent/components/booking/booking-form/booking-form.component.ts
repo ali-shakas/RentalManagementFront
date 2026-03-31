@@ -2,16 +2,17 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { forkJoin } from 'rxjs';
 
 import { AuthStateService } from '../../../../../core/auth/auth-state.service';
-import { BookingStatus, BookingUpsertRequest, Customer, Vehicle } from '../../../models';
+import { ToastService } from '../../../../../shared/services/toast.service';
+import { PageHeaderComponent } from '../../../../../shared/ui/page-header/page-header.component';
+import { BookingUpsertRequest, Customer, Vehicle } from '../../../models';
 import { BookingService } from '../../../services/booking/booking.service';
 import { CustomerService } from '../../../services/customers/customer.service';
-import { ToastService } from '../../../../../shared/services/toast.service';
 import { VehicleService } from '../../../services/vehicles/vehicle.service';
-import { PageHeaderComponent } from '../../../../../shared/ui/page-header/page-header.component';
 
 @Component({
   selector: 'app-booking-form',
@@ -39,6 +40,49 @@ export class BookingFormComponent implements OnInit {
   vehicles = signal<Vehicle[]>([]);
   loading = signal(false);
 
+  private readonly customerBasicFields: Array<{
+    label: string;
+    resolver: (customer: Customer) => string;
+  }> = [
+    {
+      label: 'Identity Number',
+      resolver: customer => this.valueOf(customer.idNationality ?? customer.identityNumber),
+    },
+    {
+      label: 'Arabic Name',
+      resolver: customer => this.valueOf(customer.nameAr ?? customer.fullName),
+    },
+    {
+      label: 'Nationality',
+      resolver: customer => this.valueOf(customer.nationality),
+    },
+    {
+      label: 'Primary Mobile Number',
+      resolver: customer => this.valueOf(customer.firstMobileNumber ?? customer.phoneNumber),
+    },
+    {
+      label: 'Driving License Expiry Date',
+      resolver: customer =>
+        this.valueOf(
+          customer.dateDrivinglicenseHajri ??
+            customer.dateDrivinglicense ??
+            customer.drivingLicenseExpiryDate,
+        ),
+    },
+    {
+      label: 'Driving License Number',
+      resolver: customer => this.valueOf(customer.licenceNo ?? customer.drivingLicenseNumber),
+    },
+    {
+      label: 'Address',
+      resolver: customer => this.valueOf(customer.address),
+    },
+    {
+      label: 'Date of Birth',
+      resolver: customer => this.valueOf(customer.birthDay ?? customer.dateOfBirth),
+    },
+  ];
+
   form = this.fb.group({
     fleetId: [this.authState.fleetId() || '', [Validators.required]],
     branchId: [Number(this.authState.branchId() || 0), [Validators.required, Validators.min(1)]],
@@ -47,7 +91,10 @@ export class BookingFormComponent implements OnInit {
     startDate: ['', [Validators.required]],
     endDate: ['', [Validators.required]],
     dateReturnVehical: ['', [Validators.required]],
-    distancetraveledgps: ['', [Validators.maxLength(100), Validators.pattern(BookingFormComponent.GPS_DISTANCE_REGEX)]],
+    distancetraveledgps: [
+      '',
+      [Validators.maxLength(100), Validators.pattern(BookingFormComponent.GPS_DISTANCE_REGEX)],
+    ],
     numberOfHoursExcess: [0, [Validators.required, Validators.min(0)]],
     numberKmExcess: [0, [Validators.required, Validators.min(0)]],
     dayExcess: [0, [Validators.required, Validators.min(0)]],
@@ -64,26 +111,50 @@ export class BookingFormComponent implements OnInit {
     otherExpenses: [0, [Validators.required, Validators.min(0)]],
     total: [0, [Validators.required, Validators.min(0)]],
     note: ['', [Validators.maxLength(500), Validators.pattern(BookingFormComponent.NOTE_REGEX)]],
-    placeUSE: ['', [Validators.maxLength(200), Validators.pattern(BookingFormComponent.PLACE_USE_REGEX)]],
+    placeUSE: [
+      '',
+      [Validators.maxLength(200), Validators.pattern(BookingFormComponent.PLACE_USE_REGEX)],
+    ],
     totalTrafic: [0, [Validators.required, Validators.min(0)]],
     totalMaintance: [0, [Validators.required, Validators.min(0)]],
     totalReceivedVehicle: [0, [Validators.required, Validators.min(0)]],
     transportationFees: [0, [Validators.required, Validators.min(0)]],
     totaltax: [0, [Validators.required, Validators.min(0)]],
-    numberBookingINBasame: ['', [Validators.maxLength(10), Validators.pattern(BookingFormComponent.BASAME_NUMBER_REGEX)]],
+    numberBookingINBasame: [
+      '',
+      [
+        Validators.required,
+        Validators.maxLength(10),
+        Validators.pattern(BookingFormComponent.BASAME_NUMBER_REGEX),
+      ],
+    ],
   });
 
   ngOnInit(): void {
     const fleetId = this.authState.fleetId() || undefined;
     forkJoin({
-      customers: this.customerService.getPaginated({ fleetId, pageNumber: 1, pageSize: 100, isActive: true }),
-      vehicles: this.vehicleService.getPaginated({ fleetId, pageNumber: 1, pageSize: 100, status: 'Available' }),
+      customers: this.customerService.getPaginated({
+        fleetId,
+        pageNumber: 1,
+        pageSize: 100,
+        isActive: true,
+      }),
+      vehicles: this.vehicleService.getPaginated({
+        fleetId,
+        pageNumber: 1,
+        pageSize: 100,
+        status: 'Available',
+      }),
     }).subscribe({
       next: ({ customers, vehicles }) => {
         this.customers.set(customers.items ?? []);
         this.vehicles.set(vehicles.items ?? []);
       },
       error: () => this.toast.error(this.translate.instant('Failed to load booking references')),
+    });
+
+    this.form.controls.vehicleId.valueChanges.subscribe(() => {
+      this.syncVehicleRelations();
     });
   }
 
@@ -100,6 +171,14 @@ export class BookingFormComponent implements OnInit {
     }
     if (new Date(raw.dateReturnVehical) < new Date(raw.startDate)) {
       this.toast.error(this.translate.instant('Return date cannot be before start date'));
+      return;
+    }
+
+    const selectedCustomer = this.selectedCustomer();
+    const missingCustomerBasics = this.getMissingCustomerBasicFields(selectedCustomer);
+    if (missingCustomerBasics.length > 0) {
+      const message = this.translate.instant('Complete customer basic information before booking');
+      this.toast.error(`${message}: ${missingCustomerBasics.join('، ')}`);
       return;
     }
 
@@ -134,7 +213,7 @@ export class BookingFormComponent implements OnInit {
       totalReceivedVehicle: raw.totalReceivedVehicle,
       transportationFees: raw.transportationFees,
       totaltax: raw.totaltax,
-      numberBookingINBasame: raw.numberBookingINBasame.trim() || undefined,
+      numberBookingINBasame: raw.numberBookingINBasame.trim(),
     };
 
     this.loading.set(true);
@@ -147,10 +226,111 @@ export class BookingFormComponent implements OnInit {
       complete: () => this.loading.set(false),
     });
   }
+
+  selectedCustomer(): Customer | null {
+    const customerId = this.form.controls.customerId.value;
+    if (!customerId) {
+      return null;
+    }
+    return this.customers().find(customer => String(customer.id) === String(customerId)) ?? null;
+  }
+
+  customerContractNumber(): string {
+    return this.valueOf(this.form.controls.numberBookingINBasame.value);
+  }
+
+  selectedVehicle(): Vehicle | null {
+    const vehicleId = this.form.controls.vehicleId.value;
+    if (!vehicleId) {
+      return null;
+    }
+    return this.vehicles().find(vehicle => String(vehicle.id) === String(vehicleId)) ?? null;
+  }
+
+  customerBasicFieldValue(label: string): string {
+    const customer = this.selectedCustomer();
+    if (!customer) {
+      return '-';
+    }
+    const field = this.customerBasicFields.find(item => item.label === label);
+    if (!field) {
+      return '-';
+    }
+    return field.resolver(customer) || '-';
+  }
+
+  missingCustomerBasicFields(): string[] {
+    return this.getMissingCustomerBasicFields(this.selectedCustomer());
+  }
+
+  private getMissingCustomerBasicFields(customer: Customer | null): string[] {
+    if (!customer) {
+      return [this.translate.instant('Customer')];
+    }
+
+    const missing = this.customerBasicFields
+      .filter(field => !field.resolver(customer))
+      .map(field => this.translate.instant(field.label));
+
+    if (!this.customerContractNumber()) {
+      missing.push(this.translate.instant('Rental Contract Number'));
+    }
+
+    return missing;
+  }
+
+  vehicleInfoValue(field: 'plateNumber' | 'type' | 'model' | 'color'): string {
+    const vehicle = this.selectedVehicle();
+    if (!vehicle) {
+      return '-';
+    }
+
+    if (field === 'plateNumber') {
+      return this.valueOf(vehicle.plateNumber) || '-';
+    }
+
+    if (field === 'type') {
+      return this.valueOf(vehicle.categoryName ?? vehicle.make) || '-';
+    }
+
+    if (field === 'model') {
+      const model = this.valueOf(vehicle.model);
+      const year = vehicle.year ? ` (${vehicle.year})` : '';
+      return `${model}${year}`.trim() || '-';
+    }
+
+    return this.valueOf(vehicle.color) || '-';
+  }
+
+  private syncVehicleRelations(): void {
+    const vehicle = this.selectedVehicle();
+    if (!vehicle) {
+      return;
+    }
+
+    const raw = this.form.getRawValue();
+    this.form.patchValue(
+      {
+        branchId: vehicle.branchId && vehicle.branchId > 0 ? vehicle.branchId : raw.branchId,
+        priceInDay: this.pickNumeric(raw.priceInDay, vehicle.dailyRate),
+        priceInMonth: this.pickNumeric(raw.priceInMonth, vehicle.monthlyRate),
+        checkoutCounter: this.pickNumeric(raw.checkoutCounter, vehicle.mileage),
+      },
+      { emitEvent: false },
+    );
+  }
+
+  private pickNumeric(currentValue: number, incoming: number | null | undefined): number {
+    if (typeof incoming === 'number' && Number.isFinite(incoming)) {
+      return incoming;
+    }
+    return currentValue;
+  }
+
+  private valueOf(value: unknown): string {
+    if (value === null || value === undefined) {
+      return '';
+    }
+    return String(value).trim();
+  }
 }
-
-
-
-
-
-

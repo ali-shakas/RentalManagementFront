@@ -30,6 +30,8 @@ export interface BookingFilters {
   startDate?: string;
   endDate?: string;
   search?: string;
+  orderByDirection?: string;
+  orderBy?: string;
   pageNumber: number;
   pageSize: number;
 }

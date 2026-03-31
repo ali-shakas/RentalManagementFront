@@ -1,10 +1,11 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, map } from 'rxjs';
+
+import { Observable, catchError, map, throwError } from 'rxjs';
 
 import { PaginatedAggregatorResponse } from '../../../../core/interfaces';
 import { BaseService } from '../../../../shared/services/base/base.service';
-import { Customer, CustomerFilters, CustomerUpsertRequest } from '../../models';
 import { normalizePaginatedResponse } from '../../../../shared/utils/paginated-response.normalizer';
+import { Customer, CustomerFilters, CustomerUpsertRequest } from '../../models';
 import { normalizeCustomer } from '../../models/customers/customer.normalizer';
 
 @Injectable({
@@ -15,23 +16,53 @@ export class CustomerService {
   private readonly base = 'Customer';
 
   getPaginated(params: CustomerFilters): Observable<PaginatedAggregatorResponse<Customer>> {
-    return this.api.getData<unknown>(`${this.base}/Paginated`, {
-      FleetId: params.fleetId,
-      Fleetid: params.fleetId,
-      fleetId: params.fleetId,
-      fleetid: params.fleetId,
-      Search: params.search,
-      search: params.search,
-      isActive: params.isActive === '' ? undefined : params.isActive,
-      PageNumber: params.pageNumber,
-      PageSize: params.pageSize,
-      pageNumber: params.pageNumber,
-      pageSize: params.pageSize,
-    }).pipe(map(response => normalizePaginatedResponse(response, normalizeCustomer)));
+    return this.api
+      .getData<unknown>(`${this.base}/Paginated`, {
+        FleetId: params.fleetId,
+        Fleetid: params.fleetId,
+        fleetId: params.fleetId,
+        fleetid: params.fleetId,
+        Search: params.search,
+        search: params.search,
+        isActive: params.isActive === '' ? undefined : params.isActive,
+        PageNumber: params.pageNumber,
+        PageSize: params.pageSize,
+        pageNumber: params.pageNumber,
+        pageSize: params.pageSize,
+      })
+      .pipe(map(response => normalizePaginatedResponse(response, normalizeCustomer)));
   }
 
   getById(id: string, fleetId: string): Observable<Customer> {
-    return this.api.getData<unknown>(`${this.base}/${id}/${fleetId}`).pipe(map(normalizeCustomer));
+    return this.api
+      .getData<unknown>(`${this.base}/${id}/${fleetId}`, undefined, { suppressErrorToast: true })
+      .pipe(
+        map(normalizeCustomer),
+        catchError(error =>
+          this.api
+            .getData<unknown[]>(
+              `${this.base}/List`,
+              {
+                FleetId: fleetId,
+                Fleetid: fleetId,
+                fleetId,
+                fleetid: fleetId,
+              },
+              { suppressErrorToast: true },
+            )
+            .pipe(
+              map(items => (items ?? []).map(normalizeCustomer)),
+              map(items => items.find(customer => String(customer.id) === String(id)) ?? null),
+              map(customer => {
+                if (!customer) {
+                  throw error;
+                }
+                return customer;
+              }),
+              catchError(() => throwError(() => error)),
+            ),
+        ),
+      );
   }
 
   create(body: CustomerUpsertRequest): Observable<unknown> {
@@ -69,6 +100,3 @@ export class CustomerService {
     };
   }
 }
-
-
-
