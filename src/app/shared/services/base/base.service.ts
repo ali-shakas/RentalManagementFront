@@ -28,14 +28,7 @@ export class BaseService {
     params?: Record<string, string | number | boolean | undefined>,
     options?: BaseRequestOptions,
   ): Observable<ApiResponse<T>> {
-    let httpParams = new HttpParams();
-    if (params) {
-      Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== '') {
-          httpParams = httpParams.set(key, String(value));
-        }
-      });
-    }
+    const httpParams = this.buildHttpParams(params);
     return this.http.get<ApiResponse<T> | T>(`${this.baseUrl}/${endpoint}`, {
       params: httpParams,
       context: this.buildHttpContext(options),
@@ -52,14 +45,7 @@ export class BaseService {
     params?: Record<string, string | number | boolean | undefined>,
     options?: BaseRequestOptions,
   ): Observable<T> {
-    let httpParams = new HttpParams();
-    if (params) {
-      Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== '') {
-          httpParams = httpParams.set(key, String(value));
-        }
-      });
-    }
+    const httpParams = this.buildHttpParams(params);
     return this.http.get<T>(`${this.baseUrl}/${endpoint}`, {
       params: httpParams,
       context: this.buildHttpContext(options),
@@ -197,5 +183,31 @@ export class BaseService {
     }
 
     return context;
+  }
+
+  private buildHttpParams(
+    params?: Record<string, string | number | boolean | undefined>,
+  ): HttpParams {
+    let httpParams = new HttpParams();
+    if (!params) {
+      return httpParams;
+    }
+
+    const seenKeys = new Set<string>();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value === undefined || value === null || value === '') {
+        return;
+      }
+
+      const normalizedKey = key.toLowerCase();
+      if (seenKeys.has(normalizedKey)) {
+        return;
+      }
+
+      seenKeys.add(normalizedKey);
+      httpParams = httpParams.set(key, String(value));
+    });
+
+    return httpParams;
   }
 }
