@@ -1,9 +1,10 @@
 import { Injectable, inject } from '@angular/core';
 
-import { Observable, catchError, map, of } from 'rxjs';
+import { Observable, catchError, map, of, throwError } from 'rxjs';
 
 import { PaginatedAggregatorResponse } from '../../../../core/interfaces';
 import { BaseService } from '../../../../shared/services/base/base.service';
+import { buildFleetQueryParams, normalizeFleetId } from '../../../../shared/utils/fleet-query.utils';
 import { normalizePaginatedResponse } from '../../../../shared/utils/paginated-response.normalizer';
 import { Booking, BookingFilters, BookingUpsertRequest } from '../../models';
 import { normalizeBooking } from '../../models/booking/booking.normalizer';
@@ -22,7 +23,7 @@ export class BookingService {
         {
           PageNumber: params.pageNumber,
           PageSize: params.pageSize,
-          FleetId: params.fleetId,
+          ...buildFleetQueryParams(params.fleetId, 'both'),
           BRANCHID: params.branchId ?? undefined,
           Search: params.search,
           OrderByDirection: params.orderByDirection ?? 'DESC',
@@ -36,8 +37,16 @@ export class BookingService {
       );
   }
 
-  getById(id: string, fleetId: string): Observable<Booking> {
-    return this.api.getData<unknown>(`${this.base}/${id}/${fleetId}`).pipe(map(normalizeBooking));
+  getById(id: string, fleetId?: string | null): Observable<Booking> {
+    const normalizedFleetId = normalizeFleetId(fleetId);
+    if (!normalizedFleetId) {
+      return this.getByIdFromList(id);
+    }
+
+    return this.api.getData<unknown>(`${this.base}/${id}/${normalizedFleetId}`).pipe(
+      map(normalizeBooking),
+      catchError(error => this.getByIdFromList(id, normalizedFleetId, error)),
+    );
   }
 
   create(body: BookingUpsertRequest): Observable<unknown> {
@@ -55,7 +64,7 @@ export class BookingService {
       .getData<unknown[]>(
         `${this.base}/List`,
         {
-          IdFleet: params.fleetId,
+          ...buildFleetQueryParams(params.fleetId, 'both'),
           BranchId: params.branchId ?? undefined,
         },
         { suppressErrorToast: true },
@@ -156,5 +165,31 @@ export class BookingService {
       totalCount: 0,
       totalPages: 1,
     };
+  }
+
+  private getByIdFromList(
+    id: string,
+    fleetId?: string,
+    sourceError?: unknown,
+  ): Observable<Booking> {
+    return this.api
+      .getData<unknown[]>(
+        `${this.base}/List`,
+        {
+          ...buildFleetQueryParams(fleetId, 'both'),
+        },
+        { suppressErrorToast: true },
+      )
+      .pipe(
+        map(items => (items ?? []).map(normalizeBooking)),
+        map(items => items.find(item => String(item.id) === String(id))),
+        map(item => {
+          if (!item) {
+            throw sourceError ?? new Error('Booking not found');
+          }
+          return item;
+        }),
+        catchError(error => throwError(() => sourceError ?? error)),
+      );
   }
 }

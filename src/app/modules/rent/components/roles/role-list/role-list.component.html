@@ -1,6 +1,8 @@
 <div class="container-fluid">
   <app-page-header [title]="'Roles' | translate" [subtitle]="'Manage security roles, role names, and attached privileges.' | translate">
-    <a class="btn btn-primary" routerLink="/roles/create">{{ 'Create Role' | translate }}</a>
+    <div class="list-header-actions">
+      <a class="btn btn-primary" routerLink="/roles/create">{{ 'Create Role' | translate }}</a>
+    </div>
   </app-page-header>
 
   <div class="card">

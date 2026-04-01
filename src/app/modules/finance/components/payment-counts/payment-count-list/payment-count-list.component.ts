@@ -62,12 +62,6 @@ export class PaymentCountListComponent implements OnInit {
 
   private load(): void {
     const fleetId = this.authState.fleetId();
-    if (!fleetId) {
-      const message = this.translate.instant('FleetId is required');
-      this.loadError.set(message);
-      this.toast.error(message);
-      return;
-    }
 
     this.loading.set(true);
     this.loadError.set(null);

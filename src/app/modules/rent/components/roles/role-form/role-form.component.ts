@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
-import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { FormsModule, NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
@@ -13,7 +13,7 @@ import { PageHeaderComponent } from '../../../../../shared/ui/page-header/page-h
 @Component({
   selector: 'app-role-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, TranslateModule, PageHeaderComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterLink, TranslateModule, PageHeaderComponent],
   templateUrl: './role-form.component.html',
 })
 export class RoleFormComponent implements OnInit {
@@ -32,7 +32,20 @@ export class RoleFormComponent implements OnInit {
   isEdit = signal(false);
   roleId = signal<string | null>(null);
   privileges = signal<PrivilegeTypeLookup[]>([]);
+  privilegeSearch = signal('');
   loading = signal(false);
+  filteredPrivileges = computed(() => {
+    const term = this.privilegeSearch().trim().toLowerCase();
+    if (!term) {
+      return this.privileges();
+    }
+
+    return this.privileges().filter(privilege =>
+      [privilege.name, privilege.nameEn, privilege.privilegeName]
+        .filter(Boolean)
+        .some(value => String(value).toLowerCase().includes(term)),
+    );
+  });
 
   form = this.fb.group({
     name: ['', [Validators.required, Validators.maxLength(255), Validators.pattern(RoleFormComponent.ROLE_NAME_REGEX)]],
@@ -77,6 +90,25 @@ export class RoleFormComponent implements OnInit {
 
   isPrivilegeSelected(id: string): boolean {
     return this.form.controls.privilegeTypeIds.value.includes(id);
+  }
+
+  selectAllFiltered(): void {
+    const selected = new Set(this.form.controls.privilegeTypeIds.value);
+    for (const privilege of this.filteredPrivileges()) {
+      selected.add(privilege.id);
+    }
+
+    this.form.controls.privilegeTypeIds.setValue(Array.from(selected));
+    this.form.controls.privilegeTypeIds.markAsDirty();
+  }
+
+  clearSelectedPrivileges(): void {
+    this.form.controls.privilegeTypeIds.setValue([]);
+    this.form.controls.privilegeTypeIds.markAsDirty();
+  }
+
+  selectedPrivilegesCount(): number {
+    return this.form.controls.privilegeTypeIds.value.length;
   }
 
   save(): void {

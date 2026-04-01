@@ -5,6 +5,7 @@ import { PaginatedAggregatorResponse } from '../../../../core/interfaces';
 import { BaseRequestOptions } from '../../../../shared/services/base/base.service';
 import { User, UserCreateRequest, UserUpdateRequest, UserPrivilegesRequest, PaginatedRequest } from '../../models';
 import { BaseService } from '../../../../shared/services/base/base.service';
+import { buildFleetQueryParams } from '../../../../shared/utils/fleet-query.utils';
 import { normalizePaginatedResponse } from '../../../../shared/utils/paginated-response.normalizer';
 import { normalizeUser } from '../../models/users/user.normalizer';
 
@@ -19,7 +20,7 @@ export class UserService {
   getList(status?: string, options?: BaseRequestOptions, fleetId?: string): Observable<User[]> {
     return this.api.getData<unknown[]>(`${this.base}/user-list`, {
       Status: status,
-      FleetId: fleetId,
+      ...buildFleetQueryParams(fleetId, 'both'),
     }, options).pipe(map(items => (items ?? []).map(normalizeUser)));
   }
 
@@ -33,7 +34,7 @@ export class UserService {
       PageNumber: params.pageNumber,
       PageSize: params.pageSize,
       Search: params.search,
-      FleetId: params.fleetId,
+      ...buildFleetQueryParams(params.fleetId, 'both'),
     }, silentOptions).pipe(
       map(response => normalizePaginatedResponse(response, normalizeUser)),
       catchError(() =>

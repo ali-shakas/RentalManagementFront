@@ -1,61 +1,68 @@
 <div class="container-fluid">
   <app-page-header [title]="'Customers' | translate" [subtitle]="'Customer records with identity, contact, license, and profile image support.' | translate">
-    <a class="btn btn-primary" routerLink="/customers/create">{{ 'Create Customer' | translate }}</a>
+    <div class="list-header-actions">
+      <a class="btn btn-primary" routerLink="/customers/create">{{ 'Create Customer' | translate }}</a>
+    </div>
   </app-page-header>
 
   <div class="card">
     <div class="card-body">
-      <div class="row g-3 mb-3">
-        <div class="col-md-6">
-          <div class="input-group">
-            <input class="form-control" [placeholder]="'Search customers...' | translate" [ngModel]="search()" (ngModelChange)="search.set($event)" (keyup.enter)="load()" />
-            <button class="btn btn-outline-secondary" type="button" (click)="load()">{{ 'Search' | translate }}</button>
-          </div>
-        </div>
-        <div class="col-md-3">
-          <select class="form-select" [ngModel]="isActive()" (ngModelChange)="isActive.set($event); load()">
-            <option [ngValue]="''">{{ 'All statuses' | translate }}</option>
-            <option [ngValue]="true">{{ 'Active' | translate }}</option>
-            <option [ngValue]="false">{{ 'Inactive' | translate }}</option>
+      <div class="row g-3 mb-3 align-items-center">
+        <div class="col-lg-3 col-md-4">
+          <select class="form-select" [ngModel]="searchField()" (ngModelChange)="searchField.set($event)">
+            @for (option of searchFieldOptions; track option.value) {
+              <option [ngValue]="option.value">{{ option.label | translate }}</option>
+            }
           </select>
+        </div>
+        <div class="col-lg-9 col-md-8">
+          <div class="input-group">
+            <button class="btn btn-primary customer-search-btn" type="button" (click)="onSearchSubmit()">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <span>{{ 'Search' | translate }}</span>
+            </button>
+            <input
+              class="form-control"
+              [placeholder]="'Search customers...' | translate"
+              [ngModel]="search()"
+              (ngModelChange)="search.set($event)"
+              (keyup.enter)="onSearchSubmit()"
+            />
+          </div>
         </div>
       </div>
 
       @if (loading()) {
         <div class="text-center py-5"><div class="spinner-border text-primary"></div></div>
-      } @else if (!customers().length) {
+      } @else if (!filteredCustomers().length) {
         <app-empty-state [title]="'No customers found' | translate" [description]="'Create a customer profile to use it in bookings.' | translate" />
       } @else {
         <div class="table-responsive">
-          <table class="table table-striped align-middle">
+          <table class="table table-striped align-middle customer-grid">
             <thead>
               <tr>
-                <th>{{ 'Name' | translate }}</th>
-                <th>{{ 'Identity' | translate }}</th>
+                <th>{{ 'Membership No' | translate }}</th>
+                <th>{{ 'Arabic Name' | translate }}</th>
                 <th>{{ 'Phone' | translate }}</th>
-                <th>{{ 'Email' | translate }}</th>
-                <th>{{ 'Status' | translate }}</th>
-                <th class="text-end">{{ 'Actions' | translate }}</th>
+                <th>{{ 'License Expiry Date' | translate }}</th>
+                <th>{{ 'Identity' | translate }}</th>
+                <th>{{ 'License' | translate }}</th>
+                <th>{{ 'Birth Date' | translate }}</th>
+                <th class="text-end customer-actions-head">{{ 'Actions' | translate }}</th>
               </tr>
             </thead>
             <tbody>
-              @for (customer of customers(); track customer.id) {
+              @for (customer of filteredCustomers(); track customer.id) {
                 <tr>
-                  <td>{{ customer.fullName }}</td>
-                  <td>{{ customer.identityNumber || '-' }}</td>
-                  <td>{{ customer.phoneNumber || '-' }}</td>
-                  <td>{{ customer.email || '-' }}</td>
-                  <td><app-status-badge [label]="customer.isActive ? ('Active' | translate) : ('Inactive' | translate)" [tone]="customer.isActive ? 'success' : 'secondary'" /></td>
+                  <td>{{ getMembershipNo(customer) }}</td>
+                  <td>{{ getArabicName(customer) }}</td>
+                  <td>{{ getPhone(customer) }}</td>
+                  <td>{{ getLicenseExpiry(customer) }}</td>
+                  <td>{{ getIdentity(customer) }}</td>
+                  <td>{{ getLicense(customer) }}</td>
+                  <td>{{ getBirthDate(customer) }}</td>
                   <td class="text-end">
                     <div class="table-actions">
-                      <a
-                        class="table-action-icon table-action-icon--info"
-                        [routerLink]="['/customers', customer.id, 'details']"
-                        [attr.aria-label]="'Details' | translate"
-                        [title]="'Details' | translate"
-                      >
-                        <i class="fa-solid fa-eye"></i>
-                      </a>
                       <a
                         class="table-action-icon table-action-icon--primary"
                         [routerLink]="['/customers', customer.id, 'edit']"
@@ -63,6 +70,23 @@
                         [title]="'Edit' | translate"
                       >
                         <i class="fa-solid fa-pen-to-square"></i>
+                      </a>
+                      <button
+                        class="table-action-icon table-action-icon--danger"
+                        type="button"
+                        (click)="deleteCustomer(customer)"
+                        [attr.aria-label]="'Delete' | translate"
+                        [title]="'Delete' | translate"
+                      >
+                        <i class="fa-solid fa-trash"></i>
+                      </button>
+                      <a
+                        class="table-action-icon table-action-icon--info"
+                        [routerLink]="['/customers', customer.id, 'details']"
+                        [attr.aria-label]="'Details' | translate"
+                        [title]="'Details' | translate"
+                      >
+                        <i class="fa-solid fa-eye"></i>
                       </a>
                     </div>
                   </td>

@@ -1,5 +1,10 @@
 <div class="d-flex align-items-center profile-media">
-  <img class="b-r-10 img-40" src="assets/images/dashboard/profile.png" alt="" />
+  <img
+    class="b-r-10 img-40"
+    [src]="avatarUrl()"
+    [alt]="displayName()"
+    (error)="onAvatarError($event)"
+  />
   <div class="flex-grow-1">
     <span>{{ displayName() }}</span>
     <p class="mb-0">

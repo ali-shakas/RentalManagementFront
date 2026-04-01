@@ -1,5 +1,7 @@
 import { NgClass } from '@angular/common';
-import { Component, HostListener, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, HostListener, NgZone, OnDestroy, OnInit, inject } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
+import { Subscription } from 'rxjs';
 
 import { NavMenuService } from '../../services/layout/nav-menu.service';
 import { Language } from './language/language';
@@ -19,8 +21,45 @@ import { Theme } from './theme/theme';
     Profile,
   ],
 })
-export class Header {
+export class Header implements OnInit, OnDestroy {
   public navmenu = inject(NavMenuService);
+  private translate = inject(TranslateService);
+  private cdr = inject(ChangeDetectorRef);
+  private zone = inject(NgZone);
+  private clockIntervalId: ReturnType<typeof setInterval> | null = null;
+  private languageSubscription: Subscription | null = null;
+
+  public gregorianDate = '';
+  public hijriDate = '';
+  public time12 = '';
+
+  public get isArabicLanguage(): boolean {
+    return this.getLanguageCode() === 'ar';
+  }
+
+  ngOnInit(): void {
+    this.refreshDateTime();
+    this.clockIntervalId = setInterval(() => {
+      this.zone.run(() => {
+        this.refreshDateTime();
+        this.cdr.detectChanges();
+      });
+    }, 1000);
+    this.languageSubscription = this.translate.onLangChange.subscribe(() => {
+      this.refreshDateTime();
+      this.cdr.detectChanges();
+    });
+  }
+
+  ngOnDestroy(): void {
+    if (this.clockIntervalId) {
+      clearInterval(this.clockIntervalId);
+      this.clockIntervalId = null;
+    }
+
+    this.languageSubscription?.unsubscribe();
+    this.languageSubscription = null;
+  }
 
   openMenu() {
     this.navmenu.isDisplay = !this.navmenu.isDisplay;
@@ -29,5 +68,43 @@ export class Header {
   @HostListener('window:resize')
   onResize() {
     this.navmenu.isDisplay = window.innerWidth < 992;
+  }
+
+  private refreshDateTime(): void {
+    const now = new Date();
+    const isArabic = this.getLanguageCode() === 'ar';
+    const baseLocale = isArabic ? 'ar-SA' : 'en-US';
+    const hijriLocale = isArabic ? 'ar-SA-u-ca-islamic' : 'en-US-u-ca-islamic';
+
+    this.gregorianDate = new Intl.DateTimeFormat(baseLocale, {
+      year: 'numeric',
+      month: 'short',
+      day: '2-digit',
+      weekday: 'short',
+      calendar: 'gregory',
+    }).format(now);
+
+    this.hijriDate = new Intl.DateTimeFormat(hijriLocale, {
+      year: 'numeric',
+      month: 'short',
+      day: '2-digit',
+      weekday: 'short',
+    }).format(now);
+
+    this.time12 = new Intl.DateTimeFormat(baseLocale, {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true,
+    }).format(now);
+  }
+
+  private getLanguageCode(): 'ar' | 'en' {
+    const language =
+      this.translate.currentLang?.toLowerCase() ||
+      this.translate.defaultLang?.toLowerCase() ||
+      'en';
+
+    return language.startsWith('ar') ? 'ar' : 'en';
   }
 }

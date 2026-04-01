@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 
 import { AuthStateService } from '../../core/auth/auth-state.service';
 import { AuthService } from '../../shared/services/auth/auth.service';
+import { LayoutService } from '../../shared/services/layout/layout.service';
 import { TokenService } from '../../shared/services/storage/token.service';
 import { ToastService } from '../../shared/services/toast.service';
 
@@ -22,6 +23,7 @@ export class LoginComponent implements OnInit {
   private router = inject(Router);
   private tokenService = inject(TokenService);
   private toast = inject(ToastService);
+  private layout = inject(LayoutService);
 
   loading = false;
   loginDisabled = false;
@@ -37,7 +39,11 @@ export class LoginComponent implements OnInit {
   ngOnInit(): void {
     if (this.authState.isAuthenticated()) {
       this.router.navigate(['/dashboard']);
+      return;
     }
+
+    // Login screen should always start in dark mode.
+    this.layout.applyTheme('dark-only');
   }
 
   onSubmit(): void {

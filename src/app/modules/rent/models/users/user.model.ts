@@ -32,6 +32,7 @@ export interface User {
   branchId?: number;
   branchNameAr?: string;
   branchNameEn?: string;
+  fleetId?: string;
   roles?: RoleLookup[];
   userRoles?: UserRole[];
   userPrivileges?: UserPrivilege[];
@@ -47,6 +48,7 @@ export interface UserCreateRequest {
   nameEn?: string;
   isActive: boolean;
   expirationDate?: string;
+  fleetId?: string;
   rolesId: string[];
 }
 

@@ -1,11 +1,5 @@
 <div class="container-fluid">
-  <app-page-header [title]="'Dashboard' | translate" [subtitle]="'Operational overview for admins, fleet managers, and staff.' | translate">
-    <div class="dashboard-actions d-flex flex-wrap gap-2">
-      <a class="btn btn-primary" routerLink="/users/create">{{ 'New User' | translate }}</a>
-      <a class="btn btn-light" routerLink="/booking/create">{{ 'New Booking' | translate }}</a>
-      <a class="btn btn-light" routerLink="/vehicles/create">{{ 'Add Vehicle' | translate }}</a>
-    </div>
-  </app-page-header>
+  <app-page-header [title]="'Dashboard' | translate"></app-page-header>
 
   <div class="row g-3 mb-4 dashboard-stats">
     <div class="col-6 col-md-4 col-xl-2">
@@ -161,26 +155,48 @@
           <span>{{ 'Common operational shortcuts' | translate }}</span>
         </div>
         <div class="card-body quick-actions-card d-grid gap-2">
-          <a class="btn btn-outline-primary text-start quick-actions-card__action" routerLink="/users/create">
-            <span class="quick-actions-card__title">{{ 'Create user' | translate }}</span>
-            <small class="quick-actions-card__meta">{{ 'Add a new employee or admin account' | translate }}</small>
-          </a>
-          <a class="btn btn-outline-primary text-start quick-actions-card__action" routerLink="/roles/create">
-            <span class="quick-actions-card__title">{{ 'Create role' | translate }}</span>
-            <small class="quick-actions-card__meta">{{ 'Define permissions for a new responsibility' | translate }}</small>
-          </a>
-          <a class="btn btn-outline-primary text-start quick-actions-card__action" routerLink="/vehicles/create">
-            <span class="quick-actions-card__title">{{ 'Add vehicle' | translate }}</span>
-            <small class="quick-actions-card__meta">{{ 'Register a vehicle in the active fleet' | translate }}</small>
-          </a>
-          <a class="btn btn-outline-primary text-start quick-actions-card__action" routerLink="/customers/create">
-            <span class="quick-actions-card__title">{{ 'Add customer' | translate }}</span>
-            <small class="quick-actions-card__meta">{{ 'Create a customer profile for reservations' | translate }}</small>
-          </a>
-          <a class="btn btn-outline-primary text-start quick-actions-card__action" routerLink="/booking/create">
-            <span class="quick-actions-card__title">{{ 'Create booking' | translate }}</span>
-            <small class="quick-actions-card__meta">{{ 'Start a fresh rental booking workflow' | translate }}</small>
-          </a>
+          @if (canAccessPath('/users/create')) {
+            <a class="btn btn-outline-primary text-start quick-actions-card__action" routerLink="/users/create">
+              <span class="quick-actions-card__title">{{ 'Create user' | translate }}</span>
+              <small class="quick-actions-card__meta">{{ 'Add a new employee or admin account' | translate }}</small>
+            </a>
+          }
+          @if (canAccessPath('/roles/create')) {
+            <a class="btn btn-outline-primary text-start quick-actions-card__action" routerLink="/roles/create">
+              <span class="quick-actions-card__title">{{ 'Create role' | translate }}</span>
+              <small class="quick-actions-card__meta">{{ 'Define permissions for a new responsibility' | translate }}</small>
+            </a>
+          }
+          @if (canAccessPath('/privileges')) {
+            <a class="btn btn-outline-primary text-start quick-actions-card__action" routerLink="/privileges">
+              <span class="quick-actions-card__title">{{ 'Manage privileges' | translate }}</span>
+              <small class="quick-actions-card__meta">{{ 'Review and update access matrix' | translate }}</small>
+            </a>
+          }
+          @if (canAccessPath('/fleet/create')) {
+            <a class="btn btn-outline-primary text-start quick-actions-card__action" routerLink="/fleet/create">
+              <span class="quick-actions-card__title">{{ 'Add fleet' | translate }}</span>
+              <small class="quick-actions-card__meta">{{ 'Create a new operational fleet unit' | translate }}</small>
+            </a>
+          }
+          @if (canAccessPath('/vehicles/create')) {
+            <a class="btn btn-outline-primary text-start quick-actions-card__action" routerLink="/vehicles/create">
+              <span class="quick-actions-card__title">{{ 'Add vehicle' | translate }}</span>
+              <small class="quick-actions-card__meta">{{ 'Register a vehicle in the active fleet' | translate }}</small>
+            </a>
+          }
+          @if (canAccessPath('/customers/create')) {
+            <a class="btn btn-outline-primary text-start quick-actions-card__action" routerLink="/customers/create">
+              <span class="quick-actions-card__title">{{ 'Add customer' | translate }}</span>
+              <small class="quick-actions-card__meta">{{ 'Create a customer profile for reservations' | translate }}</small>
+            </a>
+          }
+          @if (canAccessPath('/booking/create')) {
+            <a class="btn btn-outline-primary text-start quick-actions-card__action" routerLink="/booking/create">
+              <span class="quick-actions-card__title">{{ 'Create booking' | translate }}</span>
+              <small class="quick-actions-card__meta">{{ 'Start a fresh rental booking workflow' | translate }}</small>
+            </a>
+          }
         </div>
       </div>
     </div>

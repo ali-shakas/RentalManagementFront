@@ -1,18 +1,20 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
-import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { FormsModule, NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 
+import { AuthStateService } from '../../../../../core/auth/auth-state.service';
 import { UserService } from '../../../services/users/user.service';
 import { RoleService } from '../../../services/roles/role.service';
+import { FleetService } from '../../../services/fleet/fleet.service';
 import { ToastService } from '../../../../../shared/services/toast.service';
-import { UserCreateRequest, RoleLookup } from '../../../models';
+import { Fleet, RoleLookup, UserCreateRequest } from '../../../models';
 import { PageHeaderComponent } from '../../../../../shared/ui/page-header/page-header.component';
 
 @Component({
   selector: 'app-user-form',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, TranslateModule, PageHeaderComponent],
+  imports: [ReactiveFormsModule, FormsModule, RouterLink, TranslateModule, PageHeaderComponent],
   templateUrl: './user-form.component.html',
   styleUrl: './user-form.component.scss',
 })
@@ -22,8 +24,10 @@ export class UserFormComponent implements OnInit {
   private static readonly ENGLISH_NAME_REGEX = /^[A-Za-z\s.'-]{0,255}$/;
 
   private fb = inject(NonNullableFormBuilder);
+  private authState = inject(AuthStateService);
   private userService = inject(UserService);
   private roleService = inject(RoleService);
+  private fleetService = inject(FleetService);
   private toast = inject(ToastService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -31,7 +35,23 @@ export class UserFormComponent implements OnInit {
   isEdit = signal(false);
   userId = signal<string | null>(null);
   roles = signal<RoleLookup[]>([]);
+  roleSearch = signal('');
+  fleets = signal<Fleet[]>([]);
+  fleetLoading = signal(false);
   loading = signal(false);
+  isSuperAdmin = computed(() => this.authState.isSuperAdmin());
+  filteredRoles = computed(() => {
+    const keyword = this.roleSearch().trim().toLowerCase();
+    if (!keyword) {
+      return this.roles();
+    }
+
+    return this.roles().filter(role =>
+      [role.name, role.displayName, role.displayNameEn]
+        .filter(Boolean)
+        .some(value => String(value).toLowerCase().includes(keyword)),
+    );
+  });
 
   form = this.fb.group({
     userName: ['', [Validators.required, Validators.maxLength(255), Validators.pattern(UserFormComponent.USERNAME_REGEX)]],
@@ -41,10 +61,13 @@ export class UserFormComponent implements OnInit {
     nameEn: ['', [Validators.maxLength(255), Validators.pattern(UserFormComponent.ENGLISH_NAME_REGEX)]],
     isActive: [true],
     expirationDate: [''],
+    fleetId: [''],
     rolesId: [[] as string[]],
   });
 
   ngOnInit(): void {
+    this.configureFleetScope();
+
     this.roleService.getList().subscribe({
       next: list => this.roles.set(list ?? []),
       error: () => this.toast.error('Failed to load roles'),
@@ -59,11 +82,16 @@ export class UserFormComponent implements OnInit {
           this.form.patchValue({
             userName: user.userName,
             email: user.email,
-          nameAr: user.nameAr ?? '',
-          nameEn: user.nameEn ?? '',
+            nameAr: user.nameAr || '',
+            nameEn: user.nameEn || '',
             isActive: user.isActive,
             expirationDate: user.expirationDate ? user.expirationDate.slice(0, 10) : '',
-            rolesId: user.roleIds ?? user.roles?.map(r => r.id) ?? user.userRoles?.map(r => r.roleLookupId) ?? [],
+            fleetId: user.fleetId || this.resolveFleetId(),
+            rolesId:
+              user.roleIds ??
+              user.roles?.map(r => r.id) ??
+              user.userRoles?.map(r => r.roleLookupId) ??
+              [],
           });
         },
         error: () => this.toast.error('Failed to load user'),
@@ -89,6 +117,7 @@ export class UserFormComponent implements OnInit {
       nameEn: raw.nameEn.trim() || undefined,
       isActive: raw.isActive,
       expirationDate: raw.expirationDate || undefined,
+      fleetId: this.resolveFleetId(raw.fleetId),
       rolesId: raw.rolesId,
     };
     const id = this.userId();
@@ -98,7 +127,10 @@ export class UserFormComponent implements OnInit {
           this.toast.success('User updated');
           this.router.navigate(['/users']);
         },
-        error: () => this.loading.set(false),
+        error: () => {
+          this.toast.error('Failed to update user');
+          this.loading.set(false);
+        },
         complete: () => this.loading.set(false),
       });
     } else {
@@ -107,7 +139,10 @@ export class UserFormComponent implements OnInit {
           this.toast.success('User created');
           this.router.navigate(['/users']);
         },
-        error: () => this.loading.set(false),
+        error: () => {
+          this.toast.error('Failed to create user');
+          this.loading.set(false);
+        },
         complete: () => this.loading.set(false),
       });
     }
@@ -123,6 +158,43 @@ export class UserFormComponent implements OnInit {
 
   isRoleSelected(roleId: string): boolean {
     return this.form.controls.rolesId.value.includes(roleId);
+  }
+
+  roleDisplay(role: RoleLookup): string {
+    return role.displayName || role.displayNameEn || role.name;
+  }
+
+  selectedRolesCount(): number {
+    return this.form.controls.rolesId.value.length;
+  }
+
+  private configureFleetScope(): void {
+    if (this.isSuperAdmin()) {
+      this.form.controls.fleetId.setValidators([Validators.required]);
+      this.form.controls.fleetId.updateValueAndValidity();
+      this.loadFleets();
+      return;
+    }
+
+    const userFleetId = this.authState.fleetId();
+    if (userFleetId) {
+      this.form.controls.fleetId.setValue(userFleetId);
+    }
+  }
+
+  private loadFleets(): void {
+    this.fleetLoading.set(true);
+    this.fleetService
+      .getPaginated({ pageNumber: 1, pageSize: 500 })
+      .subscribe({
+        next: page => this.fleets.set(page.items ?? []),
+        error: () => this.toast.error('Failed to load fleets'),
+        complete: () => this.fleetLoading.set(false),
+      });
+  }
+
+  private resolveFleetId(rawFleetId?: string): string | undefined {
+    return rawFleetId || this.authState.fleetId() || undefined;
   }
 }
 

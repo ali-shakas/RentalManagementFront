@@ -1,1 +1,21 @@
 
+.customer-search-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 120px;
+  justify-content: center;
+}
+
+.customer-grid th,
+.customer-grid td {
+  white-space: nowrap;
+}
+
+.customer-grid td:nth-child(2) {
+  min-width: 260px;
+}
+
+.customer-actions-head {
+  min-width: 120px;
+}

@@ -1,9 +1,10 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, map } from 'rxjs';
+import { Observable, catchError, map, throwError } from 'rxjs';
 
 import { PaginatedAggregatorResponse } from '../../../../core/interfaces';
 import { BaseRequestOptions } from '../../../../shared/services/base/base.service';
 import { BaseService } from '../../../../shared/services/base/base.service';
+import { buildFleetQueryParams, normalizeFleetId } from '../../../../shared/utils/fleet-query.utils';
 import { Vehicle, VehicleFilters, VehicleUpsertRequest } from '../../models';
 import { normalizePaginatedResponse } from '../../../../shared/utils/paginated-response.normalizer';
 import { normalizeVehicle } from '../../models/vehicles/vehicle.normalizer';
@@ -16,27 +17,37 @@ export class VehicleService {
   private api = inject(BaseService);
   private readonly base = 'Vehicle';
 
-  getPaginated(params: VehicleFilters, options?: BaseRequestOptions): Observable<PaginatedAggregatorResponse<Vehicle>> {
-    return this.api.getData<unknown>(`${this.base}/Paginated`, {
-      FleetId: params.fleetId,
-      Fleetid: params.fleetId,
-      fleetId: params.fleetId,
-      fleetid: params.fleetId,
-      BranchId: params.branchId ?? undefined,
-      branchId: params.branchId ?? undefined,
-      BRANCHID: params.branchId ?? undefined,
-      status: params.status || undefined,
-      Search: params.search,
-      PageNumber: params.pageNumber,
-      PageSize: params.pageSize,
-      search: params.search,
-      pageNumber: params.pageNumber,
-      pageSize: params.pageSize,
-    }, options).pipe(map(response => normalizePaginatedResponse(response, normalizeVehicle)));
+  getPaginated(
+    params: VehicleFilters,
+    options?: BaseRequestOptions,
+  ): Observable<PaginatedAggregatorResponse<Vehicle>> {
+    return this.api.getData<unknown>(
+      `${this.base}/Paginated`,
+      {
+        ...buildFleetQueryParams(params.fleetId, 'both'),
+        BranchId: params.branchId ?? undefined,
+        status: params.status || undefined,
+        Search: params.search,
+        PageNumber: params.pageNumber,
+        PageSize: params.pageSize,
+        search: params.search,
+        pageNumber: params.pageNumber,
+        pageSize: params.pageSize,
+      },
+      options,
+    ).pipe(map(response => normalizePaginatedResponse(response, normalizeVehicle)));
   }
 
-  getById(id: string, fleetId: string): Observable<Vehicle> {
-    return this.api.getData<unknown>(`${this.base}/${id}/${fleetId}`).pipe(map(normalizeVehicle));
+  getById(id: string, fleetId?: string | null): Observable<Vehicle> {
+    const normalizedFleetId = normalizeFleetId(fleetId);
+    if (!normalizedFleetId) {
+      return this.getByIdFromList(id);
+    }
+
+    return this.api.getData<unknown>(`${this.base}/${id}/${normalizedFleetId}`).pipe(
+      map(normalizeVehicle),
+      catchError(error => this.getByIdFromList(id, normalizedFleetId, error)),
+    );
   }
 
   create(body: VehicleUpsertRequest): Observable<unknown> {
@@ -69,6 +80,32 @@ export class VehicleService {
     appendFormDataValue(formData, 'CapacitOil', body.capacitOil);
     appendFormDataValue(formData, 'Image', body.image);
     return formData;
+  }
+
+  private getByIdFromList(
+    id: string,
+    fleetId?: string,
+    sourceError?: unknown,
+  ): Observable<Vehicle> {
+    return this.api
+      .getData<unknown[]>(
+        `${this.base}/List`,
+        {
+          ...buildFleetQueryParams(fleetId, 'both'),
+        },
+        { suppressErrorToast: true },
+      )
+      .pipe(
+        map(items => (items ?? []).map(normalizeVehicle)),
+        map(items => items.find(item => String(item.id) === String(id))),
+        map(item => {
+          if (!item) {
+            throw sourceError ?? new Error('Vehicle not found');
+          }
+          return item;
+        }),
+        catchError(error => throwError(() => sourceError ?? error)),
+      );
   }
 }
 

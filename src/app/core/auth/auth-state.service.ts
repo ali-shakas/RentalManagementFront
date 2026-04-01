@@ -79,6 +79,7 @@ export class AuthStateService {
   readonly privileges = computed(() => this.state().user?.privileges ?? []);
   readonly fleetId = computed(() => this.state().user?.fleetId ?? this.tokenService.getFleetId() ?? null);
   readonly branchId = computed(() => this.state().user?.branchId ?? null);
+  readonly isSuperAdmin = computed(() => !this.fleetId());
   readonly isAuthenticated = computed(() => !!this.state().token);
 
   constructor() {

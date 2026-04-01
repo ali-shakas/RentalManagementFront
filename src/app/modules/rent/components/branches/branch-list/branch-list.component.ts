@@ -57,7 +57,7 @@ export class BranchListComponent implements OnInit {
 
   private buildParams(): BranchPaginatedRequest {
     return {
-      fleetId: this.fleetId(),
+      fleetId: this.fleetId() || undefined,
       pageNumber: this.pageNumber(),
       pageSize: this.pageSize(),
       search: this.search() || undefined,
@@ -65,11 +65,6 @@ export class BranchListComponent implements OnInit {
   }
 
   load(): void {
-    if (!this.fleetId()) {
-      this.toast.error(this.translate.instant('FleetId is missing in token. Please provide FleetId.'));
-      return;
-    }
-
     this.loading.set(true);
     this.branchApi.getPaginated(this.buildParams()).subscribe({
       next: res => {

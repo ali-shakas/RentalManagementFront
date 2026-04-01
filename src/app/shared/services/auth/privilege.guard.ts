@@ -2,6 +2,9 @@ import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 
 import { AuthStateService } from '../../../core/auth/auth-state.service';
+import { SUPER_ADMIN_ALLOWED_ROUTE_ROOTS } from '../../../core/auth/super-admin.constants';
+
+const superAdminAllowedRouteRoots = new Set<string>(SUPER_ADMIN_ALLOWED_ROUTE_ROOTS);
 
 /**
  * Guard يتحقق من صلاحيات المستخدم من الـ Store.
@@ -13,6 +16,17 @@ export const privilegeGuard: CanActivateFn = (route) => {
   const router = inject(Router);
   const requiredPrivileges = (route.data['privileges'] as string[] | undefined) ?? [];
   const requiredRoles = (route.data['roles'] as string[] | undefined) ?? [];
+  const routePath = route.routeConfig?.path ?? '';
+  const routeRoot = routePath.split('/').find(Boolean) ?? '';
+
+  if (authState.isSuperAdmin()) {
+    if (routeRoot && !superAdminAllowedRouteRoots.has(routeRoot)) {
+      router.navigate(['/dashboard']);
+      return false;
+    }
+
+    return true;
+  }
 
   if (requiredPrivileges.length === 0 && requiredRoles.length === 0) {
     return true;

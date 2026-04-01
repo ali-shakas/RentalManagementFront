@@ -1,9 +1,10 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, map } from 'rxjs';
+import { Observable, catchError, map, throwError } from 'rxjs';
 
 import type { PaginatedAggregatorResponse } from '../../../../core/interfaces';
 import { BaseRequestOptions } from '../../../../shared/services/base/base.service';
 import { BaseService } from '../../../../shared/services/base/base.service';
+import { buildFleetQueryParams, normalizeFleetId } from '../../../../shared/utils/fleet-query.utils';
 import type { Branch, BranchPaginatedRequest, BranchUpsertRequest } from '../../models';
 import { normalizePaginatedResponse } from '../../../../shared/utils/paginated-response.normalizer';
 import { normalizeBranch } from '../../models/branches/branch.normalizer';
@@ -19,26 +20,35 @@ export class BranchService {
     params: BranchPaginatedRequest,
     options?: BaseRequestOptions,
   ): Observable<PaginatedAggregatorResponse<Branch>> {
-    return this.api.getData<unknown>(`${this.base}/Paginated`, {
-      FleetId: params.fleetId,
-      Fleetid: params.fleetId,
-      fleetId: params.fleetId,
-      fleetid: params.fleetId,
-      PageNumber: params.pageNumber,
-      PageSize: params.pageSize,
-      Search: params.search,
-      pageNumber: params.pageNumber,
-      pageSize: params.pageSize,
-      search: params.search,
-      OrderBy: params.orderBy as any,
-      OrderByDirection: params.orderByDirection,
-      orderBy: params.orderBy as any,
-      orderByDirection: params.orderByDirection,
-    }, options).pipe(map(response => normalizePaginatedResponse(response, normalizeBranch)));
+    return this.api.getData<unknown>(
+      `${this.base}/Paginated`,
+      {
+        ...buildFleetQueryParams(params.fleetId, 'both'),
+        PageNumber: params.pageNumber,
+        PageSize: params.pageSize,
+        Search: params.search,
+        pageNumber: params.pageNumber,
+        pageSize: params.pageSize,
+        search: params.search,
+        OrderBy: params.orderBy as any,
+        OrderByDirection: params.orderByDirection,
+        orderBy: params.orderBy as any,
+        orderByDirection: params.orderByDirection,
+      },
+      options,
+    ).pipe(map(response => normalizePaginatedResponse(response, normalizeBranch)));
   }
 
-  getById(id: number, fleetId: string): Observable<Branch> {
-    return this.api.getData<unknown>(`${this.base}/${id}/${fleetId}`).pipe(map(normalizeBranch));
+  getById(id: number, fleetId?: string | null): Observable<Branch> {
+    const normalizedFleetId = normalizeFleetId(fleetId);
+    if (!normalizedFleetId) {
+      return this.getByIdFromList(id);
+    }
+
+    return this.api.getData<unknown>(`${this.base}/${id}/${normalizedFleetId}`).pipe(
+      map(normalizeBranch),
+      catchError(error => this.getByIdFromList(id, normalizedFleetId, error)),
+    );
   }
 
   create(body: BranchUpsertRequest): Observable<Branch> {
@@ -55,6 +65,32 @@ export class BranchService {
 
   softDelete(id: number): Observable<boolean> {
     return this.api.patchData<boolean>(`${this.base}/SoftDelete/${id}`, {});
+  }
+
+  private getByIdFromList(
+    id: number,
+    fleetId?: string,
+    sourceError?: unknown,
+  ): Observable<Branch> {
+    return this.api
+      .getData<unknown[]>(
+        `${this.base}/List`,
+        {
+          ...buildFleetQueryParams(fleetId, 'both'),
+        },
+        { suppressErrorToast: true },
+      )
+      .pipe(
+        map(items => (items ?? []).map(normalizeBranch)),
+        map(items => items.find(item => item.id === id)),
+        map(item => {
+          if (!item) {
+            throw sourceError ?? new Error('Branch not found');
+          }
+          return item;
+        }),
+        catchError(error => throwError(() => sourceError ?? error)),
+      );
   }
 }
 

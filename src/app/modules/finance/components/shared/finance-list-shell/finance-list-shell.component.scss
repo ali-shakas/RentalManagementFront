@@ -24,14 +24,6 @@
   padding-block: 0.95rem;
 }
 
-html[dir='rtl'] .finance-list-shell__meta {
-  flex-direction: row-reverse;
-}
-
-html[dir='rtl'] .finance-list-shell__header-actions {
-  flex-direction: row-reverse;
-}
-
 @media (max-width: 767.98px) {
   .finance-list-shell__card .table td,
   .finance-list-shell__card .table th {
@@ -40,6 +32,6 @@ html[dir='rtl'] .finance-list-shell__header-actions {
 
   .finance-list-shell__header-actions {
     width: 100%;
-    justify-content: space-between;
+    justify-content: flex-start;
   }
 }
