@@ -89,7 +89,7 @@ export class DashboardComponent implements OnInit {
             pageSize: 1000,
           }).pipe(catchError(error => of(this.handleDashboardError(error, emptyPage<Vehicle>()))))
         : of(emptyPage<Vehicle>()),
-      usersPage: this.userService.getPaginated({ pageNumber: 1, pageSize: 100 }).pipe(
+      usersPage: this.userService.getPaginated({ pageNumber: 1, pageSize: 100, fleetId }).pipe(
         catchError(error => of(this.handleDashboardError(error, emptyPage<User>()))),
       ),
       roles: this.roleService.getList().pipe(
@@ -114,9 +114,9 @@ export class DashboardComponent implements OnInit {
         if (paginatedUsers.length > 0 || (usersPage.totalCount ?? 0) > 0) {
           this.applyUsersSnapshot(paginatedUsers, usersPage.totalCount ?? paginatedUsers.length);
         } else {
-          this.userService.getList('Default').pipe(
+          this.userService.getList('Default', undefined, fleetId).pipe(
             catchError(() =>
-              this.userService.getList(undefined).pipe(
+              this.userService.getList(undefined, undefined, fleetId).pipe(
                 catchError(error => of(this.handleDashboardError(error, []))),
               ),
             ),

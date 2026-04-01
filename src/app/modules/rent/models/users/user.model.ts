@@ -64,5 +64,6 @@ export interface PaginatedRequest {
   pageNumber: number;
   pageSize: number;
   search?: string;
+  fleetId?: string;
 }
 

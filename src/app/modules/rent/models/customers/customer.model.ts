@@ -1,11 +1,27 @@
 export interface Customer {
   id: string;
   code?: string;
+  nameAr?: string;
+  nameEn?: string;
   fullName: string;
   firstName?: string;
   lastName?: string;
   email?: string;
+  firstMobileNumber?: string;
+  secondMobileNumber?: string;
+  thirdMobileNumber?: string;
   phoneNumber?: string;
+  licenceNo?: string;
+  idNationality?: string;
+  dateIdNationality?: string;
+  birthDay?: string;
+  plaseIdNationality?: string;
+  plaseDrivinglicense?: string;
+  dateDrivinglicense?: string;
+  dateDrivinglicenseHajri?: string;
+  taxRecord?: number;
+  idSubscriptionsOfCustomer?: number;
+  fleetId?: string;
   identityNumber?: string;
   drivingLicenseNumber?: string;
   drivingLicenseExpiryDate?: string;

@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
+import { AuthStateService } from '../../../../../core/auth/auth-state.service';
 import { UserService } from '../../../services/users/user.service';
 import { ToastService } from '../../../../../shared/services/toast.service';
 import { ConfirmService } from '../../../../../shared/services/confirm.service';
@@ -16,6 +17,7 @@ import { User } from '../../../models';
   styleUrl: './user-list.component.scss',
 })
 export class UserListComponent implements OnInit {
+  private authState = inject(AuthStateService);
   private userService = inject(UserService);
   private toast = inject(ToastService);
   private confirm = inject(ConfirmService);
@@ -45,6 +47,7 @@ export class UserListComponent implements OnInit {
         pageNumber: this.pageNumber(),
         pageSize: this.pageSize(),
         search: this.search() || undefined,
+        fleetId: this.authState.fleetId() ?? undefined,
       })
       .subscribe({
         next: res => {
