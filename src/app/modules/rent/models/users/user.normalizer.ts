@@ -33,6 +33,7 @@ export function normalizeUser(raw: unknown): User {
     branchId: pick<number>(source, 'branchId', 'BranchId'),
     branchNameAr: pick<string>(source, 'branchNameAr', 'BranchNameAr'),
     branchNameEn: pick<string>(source, 'branchNameEn', 'BranchNameEn'),
+    fleetId: pick<string>(source, 'fleetId', 'FleetId'),
     userRoles: pick(source, 'userRoles', 'UserRoles'),
     userPrivileges: pick(source, 'userPrivileges', 'UserPrivileges'),
   };

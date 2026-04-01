@@ -3,9 +3,11 @@
     [title]="'Branches' | translate"
     [subtitle]="'Branch operations, availability, and fleet distribution.' | translate"
   >
-    <a class="btn btn-primary" routerLink="/branches/create" hasPrivilege="CreateBranch">
-      {{ 'Create Branch' | translate }}
-    </a>
+    <div class="list-header-actions">
+      <a class="btn btn-primary" routerLink="/branches/create" hasPrivilege="CreateBranch">
+        {{ 'Create Branch' | translate }}
+      </a>
+    </div>
   </app-page-header>
 
   <div class="row mb-3">

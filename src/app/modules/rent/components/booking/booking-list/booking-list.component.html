@@ -1,6 +1,8 @@
 <div class="container-fluid">
   <app-page-header [title]="'Bookings' | translate" [subtitle]="'Reservations across fleets, branches, customers, and vehicles.' | translate">
-    <a class="btn btn-primary" routerLink="/booking/create">{{ 'Create Booking' | translate }}</a>
+    <div class="list-header-actions">
+      <a class="btn btn-primary" routerLink="/booking/create">{{ 'Create Booking' | translate }}</a>
+    </div>
   </app-page-header>
 
   <div class="card">

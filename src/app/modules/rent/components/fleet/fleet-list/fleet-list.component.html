@@ -3,7 +3,9 @@
     [title]="'Fleets' | translate"
     [subtitle]="'Master fleet records used across branches, vehicles, and bookings.' | translate"
   >
-    <a class="btn btn-primary" routerLink="/fleet/create">{{ 'Create Fleet' | translate }}</a>
+    <div class="list-header-actions">
+      <a class="btn btn-primary" routerLink="/fleet/create">{{ 'Create Fleet' | translate }}</a>
+    </div>
   </app-page-header>
 
   <div class="row mb-3">

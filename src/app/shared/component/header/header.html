@@ -14,6 +14,23 @@
           <use href="assets/svg/icon-sprite.svg#stroke-animation"></use>
         </svg>
       </button>
+      <div class="header-datetime-panel" [attr.dir]="isArabicLanguage ? 'rtl' : 'ltr'" aria-live="polite">
+        <div class="header-datetime-row">
+          <span class="header-datetime-item">
+            <span class="header-datetime-label">{{ isArabicLanguage ? 'ميلادي' : 'Gregorian' }}</span>
+            <span class="header-datetime-value">{{ gregorianDate }}</span>
+          </span>
+          <span class="header-datetime-separator">•</span>
+          <span class="header-datetime-item">
+            <span class="header-datetime-label">{{ isArabicLanguage ? 'هجري' : 'Hijri' }}</span>
+            <span class="header-datetime-value">{{ hijriDate }}</span>
+          </span>
+        </div>
+        <div class="header-time-row">
+          <i class="fa-regular fa-clock"></i>
+          <span>{{ time12 }}</span>
+        </div>
+      </div>
     </div>
     <div
       class="nav-right col-auto pull-right right-header p-0 ms-auto"

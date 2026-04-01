@@ -61,11 +61,7 @@ export class BranchFormComponent implements OnInit {
   }
 
   private loadBranch(id: number): void {
-    const fleetId = this.form.controls.fleetId.value || this.fleetId();
-    if (!fleetId) {
-      this.toast.error(this.translate.instant('FleetId is required to load branch'));
-      return;
-    }
+    const fleetId = (this.form.controls.fleetId.value || this.fleetId() || '').trim() || undefined;
 
     this.loading.set(true);
     this.branchApi.getById(id, fleetId).subscribe({

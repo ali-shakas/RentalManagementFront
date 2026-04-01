@@ -70,6 +70,36 @@
                 <div class="form-text">{{ 'Hint User Expiration Date' | translate }}</div>
               </div>
 
+              @if (isSuperAdmin()) {
+                <div class="col-md-6">
+                  <label class="form-label">{{ 'Fleet' | translate }} <span class="text-danger">*</span></label>
+                  <select
+                    class="form-select"
+                    formControlName="fleetId"
+                    [class.is-invalid]="form.get('fleetId')?.invalid && form.get('fleetId')?.touched"
+                  >
+                    <option value="">{{ 'Select Fleet' | translate }}</option>
+                    @for (fleet of fleets(); track fleet.id) {
+                      <option [value]="fleet.id">
+                        {{ fleet.name }}{{ fleet.fleetCode ? ' (' + fleet.fleetCode + ')' : '' }}
+                      </option>
+                    }
+                  </select>
+                  <div class="form-text">{{ 'Super admin must choose the fleet for this user account.' | translate }}</div>
+                  @if (fleetLoading()) {
+                    <div class="small text-muted mt-1">{{ 'Loading fleets...' | translate }}</div>
+                  }
+                  @if (form.get('fleetId')?.invalid && form.get('fleetId')?.touched) {
+                    <div class="invalid-feedback d-block">{{ 'Fleet is required for super admin user creation.' | translate }}</div>
+                  }
+                </div>
+                <div class="col-md-6">
+                  <div class="alert alert-info mb-0 h-100 d-flex align-items-center">
+                    <small>{{ 'Create fleet first, then bind user + role to keep access scope clean.' | translate }}</small>
+                  </div>
+                </div>
+              }
+
               <div class="col-md-6">
                 <label class="form-label">{{ 'Name (Ar)' | translate }} <span class="text-danger">*</span></label>
                 <input
@@ -111,11 +141,27 @@
               </div>
 
               <div class="col-12">
-                <label class="form-label">{{ 'Roles' | translate }}</label>
+                <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap">
+                  <label class="form-label mb-0">{{ 'Roles' | translate }}</label>
+                  <span class="badge bg-primary-subtle text-primary-emphasis">
+                    {{ selectedRolesCount() }} {{ 'selected' | translate }}
+                  </span>
+                </div>
                 <div class="form-text mb-2">{{ 'Hint User Roles' | translate }}</div>
+                <div class="input-group input-group-sm mb-3">
+                  <span class="input-group-text"><i class="fa-solid fa-magnifying-glass"></i></span>
+                  <input
+                    type="text"
+                    class="form-control"
+                    [placeholder]="'Search roles...' | translate"
+                    [ngModel]="roleSearch()"
+                    (ngModelChange)="roleSearch.set($event)"
+                    [ngModelOptions]="{ standalone: true }"
+                  />
+                </div>
                 <div class="d-flex flex-wrap gap-3">
-                  @for (role of roles(); track role.id) {
-                    <div class="form-check">
+                  @for (role of filteredRoles(); track role.id) {
+                    <div class="form-check border rounded px-3 py-2">
                       <input
                         class="form-check-input"
                         type="checkbox"
@@ -124,9 +170,11 @@
                         (change)="toggleRole(role.id)"
                       />
                       <label class="form-check-label" [for]="'role-' + role.id">
-                        {{ role.displayName || role.displayNameEn || role.name }}
+                        {{ roleDisplay(role) }}
                       </label>
                     </div>
+                  } @empty {
+                    <div class="text-muted small">{{ 'No matching roles.' | translate }}</div>
                   }
                 </div>
               </div>

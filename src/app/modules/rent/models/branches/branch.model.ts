@@ -18,7 +18,7 @@ export interface Branch {
 export interface BranchPaginatedRequest {
   pageNumber: number;
   pageSize: number;
-  fleetId: string;
+  fleetId?: string;
   search?: string;
   orderByDirection?: string;
   orderBy?: string | number;

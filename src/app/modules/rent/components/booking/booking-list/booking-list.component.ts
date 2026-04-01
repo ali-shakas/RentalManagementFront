@@ -34,6 +34,7 @@ export class BookingListComponent implements OnInit {
   private toast = inject(ToastService);
 
   bookings = signal<Booking[]>([]);
+  totalCount = signal(0);
   loading = signal(false);
   search = signal('');
   status = signal<BookingStatus | ''>('');
@@ -59,7 +60,10 @@ export class BookingListComponent implements OnInit {
         orderByDirection: 'DESC',
       })
       .subscribe({
-        next: page => this.bookings.set(page.items ?? []),
+        next: page => {
+          this.bookings.set(page.items ?? []);
+          this.totalCount.set(page.totalCount ?? page.items?.length ?? 0);
+        },
         error: err => this.toast.error(err?.message ?? 'Failed to load bookings'),
         complete: () => this.loading.set(false),
       });

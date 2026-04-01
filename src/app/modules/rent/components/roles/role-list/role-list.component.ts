@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { RoleLookup } from '../../../models';
 import { RoleService } from '../../../services/roles/role.service';
@@ -19,6 +19,7 @@ import { PageHeaderComponent } from '../../../../../shared/ui/page-header/page-h
 export class RoleListComponent implements OnInit {
   private roleService = inject(RoleService);
   private toast = inject(ToastService);
+  private translate = inject(TranslateService);
 
   roles = signal<RoleLookup[]>([]);
   totalCount = signal(0);
@@ -49,7 +50,7 @@ export class RoleListComponent implements OnInit {
           this.totalCount.set(page?.totalCount ?? 0);
           this.totalPages.set(page?.totalPages ?? 0);
         },
-        error: err => this.toast.error(err?.message ?? 'Failed to load roles'),
+        error: err => this.toast.error(err?.message ?? this.translate.instant('Failed to load roles')),
         complete: () => this.loading.set(false),
       });
   }

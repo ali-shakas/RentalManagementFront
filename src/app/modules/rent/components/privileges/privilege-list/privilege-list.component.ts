@@ -23,6 +23,7 @@ export class PrivilegeListComponent implements OnInit {
   private translate = inject(TranslateService);
 
   privileges = signal<PrivilegeTypeLookup[]>([]);
+  totalCount = signal(0);
   totalPages = signal(0);
   pageNumber = signal(1);
   pageSize = signal(10);
@@ -48,6 +49,7 @@ export class PrivilegeListComponent implements OnInit {
           const page = response.data;
           if ((page?.items?.length ?? 0) > 0 || (page?.totalCount ?? 0) > 0) {
             this.privileges.set(page?.items ?? []);
+            this.totalCount.set(page?.totalCount ?? (page?.items?.length ?? 0));
             this.totalPages.set(page?.totalPages ?? 0);
             return;
           }
@@ -56,6 +58,7 @@ export class PrivilegeListComponent implements OnInit {
             catchError(() => of([])),
           ).subscribe(items => {
             this.privileges.set(items);
+            this.totalCount.set(items.length);
             this.totalPages.set(items.length > 0 ? 1 : 0);
           });
         },
@@ -67,6 +70,7 @@ export class PrivilegeListComponent implements OnInit {
             }),
           ).subscribe(items => {
             this.privileges.set(items);
+            this.totalCount.set(items.length);
             this.totalPages.set(items.length > 0 ? 1 : 0);
           });
         },

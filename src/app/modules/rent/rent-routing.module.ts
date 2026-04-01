@@ -204,7 +204,7 @@ const routes: Routes = [
   {
     path: 'security',
     data: { title: 'Security', breadcrumb: 'Security' },
-    canActivate: [authGuard],
+    canActivate: [authGuard, privilegeGuard],
     children: [
       {
         path: '',

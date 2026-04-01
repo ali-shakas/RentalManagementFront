@@ -1,6 +1,8 @@
 <div class="container-fluid">
   <app-page-header [title]="'Vehicles' | translate" [subtitle]="'Operational fleet vehicles with status, pricing, assignment, and media support.' | translate">
-    <a class="btn btn-primary" routerLink="/vehicles/create">{{ 'Create Vehicle' | translate }}</a>
+    <div class="list-header-actions">
+      <a class="btn btn-primary" routerLink="/vehicles/create">{{ 'Create Vehicle' | translate }}</a>
+    </div>
   </app-page-header>
 
   <div class="card">

@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { map, Observable } from 'rxjs';
 
 import { BaseService } from '../../../../shared/services/base/base.service';
+import { buildFleetQueryParams } from '../../../../shared/utils/fleet-query.utils';
 import { CashAccount, CreateCashAccountRequest } from '../../models/cash/cash-account.model';
 import { normalizeCashAccount } from '../../models/cash/cash-account.normalizer';
 
@@ -12,8 +13,10 @@ export class CashAccountService {
   private api = inject(BaseService);
   private readonly base = 'Cash';
 
-  getList(fleetId: string): Observable<CashAccount[]> {
-    return this.api.getData<unknown[]>(`${this.base}/List`, { IdFleet: fleetId }).pipe(
+  getList(fleetId?: string | null): Observable<CashAccount[]> {
+    return this.api.getData<unknown[]>(`${this.base}/List`, {
+      ...buildFleetQueryParams(fleetId, 'both'),
+    }).pipe(
       map(items => (items ?? []).map(normalizeCashAccount)),
     );
   }

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { AuthStateService } from '../../../../../core/auth/auth-state.service';
+import { PageHeaderComponent } from '../../../../../shared/ui/page-header/page-header.component';
 import { UserService } from '../../../services/users/user.service';
 import { ToastService } from '../../../../../shared/services/toast.service';
 import { ConfirmService } from '../../../../../shared/services/confirm.service';
@@ -12,7 +13,7 @@ import { User } from '../../../models';
 @Component({
   selector: 'app-user-list',
   standalone: true,
-  imports: [RouterLink, FormsModule, TranslateModule],
+  imports: [RouterLink, FormsModule, TranslateModule, PageHeaderComponent],
   templateUrl: './user-list.component.html',
   styleUrl: './user-list.component.scss',
 })
@@ -30,6 +31,7 @@ export class UserListComponent implements OnInit {
   pageSize = signal(10);
   search = signal('');
   loading = signal(false);
+  isSuperAdmin = computed(() => this.authState.isSuperAdmin());
 
   pageNumbers = computed(() => {
     const total = this.totalPages();
@@ -88,6 +90,10 @@ export class UserListComponent implements OnInit {
     return user.userRoles?.length
       ? `${user.userRoles.length} ${this.translate.instant('role(s)')}`
       : '-';
+  }
+
+  fleetDisplay(user: User): string {
+    return user.fleetId || '-';
   }
 }
 

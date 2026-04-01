@@ -26,6 +26,7 @@ export class VehicleListComponent implements OnInit {
   private translate = inject(TranslateService);
 
   vehicles = signal<Vehicle[]>([]);
+  totalCount = signal(0);
   search = signal('');
   status = signal<VehicleStatus | ''>('');
   loading = signal(false);
@@ -45,7 +46,10 @@ export class VehicleListComponent implements OnInit {
         status: this.status(),
       })
       .subscribe({
-        next: page => this.vehicles.set(page.items ?? []),
+        next: page => {
+          this.vehicles.set(page.items ?? []);
+          this.totalCount.set(page.totalCount ?? page.items?.length ?? 0);
+        },
         error: err => this.toast.error(err?.message ?? this.translate.instant('Failed to load vehicles')),
         complete: () => this.loading.set(false),
       });

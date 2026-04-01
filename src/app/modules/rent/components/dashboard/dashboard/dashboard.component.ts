@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { catchError, forkJoin, of } from 'rxjs';
 
+import { SUPER_ADMIN_ALLOWED_PATHS } from '../../../../../core/auth/super-admin.constants';
 import { PaginatedAggregatorResponse } from '../../../../../core/interfaces';
 import { AuthStateService } from '../../../../../core/auth/auth-state.service';
 import { Menu, NavMenuService } from '../../../../../shared/services/layout/nav-menu.service';
@@ -36,6 +37,7 @@ interface DashboardShortcutSection {
   styleUrl: './dashboard.component.scss',
 })
 export class DashboardComponent implements OnInit {
+  private readonly superAdminAllowedPaths = new Set<string>(SUPER_ADMIN_ALLOWED_PATHS);
   private authState = inject(AuthStateService);
   private navMenuService = inject(NavMenuService);
   private userService = inject(UserService);
@@ -72,7 +74,7 @@ export class DashboardComponent implements OnInit {
 
   private loadDashboard(): void {
     this.loading.set(true);
-    const fleetId = this.authState.fleetId() ?? '';
+    const fleetId = this.authState.fleetId() || undefined;
     const emptyPage = <T>(items: T[] = []): PaginatedAggregatorResponse<T> => ({
       items,
       totalCount: items.length,
@@ -82,13 +84,11 @@ export class DashboardComponent implements OnInit {
     });
 
     forkJoin({
-      vehiclesPage: fleetId
-        ? this.vehicleService.getPaginated({
-            fleetId,
-            pageNumber: 1,
-            pageSize: 1000,
-          }).pipe(catchError(error => of(this.handleDashboardError(error, emptyPage<Vehicle>()))))
-        : of(emptyPage<Vehicle>()),
+      vehiclesPage: this.vehicleService.getPaginated({
+        fleetId,
+        pageNumber: 1,
+        pageSize: 1000,
+      }).pipe(catchError(error => of(this.handleDashboardError(error, emptyPage<Vehicle>())))),
       usersPage: this.userService.getPaginated({ pageNumber: 1, pageSize: 100, fleetId }).pipe(
         catchError(error => of(this.handleDashboardError(error, emptyPage<User>()))),
       ),
@@ -101,11 +101,9 @@ export class DashboardComponent implements OnInit {
       fleets: this.fleetService.getPaginated({ pageNumber: 1, pageSize: 1 }).pipe(
         catchError(error => of(this.handleDashboardError(error, emptyPage()))),
       ),
-      branches: fleetId
-        ? this.branchService.getPaginated({ fleetId, pageNumber: 1, pageSize: 1 }).pipe(
-            catchError(error => of(this.handleDashboardError(error, emptyPage<Branch>()))),
-          )
-        : of(emptyPage<Branch>()),
+      branches: this.branchService.getPaginated({ fleetId, pageNumber: 1, pageSize: 1 }).pipe(
+        catchError(error => of(this.handleDashboardError(error, emptyPage<Branch>()))),
+      ),
     }).subscribe({
       next: ({ vehiclesPage, usersPage, roles, privileges, fleets, branches }) => {
         this.groups.set(this.buildVehicleGroups(vehiclesPage.items ?? []));
@@ -257,12 +255,71 @@ export class DashboardComponent implements OnInit {
     ];
   }
 
+  canAccessPath(path: string): boolean {
+    const basePath = this.toBasePath(path);
+
+    if (this.authState.isSuperAdmin()) {
+      return this.isSuperAdminAllowedPath(basePath);
+    }
+
+    const menuItem = this.findMenuItemByPath(basePath);
+    if (!menuItem) {
+      return true;
+    }
+
+    return this.authState.hasAnyRole(menuItem.roles ?? []) && this.authState.hasAnyPrivilege(menuItem.privileges ?? []);
+  }
+
   private canAccessMenuItem(item: Menu): boolean {
+    if (this.authState.isSuperAdmin()) {
+      if (item.path) {
+        return this.isSuperAdminAllowedPath(item.path);
+      }
+
+      return (item.children ?? []).some(child => this.canAccessMenuItem(child));
+    }
+
     return this.authState.hasAnyRole(item.roles ?? []) && this.authState.hasAnyPrivilege(item.privileges ?? []);
   }
+
+  private isSuperAdminAllowedPath(path?: string): boolean {
+    if (!path) {
+      return false;
+    }
+
+    for (const allowedPath of this.superAdminAllowedPaths) {
+      if (path === allowedPath || path.startsWith(`${allowedPath}/`)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  private toBasePath(path: string): string {
+    const firstSegment = path.split('/').filter(Boolean)[0];
+    return firstSegment ? `/${firstSegment}` : '/';
+  }
+
+  private findMenuItemByPath(path: string): Menu | undefined {
+    const stack: Menu[] = [...this.navMenuService.MENUITEMS];
+
+    while (stack.length > 0) {
+      const current = stack.pop();
+      if (!current) {
+        continue;
+      }
+
+      if (current.path === path) {
+        return current;
+      }
+
+      if (current.children?.length) {
+        stack.push(...current.children);
+      }
+    }
+
+    return undefined;
+  }
 }
-
-
-
-
 

@@ -1,8 +1,13 @@
 import { Component, computed, inject, signal } from '@angular/core';
 
+import { AuthStateService } from '../../../../core/auth/auth-state.service';
 import { Feathericon } from '../../feathericon/feathericon';
 import { AuthService } from '../../../services/auth/auth.service';
 import { TokenService } from '../../../services/storage/token.service';
+
+const ACCOUNTANT_ROLE_ALIASES = ['accountant', 'accountant_role', 'محاسب'];
+const ADMIN_ROLE_ALIASES = ['admin', 'admin_role', 'manager', 'مدير'];
+const MAINTENANCE_ROLE_ALIASES = ['maintenance', 'maintenance_role', 'صيانه', 'صيانة'];
 
 @Component({
   selector: 'app-profile',
@@ -12,11 +17,18 @@ import { TokenService } from '../../../services/storage/token.service';
 })
 export class Profile {
   private auth = inject(AuthService);
+  private authState = inject(AuthStateService);
   private tokenService = inject(TokenService);
 
+  readonly defaultAvatar = 'assets/images/user/defulte_user.png';
+  readonly superAdminAvatar = 'assets/images/user/super_admin.png';
+  readonly adminAvatar = 'assets/images/user/admin.png';
+  readonly accountantAvatar = 'assets/images/user/accountant.png';
+  readonly maintenanceAvatar = 'assets/images/user/Maintenance.png';
   displayName = signal<string>('User');
   email = signal<string | null>(null);
   roles = signal<string[]>([]);
+  avatarUrl = signal<string>(this.getFallbackAvatar());
 
   primaryRole = computed(() => {
     const list = this.roles();
@@ -28,6 +40,21 @@ export class Profile {
     const token = this.tokenService.getToken();
     const payload = this.tokenService.decodePayload(token);
     if (payload) {
+      const avatar =
+        payload.imageUrl ??
+        payload.ImageUrl ??
+        payload.profileImage ??
+        payload.profile_image ??
+        payload.avatar ??
+        payload.picture ??
+        payload.url ??
+        payload.Url;
+      if (avatar && String(avatar).trim()) {
+        this.avatarUrl.set(String(avatar).trim());
+      } else {
+        this.avatarUrl.set(this.getFallbackAvatar());
+      }
+
       const name =
         payload.nameAr ??
         payload.nameEn ??
@@ -47,5 +74,47 @@ export class Profile {
 
   logout(): void {
     this.auth.logout();
+  }
+
+  onAvatarError(event: Event): void {
+    const imageElement = event.target as HTMLImageElement | null;
+    if (!imageElement) {
+      return;
+    }
+
+    if (imageElement.src.includes(this.defaultAvatar)) {
+      return;
+    }
+
+    const fallbackAvatar = this.getFallbackAvatar();
+    if (imageElement.src.includes(fallbackAvatar)) {
+      return;
+    }
+
+    imageElement.src = fallbackAvatar;
+  }
+
+  private getFallbackAvatar(): string {
+    if (this.authState.isSuperAdmin()) {
+      return this.superAdminAvatar;
+    }
+
+    const roleSet = (this.roles().length ? this.roles() : this.tokenService.getRoles()).map(role =>
+      String(role).toLowerCase().trim(),
+    );
+
+    if (roleSet.some(role => ADMIN_ROLE_ALIASES.includes(role))) {
+      return this.adminAvatar;
+    }
+
+    if (roleSet.some(role => MAINTENANCE_ROLE_ALIASES.includes(role))) {
+      return this.maintenanceAvatar;
+    }
+
+    if (roleSet.some(role => ACCOUNTANT_ROLE_ALIASES.includes(role))) {
+      return this.accountantAvatar;
+    }
+
+    return this.defaultAvatar;
   }
 }

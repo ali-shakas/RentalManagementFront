@@ -1,6 +1,13 @@
 <div class="container-fluid">
   <app-page-header [title]="'Privileges' | translate" [subtitle]="'Manage privilege records used across routes, actions, and security policies.' | translate">
-    <a class="btn btn-primary" routerLink="/privileges/create">{{ 'Create Privilege' | translate }}</a>
+    <div class="list-header-actions">
+      <div class="d-flex gap-2">
+        <a class="btn btn-outline-primary" [routerLink]="['/privileges/create']" [queryParams]="{ mode: 'bulk' }">
+          {{ 'Bulk Create' | translate }}
+        </a>
+        <a class="btn btn-primary" routerLink="/privileges/create">{{ 'Create Privilege' | translate }}</a>
+      </div>
+    </div>
   </app-page-header>
 
   <div class="card">
