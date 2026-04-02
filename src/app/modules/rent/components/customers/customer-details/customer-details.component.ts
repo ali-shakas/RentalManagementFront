@@ -1,17 +1,19 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { AuthStateService } from '../../../../../core/auth/auth-state.service';
-import { Customer } from '../../../models';
-import { CustomerService } from '../../../services/customers/customer.service';
-import { CustomerSubscription } from '../../../models/subscriptions/customer-subscription.model';
-import { CustomerSubscriptionService } from '../../../services/subscriptions/customer-subscription.service';
+import { FieldValueStateDirective } from '../../../../../shared/directives/field-value-state.directive';
 import { ToastService } from '../../../../../shared/services/toast.service';
-import { resolveMediaUrl } from '../../../../../shared/utils/media-url.utils';
 import { PageHeaderComponent } from '../../../../../shared/ui/page-header/page-header.component';
 import { StatusBadgeComponent } from '../../../../../shared/ui/status-badge/status-badge.component';
+import { resolveMediaUrl } from '../../../../../shared/utils/media-url.utils';
+import { Customer } from '../../../models';
+import { CustomerSubscription } from '../../../models/subscriptions/customer-subscription.model';
+import { CustomerService } from '../../../services/customers/customer.service';
+import { CustomerSubscriptionService } from '../../../services/subscriptions/customer-subscription.service';
 
 @Component({
   selector: 'app-customer-details',
@@ -20,6 +22,7 @@ import { StatusBadgeComponent } from '../../../../../shared/ui/status-badge/stat
     CommonModule,
     RouterLink,
     TranslateModule,
+    FieldValueStateDirective,
     PageHeaderComponent,
     StatusBadgeComponent,
   ],
@@ -114,16 +117,9 @@ export class CustomerDetailsComponent implements OnInit {
   }
 
   private loadSubscriptions(): void {
-    this.customerSubscriptionService
-      .getList(this.authState.fleetId() || undefined)
-      .subscribe({
-        next: subscriptions => this.customerSubscriptions.set(subscriptions ?? []),
-        error: () => this.customerSubscriptions.set([]),
-      });
+    this.customerSubscriptionService.getList(this.authState.fleetId() || undefined).subscribe({
+      next: subscriptions => this.customerSubscriptions.set(subscriptions ?? []),
+      error: () => this.customerSubscriptions.set([]),
+    });
   }
 }
-
-
-
-
-

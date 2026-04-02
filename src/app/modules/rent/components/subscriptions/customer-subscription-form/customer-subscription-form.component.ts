@@ -5,6 +5,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { AuthStateService } from '../../../../../core/auth/auth-state.service';
+import { FieldValueStateDirective } from '../../../../../shared/directives/field-value-state.directive';
 import { ToastService } from '../../../../../shared/services/toast.service';
 import { PageHeaderComponent } from '../../../../../shared/ui/page-header/page-header.component';
 import { CustomerSubscriptionUpsertRequest } from '../../../models/subscriptions/customer-subscription.model';
@@ -13,7 +14,14 @@ import { CustomerSubscriptionService } from '../../../services/subscriptions/cus
 @Component({
   selector: 'app-customer-subscription-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, TranslateModule, PageHeaderComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterLink,
+    TranslateModule,
+    FieldValueStateDirective,
+    PageHeaderComponent,
+  ],
   templateUrl: './customer-subscription-form.component.html',
 })
 export class CustomerSubscriptionFormComponent implements OnInit {
@@ -133,4 +141,3 @@ export class CustomerSubscriptionFormComponent implements OnInit {
     });
   }
 }
-

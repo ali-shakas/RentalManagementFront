@@ -1,10 +1,11 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, catchError, map, throwError } from 'rxjs';
+import { Observable, catchError, from, map, switchMap, throwError } from 'rxjs';
 
 import { PaginatedAggregatorResponse } from '../../../../core/interfaces';
 import { BaseRequestOptions } from '../../../../shared/services/base/base.service';
 import { BaseService } from '../../../../shared/services/base/base.service';
 import { buildFleetQueryParams, normalizeFleetId } from '../../../../shared/utils/fleet-query.utils';
+import { buildImageUploadPayload } from '../../../../shared/utils/image-upload.utils';
 import { Vehicle, VehicleFilters, VehicleUpsertRequest } from '../../models';
 import { normalizePaginatedResponse } from '../../../../shared/utils/paginated-response.normalizer';
 import { normalizeVehicle } from '../../models/vehicles/vehicle.normalizer';
@@ -30,9 +31,13 @@ export class VehicleService {
         Search: params.search,
         PageNumber: params.pageNumber,
         PageSize: params.pageSize,
+        OrderBy: params.orderBy,
+        OrderByDirection: params.orderByDirection,
         search: params.search,
         pageNumber: params.pageNumber,
         pageSize: params.pageSize,
+        orderBy: params.orderBy,
+        orderByDirection: params.orderByDirection,
       },
       options,
     ).pipe(map(response => normalizePaginatedResponse(response, normalizeVehicle)));
@@ -51,14 +56,19 @@ export class VehicleService {
   }
 
   create(body: VehicleUpsertRequest): Observable<unknown> {
-    return this.api.postData(this.base, this.toFormData(body));
+    return from(this.toFormData(body)).pipe(
+      switchMap(payload => this.api.postData(this.base, payload)),
+    );
   }
 
   update(body: VehicleUpsertRequest): Observable<unknown> {
-    return this.api.putData(`${this.base}/${body.id}`, this.toFormData(body));
+    return from(this.toFormData(body)).pipe(
+      switchMap(payload => this.api.putData(`${this.base}/${body.id}`, payload)),
+    );
   }
 
-  private toFormData(body: VehicleUpsertRequest): FormData {
+  private async toFormData(body: VehicleUpsertRequest): Promise<FormData> {
+    const imagePayload = await buildImageUploadPayload(body.image);
     const formData = new FormData();
     appendFormDataValue(formData, 'Color', body.color);
     appendFormDataValue(formData, 'InsuranceNumber', body.insuranceNumber);
@@ -79,6 +89,14 @@ export class VehicleService {
     appendFormDataValue(formData, 'CountKm', body.countKm);
     appendFormDataValue(formData, 'CapacitOil', body.capacitOil);
     appendFormDataValue(formData, 'Image', body.image);
+    appendFormDataValue(formData, 'url', imagePayload?.attachment);
+    appendFormDataValue(formData, 'Url', imagePayload?.attachment);
+    appendFormDataValue(formData, 'imageExtension', imagePayload?.extension);
+    appendFormDataValue(formData, 'ImageExtension', imagePayload?.extension);
+    appendFormDataValue(formData, 'attachment', imagePayload?.attachment);
+    appendFormDataValue(formData, 'Attachment', imagePayload?.attachment);
+    appendFormDataValue(formData, 'extension', imagePayload?.extension);
+    appendFormDataValue(formData, 'Extension', imagePayload?.extension);
     return formData;
   }
 

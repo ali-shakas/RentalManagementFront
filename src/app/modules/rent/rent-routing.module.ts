@@ -136,7 +136,8 @@ const routes: Routes = [
       },
       {
         path: ':id/details',
-        loadComponent: () => import('./components/vehicles/vehicle-details/vehicle-details.component').then(m => m.VehicleDetailsComponent),
+        loadComponent: () => import('./components/vehicles/vehicle-form/vehicle-form.component').then(m => m.VehicleFormComponent),
+        data: { title: 'Vehicle Preview', breadcrumb: 'Vehicle Preview', viewOnly: true },
       },
     ],
   },

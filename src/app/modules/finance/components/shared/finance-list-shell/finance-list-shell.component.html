@@ -43,6 +43,14 @@
               </tbody>
             </table>
           </div>
+
+          <app-pagination-bar
+            [pageNumber]="1"
+            [totalPages]="1"
+            [totalCount]="count"
+            [pageSize]="rows.length"
+            [showPageSize]="false"
+          />
         }
       </div>
     </div>

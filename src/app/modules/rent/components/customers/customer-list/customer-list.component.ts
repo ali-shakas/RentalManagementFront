@@ -14,6 +14,7 @@ import { ConfirmService } from '../../../../../shared/services/confirm.service';
 import { ToastService } from '../../../../../shared/services/toast.service';
 import { EmptyStateComponent } from '../../../../../shared/ui/empty-state/empty-state.component';
 import { PageHeaderComponent } from '../../../../../shared/ui/page-header/page-header.component';
+import { PaginationBarComponent } from '../../../../../shared/ui/pagination-bar/pagination-bar.component';
 
 type CustomerSearchField =
   | 'all'
@@ -28,7 +29,7 @@ type CustomerSearchField =
 @Component({
   selector: 'app-customer-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, TranslateModule, PageHeaderComponent, EmptyStateComponent],
+  imports: [CommonModule, FormsModule, RouterLink, TranslateModule, PageHeaderComponent, EmptyStateComponent, PaginationBarComponent],
   templateUrl: './customer-list.component.html',
   styleUrl: './customer-list.component.scss',
 })
@@ -45,13 +46,15 @@ export class CustomerListComponent implements OnInit {
   canManageSubscriptions = computed(() => this.authState.hasAnyRole(TENANT_ADMIN_ROLES));
   search = signal('');
   searchField = signal<CustomerSearchField>('all');
+  pageNumber = signal(1);
+  pageSize = signal(10);
   loading = signal(false);
   searchFieldOptions: Array<{ value: CustomerSearchField; label: string }> = [
     { value: 'all', label: 'All Fields' },
     { value: 'subscription', label: 'Subscription' },
     { value: 'nameAr', label: 'Arabic Name' },
     { value: 'phone', label: 'Phone' },
-    { value: 'licenseExpiry', label: 'License Expiry' },
+    { value: 'licenseExpiry', label: 'License Expiry Date' },
     { value: 'identity', label: 'Identity' },
     { value: 'license', label: 'License' },
     { value: 'birthDate', label: 'Birth Date' },
@@ -63,6 +66,15 @@ export class CustomerListComponent implements OnInit {
     }
 
     return this.customers().filter(customer => this.matchesSearch(customer, keyword));
+  });
+  totalCount = computed(() => this.filteredCustomers().length);
+  totalPages = computed(() => Math.max(1, Math.ceil(this.totalCount() / this.pageSize())));
+  currentPage = computed(() => Math.min(this.pageNumber(), this.totalPages()));
+  pagedCustomers = computed(() => {
+    const page = this.currentPage();
+    const size = this.pageSize();
+    const start = (page - 1) * size;
+    return this.filteredCustomers().slice(start, start + size);
   });
 
   ngOnInit(): void {
@@ -98,6 +110,29 @@ export class CustomerListComponent implements OnInit {
 
   onSearchSubmit(): void {
     this.search.set(this.search().trim());
+    this.pageNumber.set(1);
+  }
+
+  onSearchFieldChange(field: CustomerSearchField): void {
+    this.searchField.set(field);
+    this.pageNumber.set(1);
+  }
+
+  goToPage(page: number): void {
+    if (page < 1 || page > this.totalPages() || page === this.currentPage()) {
+      return;
+    }
+
+    this.pageNumber.set(page);
+  }
+
+  changePageSize(size: number): void {
+    if (size <= 0 || size === this.pageSize()) {
+      return;
+    }
+
+    this.pageSize.set(size);
+    this.pageNumber.set(1);
   }
 
   deleteCustomer(customer: Customer): void {

@@ -1,0 +1,32 @@
+<div class="app-pagination-bar">
+  <div class="app-pagination-bar__meta">
+    <span class="app-pagination-bar__meta-label">{{ 'Records' | translate }}</span>
+    <strong class="app-pagination-bar__meta-value">{{ totalCount }}</strong>
+  </div>
+
+  <div class="app-pagination-bar__nav">
+    <button class="btn btn-sm app-pagination-bar__btn" type="button" [disabled]="!canGoPrevious" (click)="goPrevious()">
+      {{ 'Previous' | translate }}
+    </button>
+    <span class="app-pagination-bar__current">{{ pageNumber }} / {{ normalizedTotalPages }}</span>
+    <button class="btn btn-sm app-pagination-bar__btn" type="button" [disabled]="!canGoNext" (click)="goNext()">
+      {{ 'Next' | translate }}
+    </button>
+  </div>
+
+  @if (showPageSize) {
+    <div class="app-pagination-bar__size">
+      <label class="app-pagination-bar__size-label">{{ 'Page Size' | translate }}</label>
+      <select
+        class="form-select form-select-sm app-pagination-bar__size-select"
+        [ngModel]="pageSize"
+        (ngModelChange)="onPageSizeChange($event)"
+      >
+        @for (sizeOption of pageSizeOptions; track sizeOption) {
+          <option [ngValue]="sizeOption">{{ sizeOption }}</option>
+        }
+      </select>
+    </div>
+  }
+</div>
+

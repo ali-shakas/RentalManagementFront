@@ -7,15 +7,25 @@
 
   <div class="card">
     <div class="card-body">
-      <div class="row g-3 mb-3">
-        <div class="col-md-6">
-          <div class="input-group">
-            <input class="form-control" [placeholder]="'Search vehicles...' | translate" [ngModel]="search()" (ngModelChange)="search.set($event)" (keyup.enter)="load()" />
-            <button class="btn btn-outline-secondary" type="button" (click)="load()">{{ 'Search' | translate }}</button>
+      <div class="app-filters-toolbar">
+        <div class="app-filter-field app-filter-field--search">
+          <label class="app-filter-label">{{ 'Search' | translate }}</label>
+          <div class="app-search-control">
+            <input
+              class="form-control"
+              [placeholder]="'Search vehicles...' | translate"
+              [ngModel]="search()"
+              (ngModelChange)="search.set($event)"
+            />
+            <button class="btn app-search-btn" type="button" (click)="onSearchSubmit()">
+              {{ 'Search' | translate }}
+            </button>
           </div>
         </div>
-        <div class="col-md-3">
-          <select class="form-select" [ngModel]="status()" (ngModelChange)="status.set($event); load()">
+
+        <div class="app-filter-field app-filter-field--narrow">
+          <label class="app-filter-label">{{ 'Status' | translate }}</label>
+          <select class="form-select" [ngModel]="status()" (ngModelChange)="status.set($event)">
             <option [ngValue]="''">{{ 'All statuses' | translate }}</option>
             <option [ngValue]="'Available'">{{ 'Available' | translate }}</option>
             <option [ngValue]="'Booked'">{{ 'Booked' | translate }}</option>
@@ -23,66 +33,135 @@
             <option [ngValue]="'Inactive'">{{ 'Inactive' | translate }}</option>
           </select>
         </div>
+
+        <div class="app-filter-field app-filter-field--narrow">
+          <label class="app-filter-label">{{ 'Branch' | translate }}</label>
+          <select class="form-select" [ngModel]="branchId()" (ngModelChange)="branchId.set($event)">
+            <option [ngValue]="''">{{ 'All branches' | translate }}</option>
+            @for (branch of branches(); track branch.id) {
+              <option [ngValue]="branch.id">{{ getBranchOptionLabel(branch) }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="app-filter-field app-filter-field--narrow">
+          <label class="app-filter-label">{{ 'Vehicle Category' | translate }}</label>
+          <select class="form-select" [ngModel]="categoryId()" (ngModelChange)="categoryId.set($event)">
+            <option [ngValue]="''">{{ 'All categories' | translate }}</option>
+            @for (category of categories(); track category.id) {
+              <option [ngValue]="category.id">{{ getCategoryOptionLabel(category) }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="app-filter-field app-filter-field--narrow">
+          <label class="app-filter-label">{{ 'Sort by' | translate }}</label>
+          <select class="form-select" [ngModel]="orderBy()" (ngModelChange)="orderBy.set($event)">
+            <option [ngValue]="'CreatedAt'">{{ 'Created Date' | translate }}</option>
+            <option [ngValue]="'Year'">{{ 'Year' | translate }}</option>
+            <option [ngValue]="'Plantnumber'">{{ 'Plate Number' | translate }}</option>
+          </select>
+        </div>
+
+        <div class="app-filter-field app-filter-field--narrow">
+          <label class="app-filter-label">{{ 'Order direction' | translate }}</label>
+          <select class="form-select" [ngModel]="orderByDirection()" (ngModelChange)="orderByDirection.set($event)">
+            <option [ngValue]="'DESC'">{{ 'Descending' | translate }}</option>
+            <option [ngValue]="'ASC'">{{ 'Ascending' | translate }}</option>
+          </select>
+        </div>
       </div>
 
       @if (loading()) {
         <div class="text-center py-5"><div class="spinner-border text-primary"></div></div>
-      } @else if (!vehicles().length) {
+      } @else if (!filteredVehicles().length) {
         <app-empty-state [title]="'No vehicles found' | translate" [description]="'Add vehicles to start managing bookings and fleet availability.' | translate" />
       } @else {
-        <div class="table-responsive">
-          <table class="table table-striped align-middle">
-            <thead>
-              <tr>
-                <th>{{ 'Vehicle' | translate }}</th>
-                <th>{{ 'Plate' | translate }}</th>
-                <th>{{ 'Branch' | translate }}</th>
-                <th>{{ 'Daily Rate' | translate }}</th>
-                <th>{{ 'Status' | translate }}</th>
-                <th class="text-end">{{ 'Actions' | translate }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (vehicle of vehicles(); track vehicle.id) {
-                <tr>
-                  <td>{{ vehicle.make }} {{ vehicle.model }} ({{ vehicle.year }})</td>
-                  <td>{{ vehicle.plateNumber }}</td>
-                  <td>{{ vehicle.branchName || '-' }}</td>
-                  <td>{{ vehicle.dailyRate ?? 0 }}</td>
-                  <td><app-status-badge [label]="vehicle.status | translate" [tone]="vehicle.status === 'Available' ? 'success' : vehicle.status === 'Booked' ? 'warning' : vehicle.status === 'Maintenance' ? 'danger' : 'secondary'" /></td>
-                  <td class="text-end">
-                    <div class="table-actions">
-                      <a
-                        class="table-action-icon table-action-icon--info"
-                        [routerLink]="['/vehicles', vehicle.id, 'details']"
-                        [attr.aria-label]="'Details' | translate"
-                        [title]="'Details' | translate"
-                      >
-                        <i class="fa-solid fa-eye"></i>
-                      </a>
-                      <a
-                        class="table-action-icon table-action-icon--primary"
-                        [routerLink]="['/vehicles', vehicle.id, 'edit']"
-                        [attr.aria-label]="'Edit' | translate"
-                        [title]="'Edit' | translate"
-                      >
-                        <i class="fa-solid fa-pen-to-square"></i>
-                      </a>
-                      <a
-                        class="table-action-icon table-action-icon--secondary"
-                        [routerLink]="['/vehicles', vehicle.id, 'gallery']"
-                        [attr.aria-label]="'Gallery' | translate"
-                        [title]="'Gallery' | translate"
-                      >
-                        <i class="fa-solid fa-images"></i>
-                      </a>
-                    </div>
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
+        <div class="vehicle-cards-grid">
+          @for (vehicle of filteredVehicles(); track vehicle.id; let cardIndex = $index) {
+            <article class="vehicle-card">
+              <div class="vehicle-card__media">
+                <div class="vehicle-card__media-overlay"></div>
+                <img
+                  [src]="getVehicleImage(vehicle)"
+                  [alt]="vehicle.plateNumber || ('Vehicle' | translate)"
+                  [attr.loading]="cardIndex < 6 ? 'eager' : 'lazy'"
+                  [attr.fetchpriority]="cardIndex < 3 ? 'high' : 'auto'"
+                  decoding="async"
+                  (error)="onVehicleImageError($event)"
+                />
+                <div class="vehicle-card__status">
+                  <app-status-badge [label]="vehicle.status | translate" [tone]="getStatusTone(vehicle.status)" />
+                </div>
+                <div class="vehicle-card__quick-meta">
+                  <span class="vehicle-chip">{{ vehicle.year || vehicle.yearMake || '-' }}</span>
+                  <span class="vehicle-chip vehicle-chip--ghost">{{ vehicle.engine || '-' }}</span>
+                </div>
+              </div>
+
+              <div class="vehicle-card__body">
+                <div class="vehicle-card__head">
+                  <h6 class="vehicle-card__title">{{ getVehicleTitle(vehicle) }}</h6>
+                  <span class="vehicle-card__plate">{{ vehicle.plateNumber || '-' }}</span>
+                </div>
+
+                <div class="vehicle-card__meta">
+                  <div class="vehicle-meta">
+                    <span class="vehicle-meta__label">{{ 'Vehicle Category' | translate }}</span>
+                    <span class="vehicle-meta__value">{{ getCategoryName(vehicle) }}</span>
+                  </div>
+                  <div class="vehicle-meta">
+                    <span class="vehicle-meta__label">{{ 'Branch' | translate }}</span>
+                    <span class="vehicle-meta__value">{{ getBranchName(vehicle) }}</span>
+                  </div>
+                  <div class="vehicle-meta">
+                    <span class="vehicle-meta__label">{{ 'Daily Rate' | translate }}</span>
+                    <span class="vehicle-meta__value">{{ getDailyRateText(vehicle) }}</span>
+                  </div>
+                </div>
+
+                <div class="table-actions vehicle-card__actions">
+                  <a
+                    class="table-action-icon table-action-icon--info vehicle-card__action"
+                    [routerLink]="['/vehicles', vehicle.id, 'details']"
+                    [attr.aria-label]="'Details' | translate"
+                    [title]="'Details' | translate"
+                  >
+                    <i class="fa-solid fa-eye"></i>
+                  </a>
+                  <a
+                    class="table-action-icon table-action-icon--primary vehicle-card__action"
+                    [routerLink]="['/vehicles', vehicle.id, 'edit']"
+                    [attr.aria-label]="'Edit' | translate"
+                    [title]="'Edit' | translate"
+                  >
+                    <i class="fa-solid fa-pen-to-square"></i>
+                  </a>
+                  <a
+                    class="table-action-icon table-action-icon--secondary vehicle-card__action"
+                    [routerLink]="['/vehicles', vehicle.id, 'gallery']"
+                    [attr.aria-label]="'Gallery' | translate"
+                    [title]="'Gallery' | translate"
+                  >
+                    <i class="fa-solid fa-images"></i>
+                  </a>
+                </div>
+              </div>
+            </article>
+          }
         </div>
+      }
+
+      @if (!loading() && totalCount() > 0) {
+        <app-pagination-bar
+          [pageNumber]="pageNumber()"
+          [totalPages]="totalPages()"
+          [totalCount]="totalCount()"
+          [pageSize]="pageSize()"
+          [pageSizeOptions]="[8, 12, 16, 24, 48]"
+          (pageChange)="goToPage($event)"
+          (pageSizeChange)="changePageSize($event)"
+        />
       }
     </div>
   </div>

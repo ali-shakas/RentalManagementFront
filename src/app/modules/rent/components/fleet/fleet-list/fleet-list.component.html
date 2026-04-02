@@ -8,17 +8,25 @@
     </div>
   </app-page-header>
 
-  <div class="row mb-3">
-    <div class="col-md-4">
-      <input
-        type="text"
-        class="form-control"
-        [placeholder]="'Search fleets...' | translate"
-        [ngModel]="search()"
-        (ngModelChange)="search.set($event); onSearch()"
-      />
+  <div class="app-filters-toolbar">
+    <div class="app-filter-field app-filter-field--search">
+      <label class="app-filter-label">{{ 'Search' | translate }}</label>
+      <div class="app-search-control">
+        <input
+          type="text"
+          class="form-control"
+          [placeholder]="'Search fleets...' | translate"
+          [ngModel]="search()"
+          (ngModelChange)="search.set($event)"
+          (keyup.enter)="onSearch()"
+        />
+        <button class="btn app-search-btn" type="button" (click)="onSearch()">
+          {{ 'Search' | translate }}
+        </button>
+      </div>
     </div>
-    <div class="col-md-2">
+    <div class="app-filter-field app-filter-field--narrow">
+      <label class="app-filter-label">{{ 'Page Size' | translate }}</label>
       <select class="form-select" [ngModel]="pageSize()" (ngModelChange)="changePageSize($event)">
         <option [ngValue]="5">5</option>
         <option [ngValue]="10">10</option>
@@ -85,24 +93,16 @@
           </tbody>
         </table>
       </div>
+      <app-pagination-bar
+        [pageNumber]="pageNumber()"
+        [totalPages]="totalPages()"
+        [totalCount]="totalCount()"
+        [pageSize]="pageSize()"
+        [showPageSize]="false"
+        (pageChange)="goToPage($event)"
+      />
       }
     </div>
   </div>
-
-  @if (totalPages() > 1) {
-    <div class="row mt-3">
-      <div class="col-12 d-flex justify-content-center">
-        <nav>
-          <ul class="pagination mb-0">
-            @for (p of pageNumbers(); track p) {
-              <li class="page-item" [class.active]="p === pageNumber()">
-                <button class="page-link" (click)="goToPage(p)">{{ p }}</button>
-              </li>
-            }
-          </ul>
-        </nav>
-      </div>
-    </div>
-  }
 </div>
 

@@ -10,7 +10,7 @@
 
   <div class="card">
     <div class="card-body">
-      <form [formGroup]="form" (ngSubmit)="save()">
+      <form class="app-form-value-state" [formGroup]="form" (ngSubmit)="save()">
         <div class="row g-3">
           <div class="col-md-6">
             <label class="form-label">{{ 'Name (Ar)' | translate }}</label>
@@ -80,4 +80,3 @@
     </div>
   </div>
 </div>
-

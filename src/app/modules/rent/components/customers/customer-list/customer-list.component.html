@@ -14,20 +14,18 @@
 
   <div class="card">
     <div class="card-body">
-      <div class="row g-3 mb-3 align-items-center">
-        <div class="col-lg-3 col-md-4">
-          <select class="form-select" [ngModel]="searchField()" (ngModelChange)="searchField.set($event)">
+      <div class="app-filters-toolbar">
+        <div class="app-filter-field app-filter-field--narrow">
+          <label class="app-filter-label">{{ 'All Fields' | translate }}</label>
+          <select class="form-select" [ngModel]="searchField()" (ngModelChange)="onSearchFieldChange($event)">
             @for (option of searchFieldOptions; track option.value) {
               <option [ngValue]="option.value">{{ option.label | translate }}</option>
             }
           </select>
         </div>
-        <div class="col-lg-9 col-md-8">
-          <div class="input-group">
-            <button class="btn btn-primary customer-search-btn" type="button" (click)="onSearchSubmit()">
-              <i class="fa-solid fa-magnifying-glass"></i>
-              <span>{{ 'Search' | translate }}</span>
-            </button>
+        <div class="app-filter-field app-filter-field--search">
+          <label class="app-filter-label">{{ 'Search' | translate }}</label>
+          <div class="app-search-control">
             <input
               class="form-control"
               [placeholder]="'Search customers...' | translate"
@@ -35,6 +33,10 @@
               (ngModelChange)="search.set($event)"
               (keyup.enter)="onSearchSubmit()"
             />
+            <button class="btn app-search-btn customer-search-btn" type="button" (click)="onSearchSubmit()">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <span>{{ 'Search' | translate }}</span>
+            </button>
           </div>
         </div>
       </div>
@@ -59,7 +61,7 @@
               </tr>
             </thead>
             <tbody>
-              @for (customer of filteredCustomers(); track customer.id) {
+              @for (customer of pagedCustomers(); track customer.id) {
                 <tr>
                   <td>{{ getSubscriptionName(customer) }}</td>
                   <td>{{ getArabicName(customer) }}</td>
@@ -102,6 +104,18 @@
             </tbody>
           </table>
         </div>
+      }
+
+      @if (!loading() && totalCount() > 0) {
+        <app-pagination-bar
+          [pageNumber]="currentPage()"
+          [totalPages]="totalPages()"
+          [totalCount]="totalCount()"
+          [pageSize]="pageSize()"
+          [pageSizeOptions]="[10, 20, 50, 100]"
+          (pageChange)="goToPage($event)"
+          (pageSizeChange)="changePageSize($event)"
+        />
       }
     </div>
   </div>

@@ -9,12 +9,13 @@ import { FleetService } from '../../../services/fleet/fleet.service';
 import { ToastService } from '../../../../../shared/services/toast.service';
 import { EmptyStateComponent } from '../../../../../shared/ui/empty-state/empty-state.component';
 import { PageHeaderComponent } from '../../../../../shared/ui/page-header/page-header.component';
+import { PaginationBarComponent } from '../../../../../shared/ui/pagination-bar/pagination-bar.component';
 import { StatusBadgeComponent } from '../../../../../shared/ui/status-badge/status-badge.component';
 
 @Component({
   selector: 'app-fleet-list',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, TranslateModule, PageHeaderComponent, EmptyStateComponent, StatusBadgeComponent],
+  imports: [CommonModule, RouterLink, FormsModule, TranslateModule, PageHeaderComponent, EmptyStateComponent, PaginationBarComponent, StatusBadgeComponent],
   templateUrl: './fleet-list.component.html',
   styleUrl: './fleet-list.component.scss',
 })

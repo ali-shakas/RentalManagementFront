@@ -7,9 +7,10 @@
 
   <div class="card user-list-card">
     <div class="card-body">
-      <div class="row g-3 mb-3 align-items-center">
-        <div class="col-md-6">
-          <div class="input-group">
+      <div class="app-filters-toolbar">
+        <div class="app-filter-field app-filter-field--search">
+          <label class="app-filter-label">{{ 'Search' | translate }}</label>
+          <div class="app-search-control">
             <input
               type="text"
               class="form-control"
@@ -18,10 +19,11 @@
               (ngModelChange)="search.set($event)"
               (keyup.enter)="onSearch()"
             />
-            <button class="btn btn-outline-secondary" type="button" (click)="onSearch()">{{ 'Search' | translate }}</button>
+            <button class="btn app-search-btn" type="button" (click)="onSearch()">{{ 'Search' | translate }}</button>
           </div>
         </div>
-        <div class="col-md-2">
+        <div class="app-filter-field app-filter-field--narrow">
+          <label class="app-filter-label">{{ 'Page Size' | translate }}</label>
           <select
             class="form-select"
             [ngModel]="pageSize()"
@@ -100,23 +102,14 @@
           </table>
         </div>
 
-        @if (totalPages() > 1) {
-          <nav class="mt-3">
-            <ul class="pagination justify-content-center">
-              <li class="page-item" [class.disabled]="pageNumber() <= 1">
-                <a class="page-link" href="javascript:void(0)" (click)="goToPage(pageNumber() - 1)">{{ 'Previous' | translate }}</a>
-              </li>
-              @for (p of pageNumbers(); track p) {
-                <li class="page-item" [class.active]="p === pageNumber()">
-                  <a class="page-link" href="javascript:void(0)" (click)="goToPage(p)">{{ p }}</a>
-                </li>
-              }
-              <li class="page-item" [class.disabled]="pageNumber() >= totalPages()">
-                <a class="page-link" href="javascript:void(0)" (click)="goToPage(pageNumber() + 1)">{{ 'Next' | translate }}</a>
-              </li>
-            </ul>
-          </nav>
-        }
+        <app-pagination-bar
+          [pageNumber]="pageNumber()"
+          [totalPages]="totalPages()"
+          [totalCount]="totalCount()"
+          [pageSize]="pageSize()"
+          [showPageSize]="false"
+          (pageChange)="goToPage($event)"
+        />
       }
     </div>
   </div>

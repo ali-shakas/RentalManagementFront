@@ -19,6 +19,25 @@ export function normalizeCustomer(raw: unknown): Customer {
   const birthDay = pick<string>(source, 'birthDay', 'BirthDay');
   const dateDrivinglicense = pick<string>(source, 'dateDrivinglicense', 'DateDrivinglicense');
 
+  const rawImage = pick<string>(
+    source,
+    'imageUrl',
+    'ImageUrl',
+    'url',
+    'Url',
+    'URL',
+    'image',
+    'Image',
+    'imagePath',
+    'ImagePath',
+    'fileName',
+    'FileName',
+  );
+  const imageUrl =
+    rawImage && !/[\\/]/.test(rawImage) && /\.(png|jpe?g|webp|gif|bmp|svg)$/i.test(rawImage)
+      ? `uploads/customer/${rawImage}`
+      : rawImage;
+
   return {
     id: String(pick(source, 'id', 'Id') ?? ''),
     code: String(pick(source, 'numbercustomerINsystem', 'NumbercustomerINsystem') ?? ''),
@@ -60,6 +79,6 @@ export function normalizeCustomer(raw: unknown): Customer {
     dateOfBirth: pick<string>(source, 'dateOfBirth', 'DateOfBirth') ?? birthDay,
     notes: pick<string>(source, 'notes', 'Notes'),
     isActive: Boolean(pick(source, 'isActive', 'IsActive') ?? true),
-    imageUrl: pick<string>(source, 'imageUrl', 'ImageUrl', 'url', 'Url'),
+    imageUrl: imageUrl,
   };
 }

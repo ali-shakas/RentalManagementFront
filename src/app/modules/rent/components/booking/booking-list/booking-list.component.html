@@ -7,11 +7,18 @@
 
   <div class="card">
     <div class="card-body">
-      <div class="row g-3 mb-3">
-        <div class="col-md-4">
-          <input class="form-control" [placeholder]="'Search booking/customer/vehicle...' | translate" [ngModel]="search()" (ngModelChange)="search.set($event)" />
+      <div class="app-filters-toolbar">
+        <div class="app-filter-field app-filter-field--wide">
+          <label class="app-filter-label">{{ 'Search' | translate }}</label>
+          <input
+            class="form-control"
+            [placeholder]="'Search booking/customer/vehicle...' | translate"
+            [ngModel]="search()"
+            (ngModelChange)="search.set($event)"
+          />
         </div>
-        <div class="col-md-2">
+        <div class="app-filter-field app-filter-field--narrow">
+          <label class="app-filter-label">{{ 'Status' | translate }}</label>
           <select class="form-select" [ngModel]="status()" (ngModelChange)="status.set($event)">
             <option [ngValue]="''">{{ 'All statuses' | translate }}</option>
             <option [ngValue]="'Draft'">{{ 'Draft' | translate }}</option>
@@ -21,9 +28,17 @@
             <option [ngValue]="'Cancelled'">{{ 'Cancelled' | translate }}</option>
           </select>
         </div>
-        <div class="col-md-2"><input class="form-control" type="date" [ngModel]="dateFrom()" (ngModelChange)="dateFrom.set($event)" /></div>
-        <div class="col-md-2"><input class="form-control" type="date" [ngModel]="dateTo()" (ngModelChange)="dateTo.set($event)" /></div>
-        <div class="col-md-2"><button class="btn btn-outline-secondary w-100" type="button" (click)="load()">{{ 'Apply' | translate }}</button></div>
+        <div class="app-filter-field app-filter-field--narrow">
+          <label class="app-filter-label">{{ 'Date From' | translate }}</label>
+          <input class="form-control" type="date" [ngModel]="dateFrom()" (ngModelChange)="dateFrom.set($event)" />
+        </div>
+        <div class="app-filter-field app-filter-field--narrow">
+          <label class="app-filter-label">{{ 'Date To' | translate }}</label>
+          <input class="form-control" type="date" [ngModel]="dateTo()" (ngModelChange)="dateTo.set($event)" />
+        </div>
+        <div class="app-filter-field app-filter-field--action">
+          <button class="btn app-search-btn" type="button" (click)="load()">{{ 'Apply' | translate }}</button>
+        </div>
       </div>
 
       @if (loading()) {
@@ -70,6 +85,18 @@
             </tbody>
           </table>
         </div>
+      }
+
+      @if (!loading() && totalCount() > 0) {
+        <app-pagination-bar
+          [pageNumber]="pageNumber()"
+          [totalPages]="totalPages()"
+          [totalCount]="totalCount()"
+          [pageSize]="pageSize()"
+          [pageSizeOptions]="[10, 20, 50, 100]"
+          (pageChange)="goToPage($event)"
+          (pageSizeChange)="changePageSize($event)"
+        />
       }
     </div>
   </div>

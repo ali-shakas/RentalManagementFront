@@ -11,6 +11,7 @@ import { CustomerSubscriptionService } from '../../../services/subscriptions/cus
 import { ToastService } from '../../../../../shared/services/toast.service';
 import { EmptyStateComponent } from '../../../../../shared/ui/empty-state/empty-state.component';
 import { PageHeaderComponent } from '../../../../../shared/ui/page-header/page-header.component';
+import { PaginationBarComponent } from '../../../../../shared/ui/pagination-bar/pagination-bar.component';
 
 @Component({
   selector: 'app-customer-subscription-list',
@@ -22,6 +23,7 @@ import { PageHeaderComponent } from '../../../../../shared/ui/page-header/page-h
     TranslateModule,
     EmptyStateComponent,
     PageHeaderComponent,
+    PaginationBarComponent,
   ],
   templateUrl: './customer-subscription-list.component.html',
   styleUrl: './customer-subscription-list.component.scss',
@@ -34,6 +36,8 @@ export class CustomerSubscriptionListComponent implements OnInit {
 
   subscriptions = signal<CustomerSubscription[]>([]);
   search = signal('');
+  pageNumber = signal(1);
+  pageSize = signal(10);
   loading = signal(false);
   canManage = computed(() => this.authState.hasAnyRole(TENANT_ADMIN_ROLES));
 
@@ -58,6 +62,15 @@ export class CustomerSubscriptionListComponent implements OnInit {
       return searchableText.includes(keyword);
     });
   });
+  totalCount = computed(() => this.filteredSubscriptions().length);
+  totalPages = computed(() => Math.max(1, Math.ceil(this.totalCount() / this.pageSize())));
+  currentPage = computed(() => Math.min(this.pageNumber(), this.totalPages()));
+  pagedSubscriptions = computed(() => {
+    const page = this.currentPage();
+    const size = this.pageSize();
+    const start = (page - 1) * size;
+    return this.filteredSubscriptions().slice(start, start + size);
+  });
 
   ngOnInit(): void {
     this.load();
@@ -79,6 +92,28 @@ export class CustomerSubscriptionListComponent implements OnInit {
         ),
       complete: () => this.loading.set(false),
     });
+  }
+
+  onSearchSubmit(): void {
+    this.search.set(this.search().trim());
+    this.pageNumber.set(1);
+  }
+
+  goToPage(page: number): void {
+    if (page < 1 || page > this.totalPages() || page === this.currentPage()) {
+      return;
+    }
+
+    this.pageNumber.set(page);
+  }
+
+  changePageSize(size: number): void {
+    if (size <= 0 || size === this.pageSize()) {
+      return;
+    }
+
+    this.pageSize.set(size);
+    this.pageNumber.set(1);
   }
 
   getSubscriptionName(subscription: CustomerSubscription): string {
