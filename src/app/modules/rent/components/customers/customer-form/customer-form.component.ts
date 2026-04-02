@@ -3,18 +3,19 @@ import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angula
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { startWith } from 'rxjs';
 
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { startWith } from 'rxjs';
 
 import { TENANT_ADMIN_ROLES } from '../../../../../core/auth/access.constants';
 import { AuthStateService } from '../../../../../core/auth/auth-state.service';
+import { FieldValueStateDirective } from '../../../../../shared/directives/field-value-state.directive';
 import { ToastService } from '../../../../../shared/services/toast.service';
 import { FileUploadComponent } from '../../../../../shared/ui/file-upload/file-upload.component';
 import { PageHeaderComponent } from '../../../../../shared/ui/page-header/page-header.component';
 import { resolveMediaUrl } from '../../../../../shared/utils/media-url.utils';
-import { CustomerSubscription } from '../../../models/subscriptions/customer-subscription.model';
 import { CustomerUpsertRequest } from '../../../models';
+import { CustomerSubscription } from '../../../models/subscriptions/customer-subscription.model';
 import { BookingService } from '../../../services/booking/booking.service';
 import { CustomerService } from '../../../services/customers/customer.service';
 import { CustomerSubscriptionService } from '../../../services/subscriptions/customer-subscription.service';
@@ -27,6 +28,7 @@ import { CustomerSubscriptionService } from '../../../services/subscriptions/cus
     ReactiveFormsModule,
     RouterLink,
     TranslateModule,
+    FieldValueStateDirective,
     FileUploadComponent,
     PageHeaderComponent,
   ],
@@ -303,10 +305,7 @@ export class CustomerFormComponent implements OnInit {
       this.updateIssuePlaceSuggestions(this.form.controls.nationality.value);
     });
     this.form.controls.nationality.valueChanges
-      .pipe(
-        startWith(this.form.controls.nationality.value),
-        takeUntilDestroyed(this.destroyRef),
-      )
+      .pipe(startWith(this.form.controls.nationality.value), takeUntilDestroyed(this.destroyRef))
       .subscribe(value => this.updateIssuePlaceSuggestions(value));
 
     const id = this.route.snapshot.paramMap.get('id');
@@ -372,7 +371,11 @@ export class CustomerFormComponent implements OnInit {
   }
 
   private isArabicUi(): boolean {
-    const lang = (this.translate.currentLang || this.translate.getDefaultLang() || 'en').toLowerCase();
+    const lang = (
+      this.translate.currentLang ||
+      this.translate.getDefaultLang() ||
+      'en'
+    ).toLowerCase();
     return lang.startsWith('ar');
   }
 
@@ -434,9 +437,7 @@ export class CustomerFormComponent implements OnInit {
       return;
     }
 
-    this.issuePlaceSuggestions.set(
-      this.uniqueSorted(this.isArabicUi() ? cities.ar : cities.en),
-    );
+    this.issuePlaceSuggestions.set(this.uniqueSorted(this.isArabicUi() ? cities.ar : cities.en));
   }
 
   private applyLocalizedNationalitySuggestions(): void {
@@ -466,7 +467,11 @@ export class CustomerFormComponent implements OnInit {
           const preferredId = this.getPreferredSubscriptionId(validSubscriptions);
           this.defaultSubscriptionId.set(preferredId);
 
-          if (!this.isEdit() && preferredId && Number(this.form.controls.idSubscriptionsOfCustomer.value) <= 0) {
+          if (
+            !this.isEdit() &&
+            preferredId &&
+            Number(this.form.controls.idSubscriptionsOfCustomer.value) <= 0
+          ) {
             this.form.controls.idSubscriptionsOfCustomer.setValue(preferredId);
           }
 
@@ -647,9 +652,7 @@ export class CustomerFormComponent implements OnInit {
       this.defaultSubscriptionId() ?? this.getPreferredSubscriptionId(this.customerSubscriptions());
 
     const isManualMode =
-      this.isEdit() &&
-      this.canManageSubscriptions() &&
-      raw.subscriptionAssignmentMode === 'manual';
+      this.isEdit() && this.canManageSubscriptions() && raw.subscriptionAssignmentMode === 'manual';
 
     const subscriptionId = this.isEdit()
       ? isManualMode

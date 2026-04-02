@@ -1,17 +1,20 @@
 <footer class="footer">
   <div class="container-fluid">
-    <div class="row align-items-center footer-shell">
-      <div class="col-md-6 p-0 footer-copyright">
-        <div class="footer-brand d-flex align-items-center gap-2">
-          <img src="assets/images/logo/logo-icon.png" [alt]="'Footer.SystemName' | translate" height="24" />
+    <div class="footer-shell">
+      <div class="footer-copyright">
+        <div class="footer-brand">
+          <span class="footer-logo-wrap" aria-hidden="true">
+            <img src="assets/images/logo/logo-icon.png" [alt]="'Footer.SystemName' | translate" height="24" />
+          </span>
           <div class="footer-copy">
             <p class="mb-0">{{ 'Footer.SystemName' | translate }}</p>
             <span>{{ 'Footer.Copyright' | translate }} {{ year }} ©</span>
           </div>
         </div>
       </div>
-      <div class="col-md-6 p-0 footer-meta">
-        <p class="heart mb-0 text-md-end">{{ 'Footer.ProductArea' | translate }}</p>
+      <div class="footer-meta" aria-hidden="true">
+        <span class="footer-meta-line"></span>
+        <span class="footer-meta-dot"></span>
       </div>
     </div>
   </div>

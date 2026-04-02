@@ -6,11 +6,12 @@ import { RouterLink } from '@angular/router';
 import { FinanceListColumn, FinanceListRow } from '../../../models/shared/finance-list.model';
 import { EmptyStateComponent } from '../../../../../shared/ui/empty-state/empty-state.component';
 import { PageHeaderComponent } from '../../../../../shared/ui/page-header/page-header.component';
+import { PaginationBarComponent } from '../../../../../shared/ui/pagination-bar/pagination-bar.component';
 
 @Component({
   selector: 'app-finance-list-shell',
   standalone: true,
-  imports: [CommonModule, TranslateModule, RouterLink, PageHeaderComponent, EmptyStateComponent],
+  imports: [CommonModule, TranslateModule, RouterLink, PageHeaderComponent, EmptyStateComponent, PaginationBarComponent],
   templateUrl: './finance-list-shell.component.html',
   styleUrl: './finance-list-shell.component.scss',
 })

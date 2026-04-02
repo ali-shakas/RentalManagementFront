@@ -5,6 +5,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { AuthStateService } from '../../../../../core/auth/auth-state.service';
+import { FieldValueStateDirective } from '../../../../../shared/directives/field-value-state.directive';
 import { CategoryVehicleUpsertRequest } from '../../../models';
 import { CategoryVehicleService } from '../../../services/category-vehicles/category-vehicle.service';
 import { ToastService } from '../../../../../shared/services/toast.service';
@@ -13,7 +14,14 @@ import { PageHeaderComponent } from '../../../../../shared/ui/page-header/page-h
 @Component({
   selector: 'app-category-vehicle-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, TranslateModule, PageHeaderComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterLink,
+    TranslateModule,
+    FieldValueStateDirective,
+    PageHeaderComponent,
+  ],
   templateUrl: './category-vehicle-form.component.html',
   styleUrl: './category-vehicle-form.component.scss',
 })

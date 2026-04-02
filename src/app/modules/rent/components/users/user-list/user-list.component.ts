@@ -5,6 +5,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { AuthStateService } from '../../../../../core/auth/auth-state.service';
 import { PageHeaderComponent } from '../../../../../shared/ui/page-header/page-header.component';
+import { PaginationBarComponent } from '../../../../../shared/ui/pagination-bar/pagination-bar.component';
 import { UserService } from '../../../services/users/user.service';
 import { ToastService } from '../../../../../shared/services/toast.service';
 import { ConfirmService } from '../../../../../shared/services/confirm.service';
@@ -13,7 +14,7 @@ import { User } from '../../../models';
 @Component({
   selector: 'app-user-list',
   standalone: true,
-  imports: [RouterLink, FormsModule, TranslateModule, PageHeaderComponent],
+  imports: [RouterLink, FormsModule, TranslateModule, PageHeaderComponent, PaginationBarComponent],
   templateUrl: './user-list.component.html',
   styleUrl: './user-list.component.scss',
 })

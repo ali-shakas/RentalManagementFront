@@ -32,6 +32,15 @@
   --app-table-action-surface: rgba(255, 255, 255, 0.72);
   --app-form-hint-size: 0.75rem;
   --app-form-hint-color: rgba(71, 85, 105, 0.9);
+  --app-form-label-color: rgba(15, 23, 42, 0.9);
+  --app-form-placeholder-color: rgba(100, 116, 139, 0.88);
+  --app-form-empty-bg: rgba(15, 23, 42, 0.015);
+  --app-form-empty-border: rgba(71, 85, 105, 0.32);
+  --app-form-empty-text: rgba(71, 85, 105, 0.86);
+  --app-form-filled-bg: rgba(37, 99, 235, 0.065);
+  --app-form-filled-border: rgba(37, 99, 235, 0.35);
+  --app-form-filled-text: rgba(15, 23, 42, 0.92);
+  --app-form-readonly-bg: rgba(15, 23, 42, 0.04);
   --app-sidebar-logo-filter: brightness(1.08) contrast(1.04) saturate(1.02);
   --app-sidebar-logo-opacity: 0.98;
 }
@@ -170,6 +179,15 @@ body.dark-only {
   --app-table-shadow: 0 22px 48px -30px rgba(2, 6, 23, 0.8);
   --app-table-action-surface: rgba(255, 255, 255, 0.04);
   --app-form-hint-color: rgba(203, 213, 225, 0.94);
+  --app-form-label-color: rgba(241, 245, 249, 0.96);
+  --app-form-placeholder-color: rgba(148, 163, 184, 0.72);
+  --app-form-empty-bg: rgba(15, 23, 42, 0.24);
+  --app-form-empty-border: rgba(148, 163, 184, 0.3);
+  --app-form-empty-text: rgba(203, 213, 225, 0.82);
+  --app-form-filled-bg: rgba(37, 99, 235, 0.19);
+  --app-form-filled-border: rgba(96, 165, 250, 0.45);
+  --app-form-filled-text: rgba(248, 250, 252, 0.96);
+  --app-form-readonly-bg: rgba(59, 130, 246, 0.2);
   --app-sidebar-logo-filter: brightness(1.16) contrast(1.06) saturate(1.03);
   --app-sidebar-logo-opacity: 0.99;
 
@@ -184,6 +202,39 @@ body.dark-only {
 
   .table-action-icon--secondary:hover {
     background: var(--app-table-row-hover);
+  }
+
+  .app-filter-label {
+    opacity: 0.92;
+  }
+
+  .app-filter-field {
+    border-color: rgba(100, 116, 139, 0.38);
+    background: linear-gradient(160deg, rgba(30, 41, 59, 0.76), rgba(15, 23, 42, 0.66));
+    box-shadow: 0 14px 24px -20px rgba(2, 6, 23, 0.68);
+
+    .form-select,
+    .form-control {
+      border-color: rgba(100, 116, 139, 0.45);
+      background-color: rgba(15, 23, 42, 0.5);
+      color: rgba(241, 245, 249, 0.94);
+    }
+
+    .form-control::placeholder {
+      color: rgba(148, 163, 184, 0.82);
+    }
+
+    .form-select:focus,
+    .form-control:focus {
+      border-color: rgba(96, 165, 250, 0.62);
+      box-shadow: 0 0 0 0.18rem rgba(59, 130, 246, 0.2);
+      background-color: rgba(30, 64, 175, 0.2);
+    }
+  }
+
+  .app-search-btn {
+    border-color: rgba(96, 165, 250, 0.46);
+    box-shadow: 0 12px 20px -16px rgba(30, 64, 175, 0.75);
   }
 }
 
@@ -209,6 +260,72 @@ body.dark-only .table tbody tr > * {
   line-height: 1.4;
   color: var(--app-form-hint-color) !important;
   opacity: 1;
+}
+
+.app-form-value-state {
+  .form-label {
+    color: var(--app-form-label-color) !important;
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .form-control,
+  .form-select {
+    transition:
+      background-color 0.2s ease,
+      border-color 0.2s ease,
+      box-shadow 0.2s ease,
+      color 0.2s ease;
+  }
+
+  .form-control.form-value-empty,
+  .form-select.form-value-empty {
+    background: var(--app-form-empty-bg);
+    border-color: var(--app-form-empty-border);
+    border-style: dashed;
+    color: var(--app-form-empty-text);
+  }
+
+  .form-control.form-value-empty::placeholder,
+  .form-control.form-value-filled::placeholder,
+  .form-control::placeholder,
+  .form-select::placeholder {
+    color: var(--app-form-placeholder-color) !important;
+    opacity: 1;
+  }
+
+  .form-control.form-value-filled,
+  .form-select.form-value-filled {
+    background: var(--app-form-filled-bg);
+    border-color: var(--app-form-filled-border);
+    border-style: solid;
+    color: var(--app-form-filled-text);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--app-form-filled-border) 55%, transparent);
+  }
+
+  .form-control.form-value-filled:focus,
+  .form-select.form-value-filled:focus {
+    border-color: color-mix(in srgb, var(--app-form-filled-border) 85%, white 15%);
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--app-form-filled-border) 72%, transparent),
+      0 0 0 0.2rem color-mix(in srgb, var(--app-form-filled-border) 22%, transparent);
+  }
+
+  .form-control[readonly],
+  .form-control:disabled,
+  .form-select:disabled {
+    background: var(--app-form-readonly-bg);
+    border-color: color-mix(in srgb, var(--app-form-empty-border) 92%, transparent);
+    color: var(--app-form-filled-text);
+    cursor: default;
+  }
+
+  .form-control[readonly].form-value-empty,
+  .form-control:disabled.form-value-empty,
+  .form-select:disabled.form-value-empty {
+    border-style: dashed;
+    color: var(--app-form-empty-text);
+    font-style: italic;
+  }
 }
 
 h1,
@@ -381,6 +498,105 @@ thead th,
   padding-inline-end: 1.2rem;
 }
 
+.app-filters-toolbar {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.app-filter-field {
+  grid-column: span 3;
+  padding: 0.72rem;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 14px;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.06), rgba(148, 163, 184, 0.04));
+  box-shadow: 0 10px 20px -18px rgba(15, 23, 42, 0.45);
+
+  .form-select,
+  .form-control,
+  .btn {
+    min-height: 44px;
+    border-radius: 12px;
+  }
+
+  .form-select,
+  .form-control {
+    border-color: rgba(148, 163, 184, 0.28);
+    background-color: rgba(15, 23, 42, 0.04);
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease,
+      background-color 0.2s ease;
+  }
+
+  .form-select:focus,
+  .form-control:focus {
+    border-color: rgba(59, 130, 246, 0.5);
+    box-shadow: 0 0 0 0.18rem rgba(59, 130, 246, 0.14);
+    background-color: rgba(59, 130, 246, 0.05);
+  }
+}
+
+.app-filter-field--search {
+  grid-column: span 6;
+}
+
+.app-filter-field--wide {
+  grid-column: span 4;
+}
+
+.app-filter-field--narrow {
+  grid-column: span 2;
+}
+
+.app-filter-field--action {
+  grid-column: span 2;
+  display: flex;
+  align-items: flex-end;
+}
+
+.app-filter-field--action .btn {
+  width: 100%;
+}
+
+.app-filter-label {
+  display: inline-block;
+  margin-bottom: 0.45rem;
+  font-size: 0.72rem;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.02em;
+  opacity: 0.86;
+}
+
+.app-search-control {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.55rem;
+}
+
+.app-search-btn {
+  min-width: 96px;
+  border: 1px solid rgba(59, 130, 246, 0.42);
+  color: #fff;
+  background: linear-gradient(135deg, #2f7cf2, #1d5fcb);
+  font-weight: 700;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    filter 0.2s ease;
+}
+
+.app-search-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 24px -18px rgba(37, 99, 235, 0.75);
+  filter: brightness(1.03);
+}
+
+.app-search-btn:active {
+  transform: translateY(0);
+}
+
 .sidebar-wrapper .sidebar-link,
 .sidebar-wrapper .submenu-title,
 .sidebar-wrapper .sidebar-main-title h6,
@@ -478,9 +694,46 @@ html[dir='ltr'] td {
     --font-size-sidebar: 0.84375rem;
     --app-form-hint-size: 0.72rem;
   }
+
+  .app-filters-toolbar {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .app-filter-field {
+    grid-column: span 2;
+  }
+
+  .app-filter-field--search {
+    grid-column: span 6;
+  }
+
+  .app-filter-field--wide {
+    grid-column: span 3;
+  }
+
+  .app-filter-field--narrow,
+  .app-filter-field--action {
+    grid-column: span 2;
+  }
 }
 
 @media (max-width: 767.98px) {
+  .app-filters-toolbar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .app-filter-field,
+  .app-filter-field--search,
+  .app-filter-field--wide,
+  .app-filter-field--narrow,
+  .app-filter-field--action {
+    grid-column: span 2;
+  }
+
+  .app-filter-field--action {
+    display: block;
+  }
+
   .page-header .header-wrapper .nav-right.right-header {
     display: block !important;
     width: auto;
@@ -511,5 +764,27 @@ html[dir='ltr'] td {
 
   .table > :not(caption) > * > * {
     padding: 0.82rem 0.9rem;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .app-filters-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .app-filter-field,
+  .app-filter-field--search,
+  .app-filter-field--wide,
+  .app-filter-field--narrow,
+  .app-filter-field--action {
+    grid-column: auto;
+  }
+
+  .app-search-control {
+    grid-template-columns: 1fr;
+  }
+
+  .app-search-btn {
+    width: 100%;
   }
 }

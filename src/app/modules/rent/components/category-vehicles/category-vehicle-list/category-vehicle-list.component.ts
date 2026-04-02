@@ -10,6 +10,7 @@ import { CategoryVehicleService } from '../../../services/category-vehicles/cate
 import { ToastService } from '../../../../../shared/services/toast.service';
 import { EmptyStateComponent } from '../../../../../shared/ui/empty-state/empty-state.component';
 import { PageHeaderComponent } from '../../../../../shared/ui/page-header/page-header.component';
+import { PaginationBarComponent } from '../../../../../shared/ui/pagination-bar/pagination-bar.component';
 import { StatusBadgeComponent } from '../../../../../shared/ui/status-badge/status-badge.component';
 
 @Component({
@@ -22,6 +23,7 @@ import { StatusBadgeComponent } from '../../../../../shared/ui/status-badge/stat
     TranslateModule,
     EmptyStateComponent,
     PageHeaderComponent,
+    PaginationBarComponent,
     StatusBadgeComponent,
   ],
   templateUrl: './category-vehicle-list.component.html',

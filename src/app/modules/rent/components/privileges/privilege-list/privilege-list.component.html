@@ -12,9 +12,10 @@
 
   <div class="card">
     <div class="card-body">
-      <div class="row g-3 mb-3">
-        <div class="col-md-6">
-          <div class="input-group">
+      <div class="app-filters-toolbar">
+        <div class="app-filter-field app-filter-field--search">
+          <label class="app-filter-label">{{ 'Search' | translate }}</label>
+          <div class="app-search-control">
             <input
               type="text"
               class="form-control"
@@ -23,7 +24,7 @@
               (ngModelChange)="search.set($event)"
               (keyup.enter)="onSearch()"
             />
-            <button class="btn btn-outline-secondary" type="button" (click)="onSearch()">{{ 'Search' | translate }}</button>
+            <button class="btn app-search-btn" type="button" (click)="onSearch()">{{ 'Search' | translate }}</button>
           </div>
         </div>
       </div>
@@ -71,6 +72,16 @@
           </table>
         </div>
       }
+
+      <app-pagination-bar
+        [pageNumber]="pageNumber()"
+        [totalPages]="totalPages()"
+        [totalCount]="totalCount()"
+        [pageSize]="pageSize()"
+        [pageSizeOptions]="[10, 20, 50, 100]"
+        (pageChange)="goToPage($event)"
+        (pageSizeChange)="changePageSize($event)"
+      />
     </div>
   </div>
 </div>

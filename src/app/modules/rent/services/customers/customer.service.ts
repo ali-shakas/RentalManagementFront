@@ -1,10 +1,14 @@
 import { Injectable, inject } from '@angular/core';
 
-import { Observable, catchError, map, throwError } from 'rxjs';
+import { Observable, catchError, from, map, switchMap, throwError } from 'rxjs';
 
 import { PaginatedAggregatorResponse } from '../../../../core/interfaces';
 import { BaseService } from '../../../../shared/services/base/base.service';
-import { buildFleetQueryParams, normalizeFleetId } from '../../../../shared/utils/fleet-query.utils';
+import {
+  buildFleetQueryParams,
+  normalizeFleetId,
+} from '../../../../shared/utils/fleet-query.utils';
+import { buildImageUploadPayload } from '../../../../shared/utils/image-upload.utils';
 import { normalizePaginatedResponse } from '../../../../shared/utils/paginated-response.normalizer';
 import { Customer, CustomerFilters, CustomerUpsertRequest } from '../../models';
 import { normalizeCustomer } from '../../models/customers/customer.normalizer';
@@ -48,18 +52,24 @@ export class CustomerService {
   }
 
   create(body: CustomerUpsertRequest): Observable<unknown> {
-    return this.api.postData(this.base, this.toApiPayload(body));
+    return from(this.toApiPayload(body)).pipe(
+      switchMap(payload => this.api.postData(this.base, payload)),
+    );
   }
 
   update(body: CustomerUpsertRequest): Observable<unknown> {
-    return this.api.putData(`${this.base}/${body.id}`, this.toApiPayload(body));
+    return from(this.toApiPayload(body)).pipe(
+      switchMap(payload => this.api.putData(`${this.base}/${body.id}`, payload)),
+    );
   }
 
   softDelete(id: string): Observable<unknown> {
     return this.api.patchData(`${this.base}/SoftDelete/${id}`, {});
   }
 
-  private toApiPayload(body: CustomerUpsertRequest): Record<string, unknown> {
+  private async toApiPayload(body: CustomerUpsertRequest): Promise<Record<string, unknown>> {
+    const imagePayload = await buildImageUploadPayload(body.image);
+
     return {
       id: body.id,
       nameAr: body.nameAr,
@@ -83,6 +93,14 @@ export class CustomerService {
       fleetId: body.fleetId,
       notes: body.notes,
       isActive: body.isActive,
+      url: imagePayload?.attachment,
+      Url: imagePayload?.attachment,
+      imageExtension: imagePayload?.extension,
+      ImageExtension: imagePayload?.extension,
+      attachment: imagePayload?.attachment,
+      Attachment: imagePayload?.attachment,
+      extension: imagePayload?.extension,
+      Extension: imagePayload?.extension,
     };
   }
 

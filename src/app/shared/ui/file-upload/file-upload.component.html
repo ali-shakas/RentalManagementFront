@@ -2,10 +2,13 @@
   <div class="card-body">
     <label class="form-label d-block">{{ label }}</label>
     <input class="form-control" type="file" [accept]="accept" (change)="onFileChange($event)" />
+    @if (validationMessage(); as message) {
+      <div class="upload-validation mt-2">{{ message }}</div>
+    }
 
-    @if (localPreview() || previewUrl) {
+    @if (getPreviewSrc() && !previewBroken()) {
       <div class="upload-preview mt-3">
-        <img [src]="localPreview() || previewUrl" alt="preview" />
+        <img [src]="getPreviewSrc()" alt="preview" (error)="onPreviewError($event)" />
       </div>
     }
   </div>

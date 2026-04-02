@@ -6,6 +6,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { AuthStateService } from '../../../../../core/auth/auth-state.service';
 import { Branch, CategoryVehicle, VehicleStatus, VehicleUpsertRequest } from '../../../models';
+import { FieldValueStateDirective } from '../../../../../shared/directives/field-value-state.directive';
 import { ToastService } from '../../../../../shared/services/toast.service';
 import { BranchService } from '../../../services/branches/branch.service';
 import { CategoryVehicleService } from '../../../services/category-vehicles/category-vehicle.service';
@@ -17,7 +18,15 @@ import { PageHeaderComponent } from '../../../../../shared/ui/page-header/page-h
 @Component({
   selector: 'app-vehicle-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, TranslateModule, FileUploadComponent, PageHeaderComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterLink,
+    TranslateModule,
+    FieldValueStateDirective,
+    FileUploadComponent,
+    PageHeaderComponent,
+  ],
   templateUrl: './vehicle-form.component.html',
   styleUrl: './vehicle-form.component.scss',
 })
@@ -40,12 +49,14 @@ export class VehicleFormComponent implements OnInit {
   private translate = inject(TranslateService);
 
   isEdit = signal(false);
+  isViewMode = signal(false);
   vehicleId = signal<string | null>(null);
   loading = signal(false);
   selectedImage = signal<File | null>(null);
   previewUrl = signal<string | null>(null);
   branches = signal<Branch[]>([]);
   categories = signal<CategoryVehicle[]>([]);
+  private readonly vehicleFallbackImage = 'assets/images/rent_icon/car_defulte.png';
 
   form = this.fb.group({
     fleetId: [this.authState.fleetId() || '', [Validators.required]],
@@ -72,6 +83,7 @@ export class VehicleFormComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    this.isViewMode.set(Boolean(this.route.snapshot.data?.['viewOnly']));
     const fleetId = this.authState.fleetId();
     if (fleetId) {
       this.branchService.getPaginated({ fleetId, pageNumber: 1, pageSize: 100 }).subscribe({
@@ -86,7 +98,12 @@ export class VehicleFormComponent implements OnInit {
     }
 
     const id = this.route.snapshot.paramMap.get('id');
-    if (!id) return;
+    if (!id) {
+      if (this.isViewMode()) {
+        this.router.navigate(['/vehicles']);
+      }
+      return;
+    }
 
     this.isEdit.set(true);
     this.vehicleId.set(id);
@@ -97,26 +114,32 @@ export class VehicleFormComponent implements OnInit {
         this.form.patchValue({
           fleetId: vehicle.fleetId,
           branchId: vehicle.branchId ?? null,
-          idCategoryVehicle: vehicle.categoryVehicleId ? Number(vehicle.categoryVehicleId) : null,
-          serialNumber: vehicle.make,
-          engine: vehicle.model,
-          yearMake: vehicle.year,
+          idCategoryVehicle:
+            vehicle.idCategoryVehicle ??
+            (vehicle.categoryVehicleId ? Number(vehicle.categoryVehicleId) : null),
+          serialNumber: vehicle.serialNumber ?? vehicle.make,
+          engine: vehicle.engine ?? vehicle.model,
+          yearMake: vehicle.yearMake ?? vehicle.year,
           plateNumber: vehicle.plateNumber,
           vin: vehicle.vin || '',
           color: vehicle.color || '',
-          insuranceNumber: '',
-          insuranceType: null,
-          insuranceExpires: '',
-          licenseExpirationDate: '',
-          insurancePolicyNumber: '',
-          operatinCard: '',
-          validityCarRegistration: '',
-          countKm: vehicle.mileage ?? 0,
-          capacitOil: vehicle.seats ?? 0,
+          insuranceNumber: vehicle.insuranceNumber || '',
+          insuranceType: vehicle.insuranceType ?? null,
+          insuranceExpires: this.toDateInputValue(vehicle.insuranceExpires),
+          licenseExpirationDate: this.toDateInputValue(vehicle.licenseExpirationDate),
+          insurancePolicyNumber: vehicle.insurancePolicyNumber || '',
+          operatinCard: this.toDateInputValue(vehicle.operatinCard),
+          validityCarRegistration: this.toDateInputValue(vehicle.validityCarRegistration),
+          countKm: vehicle.countKm ?? vehicle.mileage ?? 0,
+          capacitOil: vehicle.capacitOil ?? vehicle.seats ?? 0,
           status: vehicle.status,
           isActive: vehicle.isActive,
           notes: vehicle.notes || '',
         });
+
+        if (this.isViewMode()) {
+          this.form.disable({ emitEvent: false });
+        }
       },
       error: () => this.toast.error(this.translate.instant('Failed to load vehicle')),
       complete: () => this.loading.set(false),
@@ -124,10 +147,76 @@ export class VehicleFormComponent implements OnInit {
   }
 
   onImageSelected(file: File | null): void {
+    if (this.isViewMode()) {
+      return;
+    }
     this.selectedImage.set(file);
   }
 
+  onPreviewImageError(event: Event): void {
+    const image = event.target as HTMLImageElement | null;
+    if (!image) {
+      return;
+    }
+
+    if (image.getAttribute('src') !== this.vehicleFallbackImage) {
+      image.setAttribute('src', this.vehicleFallbackImage);
+    }
+
+    this.previewUrl.set(this.vehicleFallbackImage);
+  }
+
+  getBranchLabel(branch: Branch): string {
+    return this.isArabicUi() ? branch.nameAr || branch.nameEn || '-' : branch.nameEn || branch.nameAr || '-';
+  }
+
+  getCategoryLabel(category: CategoryVehicle): string {
+    return this.isArabicUi() ? category.nameAr || category.nameEn || '-' : category.nameEn || category.nameAr || '-';
+  }
+
+  getPreviewImageUrl(): string {
+    return this.previewUrl() || this.vehicleFallbackImage;
+  }
+
+  getPageTitleKey(): string {
+    if (this.isViewMode()) {
+      return 'Vehicle Preview';
+    }
+
+    return this.isEdit() ? 'Edit Vehicle' : 'Create Vehicle';
+  }
+
+  getPageSubtitleKey(): string {
+    if (this.isViewMode()) {
+      return 'Preview vehicle information in read-only mode.';
+    }
+
+    return 'Vehicle records with pricing, status, and image upload.';
+  }
+
+  private toDateInputValue(value?: string): string {
+    if (!value) {
+      return '';
+    }
+
+    const normalized = String(value).trim();
+    if (!normalized) {
+      return '';
+    }
+
+    return normalized.length >= 10 ? normalized.slice(0, 10) : normalized;
+  }
+
+  private isArabicUi(): boolean {
+    const lang = (this.translate.currentLang || this.translate.getDefaultLang() || 'en').toLowerCase();
+    return lang.startsWith('ar');
+  }
+
   save(): void {
+    if (this.isViewMode()) {
+      return;
+    }
+
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;

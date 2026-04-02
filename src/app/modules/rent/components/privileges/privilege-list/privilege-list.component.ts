@@ -10,11 +10,12 @@ import { PrivilegeService } from '../../../services/privileges/privilege.service
 import { ToastService } from '../../../../../shared/services/toast.service';
 import { EmptyStateComponent } from '../../../../../shared/ui/empty-state/empty-state.component';
 import { PageHeaderComponent } from '../../../../../shared/ui/page-header/page-header.component';
+import { PaginationBarComponent } from '../../../../../shared/ui/pagination-bar/pagination-bar.component';
 
 @Component({
   selector: 'app-privilege-list',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, TranslateModule, EmptyStateComponent, PageHeaderComponent],
+  imports: [CommonModule, RouterLink, FormsModule, TranslateModule, EmptyStateComponent, PageHeaderComponent, PaginationBarComponent],
   templateUrl: './privilege-list.component.html',
 })
 export class PrivilegeListComponent implements OnInit {
@@ -85,6 +86,16 @@ export class PrivilegeListComponent implements OnInit {
 
   goToPage(page: number): void {
     this.pageNumber.set(page);
+    this.load();
+  }
+
+  changePageSize(size: number): void {
+    if (size <= 0 || size === this.pageSize()) {
+      return;
+    }
+
+    this.pageSize.set(size);
+    this.pageNumber.set(1);
     this.load();
   }
 }
