@@ -49,7 +49,6 @@ export class BranchListComponent implements OnInit {
   pageNumber = signal(1);
   pageSize = signal(10);
   search = signal('');
-  statusLoadingIds = signal<number[]>([]);
   deletingIds = signal<number[]>([]);
   readonly pageSizeFilterOptions: SmoothSelectOption[] = [
     { label: '5', value: 5 },
@@ -106,26 +105,8 @@ export class BranchListComponent implements OnInit {
     this.load();
   }
 
-  isStatusLoading(id: number): boolean {
-    return this.statusLoadingIds().includes(id);
-  }
-
   isDeleting(id: number): boolean {
     return this.deletingIds().includes(id);
-  }
-
-  toggleStatus(branch: Branch): void {
-    this.statusLoadingIds.update(ids => [...ids, branch.id]);
-    this.branchApi.changeStatus(branch.id, !branch.isActive).subscribe({
-      next: () => {
-        this.branches.update(items =>
-          items.map(item => (item.id === branch.id ? { ...item, isActive: !item.isActive } : item)),
-        );
-      },
-      error: err => this.toast.error(err?.message ?? this.translate.instant('Failed to update branch status')),
-      complete: () =>
-        this.statusLoadingIds.update(ids => ids.filter(currentId => currentId !== branch.id)),
-    });
   }
 
   delete(branch: Branch): void {

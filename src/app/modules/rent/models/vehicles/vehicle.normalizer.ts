@@ -9,6 +9,66 @@ function pick<T>(source: Record<string, unknown>, ...keys: string[]): T | undefi
   return undefined;
 }
 
+function parseBooleanLike(value: unknown): boolean | null {
+  if (typeof value === 'boolean') {
+    return value;
+  }
+
+  if (typeof value === 'number') {
+    if (value === 1) return true;
+    if (value === 0) return false;
+  }
+
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    if (['true', '1', 'yes', 'y', 'available', 'isavailable', 'isavalible', 'متاحة'].includes(normalized)) {
+      return true;
+    }
+    if (['false', '0', 'no', 'n', 'booked', 'reserved', 'maintenance', 'inactive', 'غيرنشطة', 'محجوزة'].includes(normalized)) {
+      return false;
+    }
+  }
+
+  return null;
+}
+
+function normalizeVehicleStatus(source: Record<string, unknown>): Vehicle['status'] {
+  const statusRaw = String(pick(source, 'status', 'Status', 'vehicleStatus', 'VehicleStatus') ?? '')
+    .trim()
+    .toLowerCase();
+  const statusKey = statusRaw.replace(/[\s_-]/g, '');
+
+  if (['1', 'available', 'isavailable', 'isavalible', 'avalible', 'ready', 'free', 'متاحة'].includes(statusKey)) {
+    return 'Available';
+  }
+
+  if (['2', 'booked', 'reserved', 'rented', 'busy', 'isbooking', 'محجوزة', 'محجوز'].includes(statusKey)) {
+    return 'Booked';
+  }
+
+  if (['3', 'maintenance', 'undermaintenance', 'inmaintenance', 'repair', 'ismaintanes', 'صيانة'].includes(statusKey)) {
+    return 'Maintenance';
+  }
+
+  if (['4', 'inactive', 'disabled', 'notactive', 'ismangament', 'issold', 'غيرنشطة'].includes(statusKey)) {
+    return 'Inactive';
+  }
+
+  const availabilityRaw = pick<unknown>(source, 'isAvailable', 'IsAvailable', 'isAvalible', 'IsAvalible');
+  const availability = parseBooleanLike(availabilityRaw);
+  if (availability !== null) {
+    return availability ? 'Available' : 'Booked';
+  }
+
+  const activeRaw = pick<unknown>(source, 'isActive', 'IsActive');
+  const isActive = parseBooleanLike(activeRaw);
+  if (isActive === false) {
+    return 'Inactive';
+  }
+
+  return 'Available';
+}
+
 export function normalizeVehicle(raw: unknown): Vehicle {
   const source = (raw ?? {}) as Record<string, unknown>;
   const serialNumber = pick<string>(source, 'serialNumber', 'SerialNumber');
@@ -56,7 +116,7 @@ export function normalizeVehicle(raw: unknown): Vehicle {
     fuelType: pick<string>(source, 'fuelType', 'FuelType'),
     seats: pick<number>(source, 'seats', 'Seats', 'capacitOil', 'CapacitOil'),
     createdAt: pick<string>(source, 'createdAt', 'CreatedAt'),
-    status: String(pick(source, 'status', 'Status') ?? 'Available') as Vehicle['status'],
+    status: normalizeVehicleStatus(source),
     isActive: Boolean(pick(source, 'isActive', 'IsActive') ?? true),
     imageUrl: imageUrl,
     notes: pick<string>(source, 'notes', 'Notes'),

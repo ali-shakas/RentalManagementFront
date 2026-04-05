@@ -66,33 +66,13 @@
               <td>{{ branch.nameEn || '-' }}</td>
               <td>{{ branch.code || '-' }}</td>
               <td>
-                <div class="d-flex align-items-center gap-2">
-                  <app-status-badge
-                    [label]="branch.isActive ? ('Active' | translate) : ('Inactive' | translate)"
-                    [tone]="branch.isActive ? 'success' : 'secondary'"
-                  />
-                  @if (isStatusLoading(branch.id)) {
-                    <span class="spinner-border spinner-border-sm" role="status"></span>
-                  }
-                </div>
+                <app-status-badge
+                  [label]="branch.isActive ? ('Active' | translate) : ('Inactive' | translate)"
+                  [tone]="branch.isActive ? 'success' : 'secondary'"
+                />
               </td>
               <td class="text-end">
                 <div class="table-actions">
-                  <button
-                    class="table-action-icon table-action-icon--secondary"
-                    type="button"
-                    [disabled]="isStatusLoading(branch.id)"
-                    (click)="toggleStatus(branch)"
-                    hasPrivilege="UpdateBranch"
-                    [attr.aria-label]="branch.isActive ? ('Deactivate' | translate) : ('Activate' | translate)"
-                    [title]="branch.isActive ? ('Deactivate' | translate) : ('Activate' | translate)"
-                  >
-                    @if (isStatusLoading(branch.id)) {
-                      <span class="spinner-border spinner-border-sm" role="status"></span>
-                    } @else {
-                      <i class="fa-solid" [ngClass]="branch.isActive ? 'fa-toggle-on' : 'fa-toggle-off'"></i>
-                    }
-                  </button>
                   <a
                     class="table-action-icon table-action-icon--primary"
                     [routerLink]="['/branches', branch.id, 'edit']"

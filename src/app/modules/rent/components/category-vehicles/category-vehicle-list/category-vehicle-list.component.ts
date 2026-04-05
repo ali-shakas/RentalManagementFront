@@ -94,6 +94,40 @@ export class CategoryVehicleListComponent implements OnInit {
     this.pageNumber.set(page);
     this.load();
   }
+
+  formatRange(low?: number, high?: number): string {
+    const lowValue = this.toFiniteNumber(low);
+    const highValue = this.toFiniteNumber(high);
+
+    if (lowValue === null && highValue === null) {
+      return '-';
+    }
+
+    const from = lowValue === null ? '-' : this.formatNumber(lowValue);
+    const to = highValue === null ? '-' : this.formatNumber(highValue);
+    return `${from} - ${to}`;
+  }
+
+  private formatNumber(value: number): string {
+    return new Intl.NumberFormat(this.getCurrentLocale(), {
+      minimumFractionDigits: Number.isInteger(value) ? 0 : 2,
+      maximumFractionDigits: 2,
+    }).format(value);
+  }
+
+  private toFiniteNumber(value?: number): number | null {
+    if (value === null || value === undefined) {
+      return null;
+    }
+
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  private getCurrentLocale(): string {
+    const lang = (this.translate.currentLang || this.translate.getDefaultLang() || 'en').toLowerCase();
+    return lang.startsWith('ar') ? 'ar-SA' : 'en-US';
+  }
 }
 
 

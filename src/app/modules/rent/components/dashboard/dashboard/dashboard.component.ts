@@ -232,6 +232,7 @@ export class DashboardComponent implements OnInit {
     if (item.type === 'sub') {
       return (item.children ?? [])
         .filter(child => this.canAccessMenuItem(child))
+        .filter(child => !child.path || !this.shouldHideInExplore(child.path))
         .filter((child): child is Menu & { path: string; title: string; imageIcon: string } =>
           !!child.path && !!child.title && !!child.imageIcon,
         )
@@ -246,6 +247,10 @@ export class DashboardComponent implements OnInit {
       return [];
     }
 
+    if (this.shouldHideInExplore(item.path)) {
+      return [];
+    }
+
     return [
       {
         title: item.title,
@@ -253,6 +258,10 @@ export class DashboardComponent implements OnInit {
         imageIcon: item.imageIcon,
       },
     ];
+  }
+
+  private shouldHideInExplore(path: string): boolean {
+    return this.toBasePath(path) === '/dashboard';
   }
 
   canAccessPath(path: string): boolean {

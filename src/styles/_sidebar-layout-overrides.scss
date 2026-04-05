@@ -158,6 +158,40 @@ $sidebar-collapsed-width: 71px;
       }
 
       .toggle-sidebar {
+        --sidebar-toggle-fg: #3657d8;
+        --sidebar-toggle-bg:
+          linear-gradient(135deg, rgba(67, 97, 238, 0.18) 0%, rgba(67, 97, 238, 0.09) 100%);
+        --sidebar-toggle-border: rgba(67, 97, 238, 0.34);
+        --sidebar-toggle-shadow:
+          0 16px 30px -24px rgba(67, 97, 238, 0.88),
+          inset 0 1px 0 rgba(255, 255, 255, 0.18);
+        --sidebar-toggle-hover-bg:
+          linear-gradient(135deg, rgba(67, 97, 238, 0.26) 0%, rgba(67, 97, 238, 0.12) 100%);
+        --sidebar-toggle-hover-border: rgba(67, 97, 238, 0.5);
+        --sidebar-toggle-hover-shadow:
+          0 20px 34px -22px rgba(67, 97, 238, 0.94),
+          0 0 0 4px rgba(67, 97, 238, 0.09);
+        --sidebar-toggle-focus-outline: rgba(67, 97, 238, 0.42);
+        --sidebar-toggle-active-shadow:
+          0 10px 20px -18px rgba(67, 97, 238, 0.78),
+          0 0 0 3px rgba(67, 97, 238, 0.08);
+        --sidebar-toggle-open-fg: #0f766e;
+        --sidebar-toggle-open-bg:
+          linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(16, 185, 129, 0.1) 100%);
+        --sidebar-toggle-open-border: rgba(16, 185, 129, 0.38);
+        --sidebar-toggle-open-shadow:
+          0 16px 30px -24px rgba(5, 150, 105, 0.72),
+          inset 0 1px 0 rgba(255, 255, 255, 0.16);
+        --sidebar-toggle-open-hover-bg:
+          linear-gradient(135deg, rgba(16, 185, 129, 0.28) 0%, rgba(16, 185, 129, 0.14) 100%);
+        --sidebar-toggle-open-hover-border: rgba(5, 150, 105, 0.54);
+        --sidebar-toggle-open-hover-shadow:
+          0 20px 34px -22px rgba(5, 150, 105, 0.86),
+          0 0 0 4px rgba(16, 185, 129, 0.12);
+        --sidebar-toggle-open-focus-outline: rgba(16, 185, 129, 0.45);
+        --sidebar-toggle-open-active-shadow:
+          0 10px 20px -18px rgba(5, 150, 105, 0.66),
+          0 0 0 3px rgba(16, 185, 129, 0.12);
         display: inline-flex !important;
         position: static !important;
         inset: auto !important;
@@ -174,14 +208,11 @@ $sidebar-collapsed-width: 71px;
         position: relative !important;
         overflow: hidden;
         isolation: isolate;
-        border: 1px solid rgba(48, 126, 243, 0.24);
+        border: 1px solid var(--sidebar-toggle-border);
         border-radius: 14px;
-        background:
-          linear-gradient(135deg, rgba(48, 126, 243, 0.18) 0%, rgba(48, 126, 243, 0.09) 100%);
-        color: #307ef3;
-        box-shadow:
-          0 16px 30px -24px rgba(48, 126, 243, 0.9),
-          inset 0 1px 0 rgba(255, 255, 255, 0.18);
+        background: var(--sidebar-toggle-bg);
+        color: var(--sidebar-toggle-fg);
+        box-shadow: var(--sidebar-toggle-shadow);
         backdrop-filter: blur(10px);
         appearance: none;
         cursor: pointer;
@@ -216,12 +247,9 @@ $sidebar-collapsed-width: 71px;
         }
 
         &:hover {
-          background:
-            linear-gradient(135deg, rgba(48, 126, 243, 0.24) 0%, rgba(48, 126, 243, 0.12) 100%);
-          border-color: rgba(48, 126, 243, 0.42);
-          box-shadow:
-            0 20px 34px -22px rgba(48, 126, 243, 0.95),
-            0 0 0 4px rgba(48, 126, 243, 0.08);
+          background: var(--sidebar-toggle-hover-bg);
+          border-color: var(--sidebar-toggle-hover-border);
+          box-shadow: var(--sidebar-toggle-hover-shadow);
           transform: translateY(-2px) scale(1.01);
           filter: saturate(1.05);
 
@@ -231,15 +259,25 @@ $sidebar-collapsed-width: 71px;
         }
 
         &:focus-visible {
-          outline: 2px solid rgba(48, 126, 243, 0.45);
+          outline: 2px solid var(--sidebar-toggle-focus-outline);
           outline-offset: 2px;
         }
 
         &:active {
           transform: translateY(0) scale(0.985);
-          box-shadow:
-            0 10px 20px -18px rgba(48, 126, 243, 0.8),
-            0 0 0 3px rgba(48, 126, 243, 0.08);
+          box-shadow: var(--sidebar-toggle-active-shadow);
+        }
+
+        &[data-state='collapsed'] {
+          --sidebar-toggle-fg: var(--sidebar-toggle-open-fg);
+          --sidebar-toggle-bg: var(--sidebar-toggle-open-bg);
+          --sidebar-toggle-border: var(--sidebar-toggle-open-border);
+          --sidebar-toggle-shadow: var(--sidebar-toggle-open-shadow);
+          --sidebar-toggle-hover-bg: var(--sidebar-toggle-open-hover-bg);
+          --sidebar-toggle-hover-border: var(--sidebar-toggle-open-hover-border);
+          --sidebar-toggle-hover-shadow: var(--sidebar-toggle-open-hover-shadow);
+          --sidebar-toggle-focus-outline: var(--sidebar-toggle-open-focus-outline);
+          --sidebar-toggle-active-shadow: var(--sidebar-toggle-open-active-shadow);
         }
 
         &[data-state='collapsed']::after {
@@ -288,6 +326,10 @@ $sidebar-collapsed-width: 71px;
 
   .page-body-wrapper {
     min-height: 100vh;
+
+    .page-body > .container-fluid:first-child {
+      padding-top: 8px;
+    }
   }
 
   .sidebar-wrapper {
@@ -390,15 +432,41 @@ $sidebar-collapsed-width: 71px;
   }
 }
 
-body.light-only .page-wrapper.compact-wrapper .page-header .header-wrapper .toggle-sidebar,
-body.dark-only .page-wrapper.compact-wrapper .page-header .header-wrapper .toggle-sidebar {
-  color: #307ef3;
-}
-
 body.light-only .page-wrapper.compact-wrapper .page-header .header-wrapper .toggle-sidebar {
-  background:
-    linear-gradient(135deg, rgba(48, 126, 243, 0.14) 0%, rgba(48, 126, 243, 0.06) 100%);
-  border-color: rgba(48, 126, 243, 0.22);
+  --sidebar-toggle-fg: #3448c5;
+  --sidebar-toggle-bg:
+    linear-gradient(135deg, rgba(67, 97, 238, 0.16) 0%, rgba(67, 97, 238, 0.07) 100%);
+  --sidebar-toggle-border: rgba(67, 97, 238, 0.3);
+  --sidebar-toggle-shadow:
+    0 16px 30px -24px rgba(67, 97, 238, 0.72),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  --sidebar-toggle-hover-bg:
+    linear-gradient(135deg, rgba(67, 97, 238, 0.24) 0%, rgba(67, 97, 238, 0.11) 100%);
+  --sidebar-toggle-hover-border: rgba(67, 97, 238, 0.46);
+  --sidebar-toggle-hover-shadow:
+    0 20px 34px -22px rgba(67, 97, 238, 0.84),
+    0 0 0 4px rgba(67, 97, 238, 0.07);
+  --sidebar-toggle-focus-outline: rgba(67, 97, 238, 0.42);
+  --sidebar-toggle-active-shadow:
+    0 10px 20px -18px rgba(67, 97, 238, 0.62),
+    0 0 0 3px rgba(67, 97, 238, 0.07);
+  --sidebar-toggle-open-fg: #0f766e;
+  --sidebar-toggle-open-bg:
+    linear-gradient(135deg, rgba(16, 185, 129, 0.18) 0%, rgba(16, 185, 129, 0.08) 100%);
+  --sidebar-toggle-open-border: rgba(16, 185, 129, 0.36);
+  --sidebar-toggle-open-shadow:
+    0 16px 30px -24px rgba(5, 150, 105, 0.62),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  --sidebar-toggle-open-hover-bg:
+    linear-gradient(135deg, rgba(16, 185, 129, 0.28) 0%, rgba(16, 185, 129, 0.14) 100%);
+  --sidebar-toggle-open-hover-border: rgba(5, 150, 105, 0.52);
+  --sidebar-toggle-open-hover-shadow:
+    0 20px 34px -22px rgba(5, 150, 105, 0.78),
+    0 0 0 4px rgba(16, 185, 129, 0.11);
+  --sidebar-toggle-open-focus-outline: rgba(5, 150, 105, 0.44);
+  --sidebar-toggle-open-active-shadow:
+    0 10px 20px -18px rgba(5, 150, 105, 0.58),
+    0 0 0 3px rgba(16, 185, 129, 0.1);
 }
 
 body.light-only .page-wrapper.compact-wrapper .page-header .header-wrapper .nav-right > ul > li:not(.profile-nav),
@@ -409,10 +477,40 @@ body.light-only .page-wrapper.compact-wrapper .page-header .header-wrapper .prof
 }
 
 body.dark-only .page-wrapper.compact-wrapper .page-header .header-wrapper .toggle-sidebar {
-  background:
-    linear-gradient(135deg, rgba(48, 126, 243, 0.2) 0%, rgba(48, 126, 243, 0.1) 100%);
-  border-color: rgba(147, 197, 253, 0.2);
-  box-shadow: 0 14px 24px -22px rgba(15, 23, 42, 0.95);
+  --sidebar-toggle-fg: rgba(191, 205, 255, 0.98);
+  --sidebar-toggle-bg:
+    linear-gradient(135deg, rgba(49, 46, 129, 0.58) 0%, rgba(30, 41, 95, 0.5) 100%);
+  --sidebar-toggle-border: rgba(129, 140, 248, 0.5);
+  --sidebar-toggle-shadow:
+    0 16px 30px -24px rgba(30, 64, 175, 0.74),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  --sidebar-toggle-hover-bg:
+    linear-gradient(135deg, rgba(79, 70, 229, 0.62) 0%, rgba(37, 99, 235, 0.52) 100%);
+  --sidebar-toggle-hover-border: rgba(165, 180, 252, 0.72);
+  --sidebar-toggle-hover-shadow:
+    0 22px 36px -22px rgba(67, 97, 238, 0.82),
+    0 0 0 4px rgba(99, 102, 241, 0.16);
+  --sidebar-toggle-focus-outline: rgba(165, 180, 252, 0.72);
+  --sidebar-toggle-active-shadow:
+    0 10px 20px -18px rgba(67, 97, 238, 0.62),
+    0 0 0 3px rgba(99, 102, 241, 0.14);
+  --sidebar-toggle-open-fg: rgba(167, 243, 208, 0.98);
+  --sidebar-toggle-open-bg:
+    linear-gradient(135deg, rgba(6, 78, 59, 0.64) 0%, rgba(4, 120, 87, 0.56) 100%);
+  --sidebar-toggle-open-border: rgba(52, 211, 153, 0.56);
+  --sidebar-toggle-open-shadow:
+    0 16px 30px -24px rgba(4, 120, 87, 0.72),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  --sidebar-toggle-open-hover-bg:
+    linear-gradient(135deg, rgba(5, 150, 105, 0.76) 0%, rgba(16, 185, 129, 0.66) 100%);
+  --sidebar-toggle-open-hover-border: rgba(110, 231, 183, 0.72);
+  --sidebar-toggle-open-hover-shadow:
+    0 22px 36px -22px rgba(4, 120, 87, 0.84),
+    0 0 0 4px rgba(16, 185, 129, 0.18);
+  --sidebar-toggle-open-focus-outline: rgba(110, 231, 183, 0.74);
+  --sidebar-toggle-open-active-shadow:
+    0 10px 20px -18px rgba(4, 120, 87, 0.64),
+    0 0 0 3px rgba(16, 185, 129, 0.14);
 }
 
 body.dark-only .page-wrapper.compact-wrapper .page-header .header-wrapper .nav-right > ul > li:not(.profile-nav),
@@ -425,6 +523,126 @@ body.dark-only .page-wrapper.compact-wrapper .page-header .header-wrapper .profi
 body.dark-only .page-wrapper.compact-wrapper .page-header.close_icon .header-wrapper .toggle-sidebar,
 body.light-only .page-wrapper.compact-wrapper .page-header.close_icon .header-wrapper .toggle-sidebar {
   border-style: solid;
+}
+
+/* Hard override to guarantee clear state colors for sidebar toggle */
+.page-wrapper.compact-wrapper .page-header .header-wrapper .toggle-sidebar[data-state='expanded'] {
+  --sidebar-toggle-fg: #9a3412 !important;
+  --sidebar-toggle-bg:
+    linear-gradient(135deg, rgba(251, 146, 60, 0.24) 0%, rgba(234, 88, 12, 0.12) 100%) !important;
+  --sidebar-toggle-border: rgba(194, 65, 12, 0.46) !important;
+  --sidebar-toggle-shadow:
+    0 18px 32px -24px rgba(194, 65, 12, 0.74),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16) !important;
+  --sidebar-toggle-hover-bg:
+    linear-gradient(135deg, rgba(251, 146, 60, 0.32) 0%, rgba(234, 88, 12, 0.18) 100%) !important;
+  --sidebar-toggle-hover-border: rgba(194, 65, 12, 0.58) !important;
+  --sidebar-toggle-hover-shadow:
+    0 22px 36px -22px rgba(194, 65, 12, 0.82),
+    0 0 0 4px rgba(234, 88, 12, 0.12) !important;
+  --sidebar-toggle-focus-outline: rgba(234, 88, 12, 0.48) !important;
+  --sidebar-toggle-active-shadow:
+    0 10px 20px -18px rgba(194, 65, 12, 0.7),
+    0 0 0 3px rgba(234, 88, 12, 0.12) !important;
+  color: var(--sidebar-toggle-fg) !important;
+  border-color: var(--sidebar-toggle-border) !important;
+  background: var(--sidebar-toggle-bg) !important;
+  box-shadow: var(--sidebar-toggle-shadow) !important;
+}
+
+.page-wrapper.compact-wrapper .page-header .header-wrapper .toggle-sidebar[data-state='collapsed'] {
+  --sidebar-toggle-fg: #0f766e !important;
+  --sidebar-toggle-bg:
+    linear-gradient(135deg, rgba(16, 185, 129, 0.22) 0%, rgba(16, 185, 129, 0.11) 100%) !important;
+  --sidebar-toggle-border: rgba(16, 185, 129, 0.46) !important;
+  --sidebar-toggle-shadow:
+    0 18px 32px -24px rgba(5, 150, 105, 0.76),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16) !important;
+  --sidebar-toggle-hover-bg:
+    linear-gradient(135deg, rgba(16, 185, 129, 0.3) 0%, rgba(16, 185, 129, 0.15) 100%) !important;
+  --sidebar-toggle-hover-border: rgba(5, 150, 105, 0.58) !important;
+  --sidebar-toggle-hover-shadow:
+    0 22px 36px -22px rgba(5, 150, 105, 0.82),
+    0 0 0 4px rgba(16, 185, 129, 0.12) !important;
+  --sidebar-toggle-focus-outline: rgba(16, 185, 129, 0.5) !important;
+  --sidebar-toggle-active-shadow:
+    0 10px 20px -18px rgba(5, 150, 105, 0.68),
+    0 0 0 3px rgba(16, 185, 129, 0.12) !important;
+  color: var(--sidebar-toggle-fg) !important;
+  border-color: var(--sidebar-toggle-border) !important;
+  background: var(--sidebar-toggle-bg) !important;
+  box-shadow: var(--sidebar-toggle-shadow) !important;
+}
+
+body.dark-only .page-wrapper.compact-wrapper .page-header .header-wrapper .toggle-sidebar[data-state='expanded'] {
+  --sidebar-toggle-fg: rgba(254, 215, 170, 0.98) !important;
+  --sidebar-toggle-bg:
+    linear-gradient(135deg, rgba(124, 45, 18, 0.76) 0%, rgba(154, 52, 18, 0.62) 100%) !important;
+  --sidebar-toggle-border: rgba(251, 146, 60, 0.72) !important;
+  --sidebar-toggle-shadow:
+    0 20px 34px -22px rgba(124, 45, 18, 0.82),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14) !important;
+  --sidebar-toggle-hover-bg:
+    linear-gradient(135deg, rgba(154, 52, 18, 0.84) 0%, rgba(194, 65, 12, 0.68) 100%) !important;
+  --sidebar-toggle-hover-border: rgba(253, 186, 116, 0.78) !important;
+  --sidebar-toggle-hover-shadow:
+    0 24px 38px -22px rgba(124, 45, 18, 0.9),
+    0 0 0 4px rgba(234, 88, 12, 0.2) !important;
+  --sidebar-toggle-focus-outline: rgba(251, 146, 60, 0.8) !important;
+  --sidebar-toggle-active-shadow:
+    0 10px 20px -18px rgba(124, 45, 18, 0.7),
+    0 0 0 3px rgba(234, 88, 12, 0.2) !important;
+  color: var(--sidebar-toggle-fg) !important;
+  border-color: var(--sidebar-toggle-border) !important;
+  background: var(--sidebar-toggle-bg) !important;
+  box-shadow: var(--sidebar-toggle-shadow) !important;
+}
+
+body.dark-only .page-wrapper.compact-wrapper .page-header .header-wrapper .toggle-sidebar[data-state='collapsed'] {
+  --sidebar-toggle-fg: rgba(167, 243, 208, 0.98) !important;
+  --sidebar-toggle-bg:
+    linear-gradient(135deg, rgba(6, 78, 59, 0.72) 0%, rgba(5, 150, 105, 0.56) 100%) !important;
+  --sidebar-toggle-border: rgba(52, 211, 153, 0.66) !important;
+  --sidebar-toggle-shadow:
+    0 20px 34px -22px rgba(4, 120, 87, 0.84),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+  --sidebar-toggle-hover-bg:
+    linear-gradient(135deg, rgba(5, 150, 105, 0.82) 0%, rgba(16, 185, 129, 0.68) 100%) !important;
+  --sidebar-toggle-hover-border: rgba(110, 231, 183, 0.76) !important;
+  --sidebar-toggle-hover-shadow:
+    0 24px 38px -22px rgba(4, 120, 87, 0.92),
+    0 0 0 4px rgba(16, 185, 129, 0.2) !important;
+  --sidebar-toggle-focus-outline: rgba(110, 231, 183, 0.8) !important;
+  --sidebar-toggle-active-shadow:
+    0 10px 20px -18px rgba(4, 120, 87, 0.7),
+    0 0 0 3px rgba(16, 185, 129, 0.2) !important;
+  color: var(--sidebar-toggle-fg) !important;
+  border-color: var(--sidebar-toggle-border) !important;
+  background: var(--sidebar-toggle-bg) !important;
+  box-shadow: var(--sidebar-toggle-shadow) !important;
+}
+
+/* Performance mode for dark theme: reduce jank while opening/collapsing sidebar */
+body.dark-only .page-wrapper.compact-wrapper .page-header .header-wrapper .toggle-sidebar {
+  backdrop-filter: none !important;
+  transition:
+    background-color 0.14s ease,
+    border-color 0.14s ease,
+    box-shadow 0.14s ease,
+    color 0.14s ease !important;
+}
+
+body.dark-only .page-wrapper.compact-wrapper .page-header .header-wrapper .toggle-sidebar:hover {
+  filter: none !important;
+  transform: translateY(-1px) !important;
+}
+
+@media (min-width: 992px) {
+  body.dark-only .page-wrapper.compact-wrapper .page-body-wrapper .sidebar-wrapper,
+  body.dark-only .page-wrapper.compact-wrapper .page-body-wrapper .page-body,
+  body.dark-only .page-wrapper.compact-wrapper .page-body-wrapper app-footer .footer {
+    transition: none !important;
+  }
 }
 
 @media (min-width: 992px) {
@@ -543,6 +761,10 @@ body.light-only .page-wrapper.compact-wrapper .page-header.close_icon .header-wr
         margin-inline-start: 0 !important;
         margin-inline-end: 0 !important;
         width: auto !important;
+      }
+
+      .page-body > .container-fluid:first-child {
+        padding-top: 6px;
       }
 
       .sidebar-wrapper {

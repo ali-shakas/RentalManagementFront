@@ -71,8 +71,43 @@ export class VehicleService {
     );
   }
 
+  changeStatus(id: string | number, status: VehicleUpsertRequest['status']): Observable<boolean> {
+    const vehicleId = Number(id);
+    const vehicleEnumCode = this.toBackendVehicleStatusEnumCode(status);
+    const vehicleEnumName = this.toBackendVehicleStatusEnumName(status);
+    const endpoint = `${this.base}/Status/${vehicleId}`;
+
+    // Match backend command shape exactly: { id, vehicleEnum }.
+    // Try numeric enum first (default ASP.NET behavior), then string enum name as fallback.
+    return this.api.putData<boolean>(endpoint, {
+      id: vehicleId,
+      vehicleEnum: vehicleEnumCode,
+    }).pipe(
+      catchError(() =>
+        this.api.putData<boolean>(endpoint, {
+          id: vehicleId,
+          vehicleEnum: vehicleEnumName,
+        }),
+      ),
+    );
+  }
+
+  softDelete(id: string | number): Observable<boolean> {
+    return this.api.patchData<boolean>(`${this.base}/SoftDelete/${id}`, {});
+  }
+
   private async toApiPayload(body: VehicleUpsertRequest): Promise<Record<string, unknown>> {
     const imagePayload = await buildImageUploadPayload(body.image);
+    const isAvailable = body.status === 'Available';
+    const statusCode =
+      body.status === 'Available'
+        ? 1
+        : body.status === 'Booked'
+          ? 2
+          : body.status === 'Maintenance'
+            ? 3
+            : 4;
+
     return {
       id: body.id,
       color: body.color,
@@ -94,6 +129,17 @@ export class VehicleService {
       countKm: body.countKm,
       capacitOil: body.capacitOil,
       status: body.status,
+      Status: body.status,
+      vehicleStatus: body.status,
+      VehicleStatus: body.status,
+      stutus: body.status,
+      Stutus: body.status,
+      statusCode,
+      StatusCode: statusCode,
+      isAvailable,
+      IsAvailable: isAvailable,
+      isAvalible: isAvailable,
+      IsAvalible: isAvailable,
       isActive: body.isActive,
       notes: body.notes,
       url: imagePayload?.attachment,
@@ -131,5 +177,37 @@ export class VehicleService {
         }),
         catchError(error => throwError(() => sourceError ?? error)),
       );
+  }
+
+  private toBackendVehicleStatusEnumCode(status: VehicleUpsertRequest['status']): number {
+    if (status === 'Booked') {
+      return 1; // IsBooking
+    }
+
+    if (status === 'Maintenance') {
+      return 3; // IsMaintanes
+    }
+
+    if (status === 'Inactive') {
+      return 4; // IsMangament
+    }
+
+    return 2; // IsAvalible
+  }
+
+  private toBackendVehicleStatusEnumName(status: VehicleUpsertRequest['status']): string {
+    if (status === 'Booked') {
+      return 'IsBooking';
+    }
+
+    if (status === 'Maintenance') {
+      return 'IsMaintanes';
+    }
+
+    if (status === 'Inactive') {
+      return 'IsMangament';
+    }
+
+    return 'IsAvalible';
   }
 }

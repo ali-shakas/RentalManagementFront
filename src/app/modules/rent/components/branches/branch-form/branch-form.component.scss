@@ -1,1 +1,33 @@
 
+:host {
+  display: block;
+}
+
+.branch-active-field {
+  min-height: 44px;
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: rgba(15, 23, 42, 0.04);
+  padding: 0.5rem 0.85rem;
+  display: flex;
+  align-items: center;
+}
+
+.branch-active-field .form-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.branch-active-field .form-check-input {
+  margin: 0;
+}
+
+.branch-active-field .form-check-label {
+  font-weight: 600;
+}
+
+:host-context(body.dark-only) .branch-active-field {
+  border-color: rgba(100, 116, 139, 0.45);
+  background: rgba(15, 23, 42, 0.5);
+}

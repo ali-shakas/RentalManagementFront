@@ -70,30 +70,6 @@
                 <div class="form-text">{{ 'Hint User Expiration Date' | translate }}</div>
               </div>
 
-              @if (isSuperAdmin()) {
-                <div class="col-md-6">
-                  <label class="form-label">{{ 'Fleet' | translate }} <span class="text-danger">*</span></label>
-                  <app-smooth-select
-                    formControlName="fleetId"
-                    [ariaLabel]="'Fleet' | translate"
-                    [placeholder]="'Select Fleet'"
-                    [options]="fleetSelectOptions()"
-                  />
-                  <div class="form-text">{{ 'Super admin must choose the fleet for this user account.' | translate }}</div>
-                  @if (fleetLoading()) {
-                    <div class="small text-muted mt-1">{{ 'Loading fleets...' | translate }}</div>
-                  }
-                  @if (form.get('fleetId')?.invalid && form.get('fleetId')?.touched) {
-                    <div class="invalid-feedback d-block">{{ 'Fleet is required for super admin user creation.' | translate }}</div>
-                  }
-                </div>
-                <div class="col-md-6">
-                  <div class="alert alert-info mb-0 h-100 d-flex align-items-center">
-                    <small>{{ 'Create fleet first, then bind user + role to keep access scope clean.' | translate }}</small>
-                  </div>
-                </div>
-              }
-
               <div class="col-md-6">
                 <label class="form-label">{{ 'Name (Ar)' | translate }} <span class="text-danger">*</span></label>
                 <input
@@ -181,7 +157,7 @@
                 }
                 {{ (isEdit() ? 'Update' : 'Create') | translate }}
               </button>
-              <a class="btn btn-secondary" routerLink="/users">{{ 'Cancel' | translate }}</a>
+              <a class="btn btn-cancel" routerLink="/users">{{ 'Cancel' | translate }}</a>
             </div>
           </form>
         </div>

@@ -11,12 +11,6 @@
       <form class="app-form-value-state" [formGroup]="form" (ngSubmit)="save()">
         <div class="row g-3">
           <div class="col-md-6">
-            <label class="form-label">{{ 'FleetId' | translate }} <span class="text-danger">*</span></label>
-            <input class="form-control" formControlName="fleetId" [placeholder]="'Example Fleet ID' | translate" />
-            <div class="form-text">{{ 'Hint Fleet ID' | translate }}</div>
-          </div>
-
-          <div class="col-md-6">
             <label class="form-label">{{ 'Name (AR)' | translate }} <span class="text-danger">*</span></label>
             <input class="form-control" formControlName="nameAr" maxlength="255" [placeholder]="'Example Category Arabic Name' | translate" />
             <div class="form-text">{{ 'Hint Category Arabic Name' | translate }}</div>
@@ -102,7 +96,7 @@
             }
             {{ (isEdit() ? 'Update' : 'Create') | translate }}
           </button>
-          <a class="btn btn-outline-secondary" routerLink="/category-vehicles">{{ 'Cancel' | translate }}</a>
+          <a class="btn btn-cancel" routerLink="/category-vehicles">{{ 'Cancel' | translate }}</a>
         </div>
       </form>
     </div>

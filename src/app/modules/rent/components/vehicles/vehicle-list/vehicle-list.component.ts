@@ -9,6 +9,7 @@ import { resolveMediaUrl } from '../../../../../shared/utils/media-url.utils';
 import { Branch, CategoryVehicle, Vehicle, VehicleOrderBy, VehicleOrderDirection, VehicleStatus } from '../../../models';
 import { BranchService } from '../../../services/branches/branch.service';
 import { CategoryVehicleService } from '../../../services/category-vehicles/category-vehicle.service';
+import { ConfirmService } from '../../../../../shared/services/confirm.service';
 import { ToastService } from '../../../../../shared/services/toast.service';
 import { VehicleService } from '../../../services/vehicles/vehicle.service';
 import { EmptyStateComponent } from '../../../../../shared/ui/empty-state/empty-state.component';
@@ -29,6 +30,7 @@ export class VehicleListComponent implements OnInit {
   private branchService = inject(BranchService);
   private categoryVehicleService = inject(CategoryVehicleService);
   private authState = inject(AuthStateService);
+  private confirm = inject(ConfirmService);
   private toast = inject(ToastService);
   private translate = inject(TranslateService);
   private readonly vehicleFallbackImage = 'assets/images/rent_icon/car_defulte.png';
@@ -48,6 +50,7 @@ export class VehicleListComponent implements OnInit {
   orderBy = signal<VehicleOrderBy>('CreatedAt');
   orderByDirection = signal<VehicleOrderDirection>('DESC');
   loading = signal(false);
+  deletingIds = signal<Array<string | number>>([]);
   readonly statusFilterOptions: SmoothSelectOption[] = [
     { label: 'All statuses', value: '' },
     { label: 'Available', value: 'Available' },
@@ -221,6 +224,38 @@ export class VehicleListComponent implements OnInit {
     this.pageSize.set(size);
     this.pageNumber.set(1);
     this.load();
+  }
+
+  isDeleting(id: string | number): boolean {
+    const target = String(id);
+    return this.deletingIds().some(currentId => String(currentId) === target);
+  }
+
+  deleteVehicle(vehicle: Vehicle): void {
+    const vehicleName = this.getVehicleTitle(vehicle);
+    this.confirm
+      .confirm(
+        this.translate.instant('Delete Vehicle'),
+        `${this.translate.instant('Are you sure you want to delete this vehicle?')} ${vehicleName}`,
+      )
+      .subscribe(confirmed => {
+        if (!confirmed) {
+          return;
+        }
+
+        this.deletingIds.update(ids => [...ids, vehicle.id]);
+        this.vehicleService.softDelete(vehicle.id).subscribe({
+          next: () => {
+            this.toast.success(this.translate.instant('Vehicle deleted successfully'));
+            this.vehicles.update(items => items.filter(item => String(item.id) !== String(vehicle.id)));
+            this.totalCount.update(count => Math.max(0, count - 1));
+          },
+          error: err =>
+            this.toast.error(err?.message ?? this.translate.instant('Failed to delete vehicle')),
+          complete: () =>
+            this.deletingIds.update(ids => ids.filter(currentId => String(currentId) !== String(vehicle.id))),
+        });
+      });
   }
 
   private loadReferenceData(): void {

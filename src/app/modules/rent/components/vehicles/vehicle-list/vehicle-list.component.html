@@ -7,7 +7,7 @@
 
   <div class="card">
     <div class="card-body">
-      <div class="app-filters-toolbar">
+      <div class="app-filters-toolbar app-filters-toolbar--vehicles">
         <div class="app-filter-field app-filter-field--search">
           <label class="app-filter-label">{{ 'Search' | translate }}</label>
           <div class="app-search-control">
@@ -126,6 +126,20 @@
                 </div>
 
                 <div class="table-actions vehicle-card__actions">
+                  <button
+                    class="table-action-icon table-action-icon--danger vehicle-card__action"
+                    type="button"
+                    [disabled]="isDeleting(vehicle.id)"
+                    (click)="deleteVehicle(vehicle)"
+                    [attr.aria-label]="'Delete' | translate"
+                    [title]="'Delete' | translate"
+                  >
+                    @if (isDeleting(vehicle.id)) {
+                      <span class="spinner-border spinner-border-sm" role="status"></span>
+                    } @else {
+                      <i class="fa-solid fa-trash-can"></i>
+                    }
+                  </button>
                   <a
                     class="table-action-icon table-action-icon--info vehicle-card__action"
                     [routerLink]="['/vehicles', vehicle.id, 'details']"

@@ -6,16 +6,14 @@ import { TranslateModule } from '@ngx-translate/core';
 import { AuthStateService } from '../../../../../core/auth/auth-state.service';
 import { UserService } from '../../../services/users/user.service';
 import { RoleService } from '../../../services/roles/role.service';
-import { FleetService } from '../../../services/fleet/fleet.service';
 import { ToastService } from '../../../../../shared/services/toast.service';
-import { Fleet, RoleLookup, UserCreateRequest } from '../../../models';
+import { RoleLookup, UserCreateRequest } from '../../../models';
 import { PageHeaderComponent } from '../../../../../shared/ui/page-header/page-header.component';
-import { SmoothSelectComponent, SmoothSelectOption } from '../../../../../shared/ui/smooth-select/smooth-select.component';
 
 @Component({
   selector: 'app-user-form',
   standalone: true,
-  imports: [ReactiveFormsModule, FormsModule, RouterLink, TranslateModule, PageHeaderComponent, SmoothSelectComponent],
+  imports: [ReactiveFormsModule, FormsModule, RouterLink, TranslateModule, PageHeaderComponent],
   templateUrl: './user-form.component.html',
   styleUrl: './user-form.component.scss',
 })
@@ -28,7 +26,6 @@ export class UserFormComponent implements OnInit {
   private authState = inject(AuthStateService);
   private userService = inject(UserService);
   private roleService = inject(RoleService);
-  private fleetService = inject(FleetService);
   private toast = inject(ToastService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -37,17 +34,7 @@ export class UserFormComponent implements OnInit {
   userId = signal<string | null>(null);
   roles = signal<RoleLookup[]>([]);
   roleSearch = signal('');
-  fleets = signal<Fleet[]>([]);
-  fleetLoading = signal(false);
   loading = signal(false);
-  isSuperAdmin = computed(() => this.authState.isSuperAdmin());
-  fleetSelectOptions = computed<SmoothSelectOption[]>(() => [
-    { label: 'Select Fleet', value: '' },
-    ...this.fleets().map(fleet => ({
-      label: `${fleet.name}${fleet.fleetCode ? ' (' + fleet.fleetCode + ')' : ''}`,
-      value: fleet.id,
-    })),
-  ]);
   filteredRoles = computed(() => {
     const keyword = this.roleSearch().trim().toLowerCase();
     if (!keyword) {
@@ -74,7 +61,10 @@ export class UserFormComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.configureFleetScope();
+    const userFleetId = this.authState.fleetId();
+    if (userFleetId) {
+      this.form.controls.fleetId.setValue(userFleetId);
+    }
 
     this.roleService.getList().subscribe({
       next: list => this.roles.set(list ?? []),
@@ -116,6 +106,12 @@ export class UserFormComponent implements OnInit {
       return;
     }
     const raw = this.form.getRawValue();
+    const fleetId = this.resolveFleetId(raw.fleetId);
+    if (!fleetId) {
+      this.toast.error('FleetId is required');
+      return;
+    }
+
     this.loading.set(true);
     const body: UserCreateRequest = {
       userName: raw.userName.trim(),
@@ -125,7 +121,7 @@ export class UserFormComponent implements OnInit {
       nameEn: raw.nameEn.trim() || undefined,
       isActive: raw.isActive,
       expirationDate: raw.expirationDate || undefined,
-      fleetId: this.resolveFleetId(raw.fleetId),
+      fleetId,
       rolesId: raw.rolesId,
     };
     const id = this.userId();
@@ -174,31 +170,6 @@ export class UserFormComponent implements OnInit {
 
   selectedRolesCount(): number {
     return this.form.controls.rolesId.value.length;
-  }
-
-  private configureFleetScope(): void {
-    if (this.isSuperAdmin()) {
-      this.form.controls.fleetId.setValidators([Validators.required]);
-      this.form.controls.fleetId.updateValueAndValidity();
-      this.loadFleets();
-      return;
-    }
-
-    const userFleetId = this.authState.fleetId();
-    if (userFleetId) {
-      this.form.controls.fleetId.setValue(userFleetId);
-    }
-  }
-
-  private loadFleets(): void {
-    this.fleetLoading.set(true);
-    this.fleetService
-      .getPaginated({ pageNumber: 1, pageSize: 500 })
-      .subscribe({
-        next: page => this.fleets.set(page.items ?? []),
-        error: () => this.toast.error('Failed to load fleets'),
-        complete: () => this.fleetLoading.set(false),
-      });
   }
 
   private resolveFleetId(rawFleetId?: string): string | undefined {
