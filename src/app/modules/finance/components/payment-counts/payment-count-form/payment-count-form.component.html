@@ -34,11 +34,6 @@
                 <input type="number" step="0.01" class="form-control" formControlName="paid" />
               </div>
               <div class="col-md-4">
-                <label class="form-label">{{ 'FleetId' | translate }} <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" formControlName="fleetId" />
-              </div>
-
-              <div class="col-md-4">
                 <label class="form-label">{{ 'Payment Type' | translate }} <span class="text-danger">*</span></label>
                 <input type="number" class="form-control" formControlName="paymentType" />
               </div>
@@ -90,7 +85,7 @@
                 }
                 {{ 'Create' | translate }}
               </button>
-              <a class="btn btn-outline-secondary" routerLink="/payment-counts">{{ 'Cancel' | translate }}</a>
+              <a class="btn btn-cancel" routerLink="/payment-counts">{{ 'Cancel' | translate }}</a>
             </div>
           </form>
         </div>

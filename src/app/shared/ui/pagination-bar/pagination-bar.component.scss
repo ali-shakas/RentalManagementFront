@@ -52,6 +52,8 @@
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
+  min-width: 180px;
+  justify-content: flex-start;
 }
 
 .app-pagination-bar__size-label {
@@ -64,6 +66,17 @@
   width: 92px;
   max-width: 92px;
   border-radius: 10px;
+}
+
+.app-pagination-bar__size--placeholder {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.app-pagination-bar__size-placeholder {
+  display: inline-block;
+  width: 1px;
+  height: 44px;
 }
 
 :host-context(body.dark-only) {
@@ -89,5 +102,13 @@
   .app-pagination-bar__nav,
   .app-pagination-bar__size {
     justify-content: center;
+  }
+
+  .app-pagination-bar__size {
+    min-width: 0;
+  }
+
+  .app-pagination-bar__size--placeholder {
+    display: none;
   }
 }

@@ -36,7 +36,6 @@ export class BranchFormComponent implements OnInit {
   fleetId = signal<string>('');
 
   form = this.fb.group({
-    fleetId: ['', [Validators.required]],
     nameAr: ['', [Validators.required, Validators.maxLength(255), Validators.pattern(BranchFormComponent.ARABIC_NAME_REGEX)]],
     nameEn: ['', [Validators.maxLength(255), Validators.pattern(BranchFormComponent.ENGLISH_NAME_REGEX)]],
     code: ['', [Validators.maxLength(100), Validators.pattern(BranchFormComponent.BRANCH_CODE_REGEX)]],
@@ -47,7 +46,6 @@ export class BranchFormComponent implements OnInit {
     const fleet = this.authState.fleetId() ?? '';
     if (fleet) {
       this.fleetId.set(fleet);
-      this.form.controls.fleetId.setValue(fleet);
     }
 
     const idRaw = this.route.snapshot.paramMap.get('id');
@@ -61,13 +59,16 @@ export class BranchFormComponent implements OnInit {
   }
 
   private loadBranch(id: number): void {
-    const fleetId = (this.form.controls.fleetId.value || this.fleetId() || '').trim() || undefined;
+    const fleetId = this.resolveFleetId();
 
     this.loading.set(true);
     this.branchApi.getById(id, fleetId).subscribe({
       next: (branch: Branch) => {
+        if (branch.fleetId?.trim()) {
+          this.fleetId.set(branch.fleetId.trim());
+        }
+
         this.form.patchValue({
-          fleetId: branch.fleetId,
           nameAr: branch.nameAr ?? '',
           nameEn: branch.nameEn ?? '',
           code: branch.code ?? '',
@@ -89,8 +90,14 @@ export class BranchFormComponent implements OnInit {
     }
 
     const raw = this.form.getRawValue();
+    const fleetId = this.resolveFleetId();
+    if (!fleetId) {
+      this.toast.error(this.translate.instant('FleetId is required'));
+      return;
+    }
+
     const body: BranchUpsertRequest = {
-      fleetId: raw.fleetId.trim(),
+      fleetId,
       nameAr: raw.nameAr.trim(),
       nameEn: raw.nameEn.trim() || undefined,
       code: raw.code.trim() || undefined,
@@ -114,6 +121,10 @@ export class BranchFormComponent implements OnInit {
       },
       complete: () => this.loading.set(false),
     });
+  }
+
+  private resolveFleetId(): string | undefined {
+    return this.fleetId().trim() || undefined;
   }
 }
 

@@ -18,11 +18,6 @@
               </div>
 
               <div class="col-md-6">
-                <label class="form-label">{{ 'FleetId' | translate }} <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" formControlName="fleetId" />
-              </div>
-
-              <div class="col-md-6">
                 <label class="form-label">{{ 'Name' | translate }} <span class="text-danger">*</span></label>
                 <input type="text" class="form-control" formControlName="name" />
               </div>
@@ -49,7 +44,7 @@
                 }
                 {{ 'Create' | translate }}
               </button>
-              <a class="btn btn-outline-secondary" routerLink="/banks">{{ 'Cancel' | translate }}</a>
+              <a class="btn btn-cancel" routerLink="/banks">{{ 'Cancel' | translate }}</a>
             </div>
           </form>
         </div>

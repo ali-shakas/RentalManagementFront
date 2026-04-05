@@ -47,10 +47,6 @@
                 <input type="text" class="form-control" formControlName="nameEn" />
               </div>
 
-              <div class="col-md-6">
-                <label class="form-label">{{ 'FleetId' | translate }} <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" formControlName="fleetId" />
-              </div>
             </div>
 
             @if (form.invalid && form.touched) {
@@ -64,7 +60,7 @@
                 }
                 {{ 'Create' | translate }}
               </button>
-              <a class="btn btn-outline-secondary" routerLink="/counting">{{ 'Cancel' | translate }}</a>
+              <a class="btn btn-cancel" routerLink="/counting">{{ 'Cancel' | translate }}</a>
             </div>
           </form>
         </div>

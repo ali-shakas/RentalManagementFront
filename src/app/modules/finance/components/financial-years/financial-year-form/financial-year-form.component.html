@@ -32,11 +32,6 @@
                 <input type="date" class="form-control" formControlName="endDate" />
               </div>
 
-              <div class="col-md-6">
-                <label class="form-label">{{ 'FleetId' | translate }} <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" formControlName="fleetId" />
-              </div>
-
               <div class="col-md-6 d-flex align-items-end">
                 <div class="form-check">
                   <input class="form-check-input" type="checkbox" id="isCurrentYear" formControlName="isCurrentYear" />
@@ -56,7 +51,7 @@
                 }
                 {{ 'Create' | translate }}
               </button>
-              <a class="btn btn-outline-secondary" routerLink="/financial-years">{{ 'Cancel' | translate }}</a>
+              <a class="btn btn-cancel" routerLink="/financial-years">{{ 'Cancel' | translate }}</a>
             </div>
           </form>
         </div>

@@ -40,9 +40,9 @@ export class CategoryVehicleFormComponent implements OnInit {
   isEdit = signal(false);
   categoryId = signal<string | null>(null);
   loading = signal(false);
+  private categoryFleetId = signal<string>('');
 
   form = this.fb.group({
-    fleetId: ['', [Validators.required]],
     nameAr: ['', [Validators.required, Validators.maxLength(255), Validators.pattern(CategoryVehicleFormComponent.ARABIC_NAME_REGEX)]],
     nameEn: ['', [Validators.maxLength(255), Validators.pattern(CategoryVehicleFormComponent.ENGLISH_NAME_REGEX)]],
     price_day_low: [0, [Validators.required, Validators.min(0)]],
@@ -58,7 +58,10 @@ export class CategoryVehicleFormComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.form.controls.fleetId.setValue(this.authState.fleetId() ?? '');
+    const fleetIdFromAuth = (this.authState.fleetId() ?? '').trim();
+    if (fleetIdFromAuth) {
+      this.categoryFleetId.set(fleetIdFromAuth);
+    }
 
     const id = this.route.snapshot.paramMap.get('id');
     if (!id) return;
@@ -68,8 +71,12 @@ export class CategoryVehicleFormComponent implements OnInit {
     this.loading.set(true);
     this.categoryVehicleService.getById(id, this.authState.fleetId() ?? '').subscribe({
       next: category => {
+        const fleetIdFromCategory = (category.fleetId ?? '').trim();
+        if (fleetIdFromCategory) {
+          this.categoryFleetId.set(fleetIdFromCategory);
+        }
+
         this.form.patchValue({
-          fleetId: category.fleetId,
           nameAr: category.nameAr,
           nameEn: category.nameEn || '',
           price_day_low: category.price_day_low ?? 0,
@@ -98,10 +105,16 @@ export class CategoryVehicleFormComponent implements OnInit {
       return;
     }
 
+    const fleetId = this.resolveFleetId();
+    if (!fleetId) {
+      this.toast.error(this.translate.instant('FleetId is required'));
+      return;
+    }
+
     const raw = this.form.getRawValue();
     const payload: CategoryVehicleUpsertRequest = {
       id: this.categoryId() ?? undefined,
-      fleetId: raw.fleetId.trim(),
+      fleetId,
       nameAr: raw.nameAr.trim(),
       nameEn: raw.nameEn.trim() || undefined,
       price_day_low: raw.price_day_low,
@@ -132,6 +145,16 @@ export class CategoryVehicleFormComponent implements OnInit {
       },
       complete: () => this.loading.set(false),
     });
+  }
+
+  private resolveFleetId(): string | null {
+    const fleetIdFromAuth = (this.authState.fleetId() ?? '').trim();
+    if (fleetIdFromAuth) {
+      return fleetIdFromAuth;
+    }
+
+    const fleetIdFromCategory = this.categoryFleetId().trim();
+    return fleetIdFromCategory || null;
   }
 }
 

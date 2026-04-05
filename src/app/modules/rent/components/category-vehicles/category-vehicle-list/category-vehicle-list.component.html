@@ -38,12 +38,17 @@
         <app-empty-state [title]="'No categories found' | translate" [description]="'Create categories to classify sedans, SUVs, vans, and other rental vehicle types.' | translate" />
       } @else {
         <div class="table-responsive">
-          <table class="table table-striped align-middle">
+          <table class="table table-striped align-middle category-vehicle-table">
             <thead>
               <tr>
                 <th>{{ 'Name (AR)' | translate }}</th>
                 <th>{{ 'Name (EN)' | translate }}</th>
                 <th>{{ 'Code' | translate }}</th>
+                <th class="text-nowrap">{{ 'Daily Price Range' | translate }}</th>
+                <th class="text-nowrap">{{ 'Monthly Price Range' | translate }}</th>
+                <th class="text-nowrap">{{ 'Extra Hour Price Range' | translate }}</th>
+                <th class="text-nowrap">{{ 'Extra KM Price Range' | translate }}</th>
+                <th class="text-nowrap">{{ 'Allowed Limit Range' | translate }}</th>
                 <th>{{ 'Status' | translate }}</th>
                 <th class="text-end">{{ 'Actions' | translate }}</th>
               </tr>
@@ -54,6 +59,11 @@
                   <td>{{ category.nameAr }}</td>
                   <td>{{ category.nameEn || '-' }}</td>
                   <td>{{ category.code || '-' }}</td>
+                  <td class="category-vehicle-table__range">{{ formatRange(category.price_day_low, category.price_day_high) }}</td>
+                  <td class="category-vehicle-table__range">{{ formatRange(category.price_month_low, category.price_month_high) }}</td>
+                  <td class="category-vehicle-table__range">{{ formatRange(category.priceHoureExtraLow, category.priceHoureExtraHigh) }}</td>
+                  <td class="category-vehicle-table__range">{{ formatRange(category.countKMExtraLow, category.countKMExtraHigh) }}</td>
+                  <td class="category-vehicle-table__range">{{ formatRange(category.allowToLow, category.allowToHigh) }}</td>
                   <td>
                     <app-status-badge [label]="category.isActive ? ('Active' | translate) : ('Inactive' | translate)" [tone]="category.isActive ? 'success' : 'secondary'" />
                   </td>

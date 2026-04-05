@@ -14,8 +14,8 @@
     </button>
   </div>
 
-  @if (showPageSize) {
-    <div class="app-pagination-bar__size">
+  <div class="app-pagination-bar__size" [class.app-pagination-bar__size--placeholder]="!showPageSize">
+    @if (showPageSize) {
       <label class="app-pagination-bar__size-label">{{ 'Page Size' | translate }}</label>
       <app-smooth-select
         class="app-pagination-bar__size-select"
@@ -24,6 +24,8 @@
         [value]="pageSize"
         (valueChange)="onPageSizeChange($any($event))"
       />
-    </div>
-  }
+    } @else {
+      <span class="app-pagination-bar__size-placeholder" aria-hidden="true"></span>
+    }
+  </div>
 </div>

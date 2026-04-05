@@ -24,6 +24,8 @@
     <button
       type="button"
       class="lang"
+      [class.lang--selected]="lang.code === selectedLanguage.code"
+      [attr.aria-current]="lang.code === selectedLanguage.code ? 'true' : null"
       [attr.data-value]="lang.code"
       (click)="changeLanguage(lang, $event)"
     >

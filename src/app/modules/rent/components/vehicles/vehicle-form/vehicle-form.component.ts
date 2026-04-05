@@ -3,6 +3,7 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { map, of, switchMap } from 'rxjs';
 
 import { AuthStateService } from '../../../../../core/auth/auth-state.service';
 import { Branch, CategoryVehicle, VehicleStatus, VehicleUpsertRequest } from '../../../models';
@@ -53,6 +54,7 @@ export class VehicleFormComponent implements OnInit {
   isEdit = signal(false);
   isViewMode = signal(false);
   vehicleId = signal<string | null>(null);
+  originalStatus = signal<VehicleStatus>('Available');
   loading = signal(false);
   selectedImage = signal<File | null>(null);
   previewUrl = signal<string | null>(null);
@@ -158,6 +160,7 @@ export class VehicleFormComponent implements OnInit {
           isActive: vehicle.isActive,
           notes: vehicle.notes || '',
         });
+        this.originalStatus.set(vehicle.status);
 
         if (this.isViewMode()) {
           this.form.disable({ emitEvent: false });
@@ -245,6 +248,7 @@ export class VehicleFormComponent implements OnInit {
     }
 
     const raw = this.form.getRawValue();
+    const selectedStatus = raw.status;
     const body: VehicleUpsertRequest = {
       id: this.vehicleId() || undefined,
       fleetId: raw.fleetId,
@@ -273,14 +277,77 @@ export class VehicleFormComponent implements OnInit {
 
     this.loading.set(true);
     const request$ = this.isEdit() ? this.vehicleService.update(body) : this.vehicleService.create(body);
-    request$.subscribe({
+    request$
+      .pipe(
+        switchMap(response => {
+          if (!this.shouldSyncStatus(selectedStatus)) {
+            return of(response);
+          }
+
+          const targetVehicleId = this.resolveVehicleIdForStatusSync(response);
+          if (!targetVehicleId) {
+            return of(response);
+          }
+
+          return this.vehicleService.changeStatus(targetVehicleId, selectedStatus).pipe(map(() => response));
+        }),
+      )
+      .subscribe({
       next: () => {
+        this.originalStatus.set(selectedStatus);
         this.toast.success(this.translate.instant(this.isEdit() ? 'Vehicle updated' : 'Vehicle created'));
         this.router.navigate(['/vehicles']);
       },
-      error: () => this.loading.set(false),
+      error: err => {
+        this.toast.error(err?.message ?? this.translate.instant('Failed to save vehicle'));
+        this.loading.set(false);
+      },
       complete: () => this.loading.set(false),
     });
+  }
+
+  private shouldSyncStatus(selectedStatus: VehicleStatus): boolean {
+    if (this.isEdit()) {
+      return selectedStatus !== this.originalStatus();
+    }
+
+    // Backend create command always initializes status as IsAvalible.
+    return selectedStatus !== 'Available';
+  }
+
+  private resolveVehicleIdForStatusSync(response: unknown): number | null {
+    const editId = Number(this.vehicleId() ?? 0);
+    if (Number.isFinite(editId) && editId > 0) {
+      return editId;
+    }
+
+    const candidate = this.extractNumericId(response);
+    if (candidate) {
+      return candidate;
+    }
+
+    if (response && typeof response === 'object') {
+      const fromData = this.extractNumericId((response as Record<string, unknown>)['data']);
+      if (fromData) {
+        return fromData;
+      }
+    }
+
+    return null;
+  }
+
+  private extractNumericId(value: unknown): number | null {
+    if (!value || typeof value !== 'object') {
+      return null;
+    }
+
+    const source = value as Record<string, unknown>;
+    const numericId = Number(source['id'] ?? source['Id'] ?? 0);
+    if (!Number.isFinite(numericId) || numericId <= 0) {
+      return null;
+    }
+
+    return numericId;
   }
 }
 

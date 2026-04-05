@@ -162,7 +162,7 @@ export class NavMenuService {
       path: '/category-vehicles',
       title: 'Category Vehicles',
       icon: 'sample-page',
-      imageIcon: 'assets/images/rent_icon/car-rent.png',
+      imageIcon: 'assets/images/rent_icon/Vehicle_Category.png',
       type: 'link',
       privileges: [APP_PRIVILEGES.vehicle],
     },
