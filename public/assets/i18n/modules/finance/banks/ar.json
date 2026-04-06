@@ -9,5 +9,6 @@
   "Failed to save bank": "فشل حفظ البنك",
   "FleetId": "معرف الأسطول",
   "Name": "الاسم",
+  "No dedicated bank account was detected. Showing all available accounts.": "لم يتم اكتشاف حساب بنك مخصص، لذلك تم عرض جميع الحسابات المتاحة.",
   "Register a bank account and link it to a counting record for fleet payments.": "إنشاء حساب بنكي وربطه بسجل حسابات خاص بمدفوعات الأسطول."
 }

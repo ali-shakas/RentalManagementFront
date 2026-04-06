@@ -1,30 +1,56 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { AuthStateService } from '../../../../../core/auth/auth-state.service';
 import { ToastService } from '../../../../../shared/services/toast.service';
 import { PageHeaderComponent } from '../../../../../shared/ui/page-header/page-header.component';
+import {
+  SmoothSelectComponent,
+  SmoothSelectOption,
+} from '../../../../../shared/ui/smooth-select/smooth-select.component';
+import { isCashCountingCandidate } from '../../../common/finance-accounting-blueprints';
 import { CreateCashAccountRequest } from '../../../models/cash/cash-account.model';
+import { CountingEntry } from '../../../models/counting/counting-entry.model';
 import { CashAccountService } from '../../../services/cash/cash-account.service';
+import { CountingEntryService } from '../../../services/counting/counting-entry.service';
 
 @Component({
   selector: 'app-cash-account-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, TranslateModule, PageHeaderComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterLink,
+    TranslateModule,
+    PageHeaderComponent,
+    SmoothSelectComponent,
+  ],
   templateUrl: './cash-account-form.component.html',
 })
 export class CashAccountFormComponent implements OnInit {
   private fb = inject(NonNullableFormBuilder);
   private authState = inject(AuthStateService);
   private cashService = inject(CashAccountService);
+  private countingService = inject(CountingEntryService);
   private toast = inject(ToastService);
   private translate = inject(TranslateService);
   private router = inject(Router);
 
   loading = signal(false);
+  loadingAccounts = signal(false);
+  countingEntries = signal<CountingEntry[]>([]);
+
+  readonly countingOptions = computed<SmoothSelectOption[]>(() => [
+    { label: 'Select account from chart', value: '' },
+    ...this.countingEntries().map(entry => ({
+      label: this.formatAccountLabel(entry),
+      value: String(entry.countingNumber ?? entry.id),
+    })),
+  ]);
 
   form = this.fb.group({
     countingId: ['', [Validators.required]],
@@ -35,6 +61,7 @@ export class CashAccountFormComponent implements OnInit {
 
   ngOnInit(): void {
     this.form.controls.fleetId.setValue(this.authState.fleetId() ?? '');
+    this.loadCountingEntries();
   }
 
   onSubmit(): void {
@@ -52,7 +79,7 @@ export class CashAccountFormComponent implements OnInit {
     const raw = this.form.getRawValue();
     const body: CreateCashAccountRequest = {
       id: this.generateUuid(),
-      countingId: raw.countingId.trim(),
+      countingId: raw.countingId,
       name: raw.name.trim(),
       description: raw.description.trim() || undefined,
       createdBy,
@@ -79,9 +106,40 @@ export class CashAccountFormComponent implements OnInit {
     }
 
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, char => {
-      const rand = Math.random() * 16 | 0;
+      const rand = (Math.random() * 16) | 0;
       const value = char === 'x' ? rand : (rand & 0x3) | 0x8;
       return value.toString(16);
     });
+  }
+
+  private loadCountingEntries(): void {
+    const fleetId = this.authState.fleetId();
+    this.loadingAccounts.set(true);
+    this.countingService.getList(fleetId).subscribe({
+      next: entries => {
+        const activeEntries = entries.filter(entry => !entry.isDeleted);
+        const cashEntries = activeEntries.filter(isCashCountingCandidate);
+        this.countingEntries.set(cashEntries.length > 0 ? cashEntries : activeEntries);
+        if (cashEntries.length === 0 && activeEntries.length > 0) {
+          this.toast.info(
+            this.translate.instant(
+              'No dedicated cash account was detected. Showing all available accounts.',
+            ),
+          );
+        }
+      },
+      error: err => {
+        this.toast.error(err?.message ?? this.translate.instant('Failed to load accounts'));
+        this.loadingAccounts.set(false);
+      },
+      complete: () => this.loadingAccounts.set(false),
+    });
+  }
+
+  private formatAccountLabel(entry: CountingEntry): string {
+    const isArabic = this.translate.currentLang?.startsWith('ar');
+    const name = (isArabic ? entry.nameAr : entry.nameEn) || entry.nameAr || entry.nameEn || '-';
+    const number = entry.countingNumber ?? '-';
+    return `${number} - ${name}`;
   }
 }

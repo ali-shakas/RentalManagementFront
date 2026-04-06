@@ -1,89 +1,192 @@
 <div class="container-fluid">
   <app-page-header
     [title]="'Create Journal Entry' | translate"
-    [subtitle]="'Capture a simplified accounting entry tied to branch and fleet activity.' | translate"
+    [subtitle]="'Create balanced journal entries with header and line details linked to chart of accounts.' | translate"
   >
     <a class="btn btn-outline-secondary" routerLink="/journals">{{ 'Back to Journals' | translate }}</a>
   </app-page-header>
 
-  <div class="row">
-    <div class="col-12">
-      <div class="card">
-        <div class="card-body">
-          <form [formGroup]="form" (ngSubmit)="onSubmit()">
-            <div class="row g-3">
-              <div class="col-md-6">
-                <label class="form-label">{{ 'Date' | translate }} <span class="text-danger">*</span></label>
-                <input type="datetime-local" class="form-control" formControlName="date" />
-              </div>
+  <form [formGroup]="form" (ngSubmit)="onSubmit()">
+    <div class="card journal-card">
+      <div class="card-body">
+        <h6 class="journal-section-title">{{ 'Journal Header' | translate }}</h6>
+        <div class="row g-3">
+          <div class="col-lg-4">
+            <label class="form-label">{{ 'Date' | translate }} <span class="text-danger">*</span></label>
+            <input type="datetime-local" class="form-control" formControlName="date" />
+          </div>
 
-              <div class="col-md-6">
-                <label class="form-label">{{ 'Branch ID' | translate }} <span class="text-danger">*</span></label>
-                <input type="number" class="form-control" formControlName="idBranch" />
-              </div>
+          <div class="col-lg-4">
+            <label class="form-label">{{ 'Branch ID' | translate }} <span class="text-danger">*</span></label>
+            <input type="number" class="form-control" formControlName="idBranch" />
+          </div>
 
-              <div class="col-12">
-                <label class="form-label">{{ 'Note' | translate }} <span class="text-danger">*</span></label>
-                <textarea class="form-control" rows="3" formControlName="node"></textarea>
-              </div>
+          <div class="col-lg-2">
+            <label class="form-label">{{ 'Operation Type' | translate }} <span class="text-danger">*</span></label>
+            <input type="number" class="form-control" formControlName="operationType" />
+          </div>
 
-              <div class="col-md-4">
-                <label class="form-label">{{ 'Debit' | translate }} <span class="text-danger">*</span></label>
-                <input type="number" class="form-control" formControlName="debtir" />
-              </div>
-              <div class="col-md-4">
-                <label class="form-label">{{ 'Credit' | translate }} <span class="text-danger">*</span></label>
-                <input type="number" class="form-control" formControlName="credit" />
-              </div>
-              <div class="col-md-4">
-                <label class="form-label">{{ 'Balance' | translate }} <span class="text-danger">*</span></label>
-                <input type="number" class="form-control" formControlName="balannce" />
-              </div>
+          <div class="col-lg-2">
+            <label class="form-label">{{ 'Status' | translate }} <span class="text-danger">*</span></label>
+            <input type="number" class="form-control" formControlName="status" />
+          </div>
 
-              <div class="col-md-4">
-                <label class="form-label">{{ 'Operation Type' | translate }} <span class="text-danger">*</span></label>
-                <input type="number" class="form-control" formControlName="operationType" />
-              </div>
-              <div class="col-md-4">
-                <label class="form-label">{{ 'Status' | translate }} <span class="text-danger">*</span></label>
-                <input type="number" class="form-control" formControlName="status" />
-              </div>
-              <div class="col-md-6 d-flex align-items-end">
-                <div class="form-check">
-                  <input class="form-check-input" type="checkbox" id="journalType" formControlName="journalType" />
-                  <label class="form-check-label" for="journalType">{{ 'Journal Type' | translate }}</label>
-                </div>
-              </div>
+          <div class="col-12">
+            <label class="form-label">{{ 'Note' | translate }} <span class="text-danger">*</span></label>
+            <textarea class="form-control" rows="3" formControlName="node"></textarea>
+          </div>
 
-              <div class="col-md-6 d-flex align-items-end">
-                <div class="form-check">
-                  <input
-                    class="form-check-input"
-                    type="checkbox"
-                    id="isSystemOperation"
-                    formControlName="isSystemOperation"
-                  />
-                  <label class="form-check-label" for="isSystemOperation">{{ 'System Operation' | translate }}</label>
-                </div>
-              </div>
+          <div class="col-md-3 col-sm-6">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="journalType" formControlName="journalType" />
+              <label class="form-check-label" for="journalType">{{ 'Journal Type' | translate }}</label>
             </div>
+          </div>
 
-            @if (form.invalid && form.touched) {
-              <div class="text-danger small mt-3">{{ 'Required field' | translate }}</div>
-            }
-
-            <div class="mt-4 d-flex gap-2">
-              <button class="btn btn-primary" type="submit" [disabled]="loading() || form.invalid">
-                @if (loading()) {
-                  <span class="spinner-border spinner-border-sm me-2"></span>
-                }
-                {{ 'Create' | translate }}
-              </button>
-              <a class="btn btn-cancel" routerLink="/journals">{{ 'Cancel' | translate }}</a>
+          <div class="col-md-3 col-sm-6">
+            <div class="form-check">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                id="isSystemOperation"
+                formControlName="isSystemOperation"
+              />
+              <label class="form-check-label" for="isSystemOperation">{{ 'System Operation' | translate }}</label>
             </div>
-          </form>
+          </div>
         </div>
       </div>
     </div>
-  </div>
+
+    <div class="card journal-card mt-3">
+      <div class="card-body">
+        <div class="journal-lines-head">
+          <h6 class="journal-section-title mb-0">{{ 'Journal Lines' | translate }}</h6>
+          <button class="btn btn-primary btn-sm" type="button" (click)="addLine()">
+            <i class="fa fa-plus me-1"></i>
+            {{ 'Add Line' | translate }}
+          </button>
+        </div>
+
+        @if (loadingAccounts()) {
+          <div class="journal-lines-state">
+            <span class="spinner-border spinner-border-sm me-2"></span>
+            {{ 'Loading...' | translate }}
+          </div>
+        } @else if (!accounts().length) {
+          <div class="alert alert-warning mb-0 mt-3">{{ 'No active accounts available' | translate }}</div>
+        }
+
+        <div class="table-responsive mt-3">
+          <table class="table table-striped align-middle journal-lines-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>{{ 'Account' | translate }}</th>
+                <th class="text-end">{{ 'Debit' | translate }}</th>
+                <th class="text-end">{{ 'Credit' | translate }}</th>
+                <th>{{ 'Line Note' | translate }}</th>
+                <th class="text-end">{{ 'Actions' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody formArrayName="details">
+              @for (line of detailsArray.controls; track trackByIndex($index)) {
+                <tr [formGroupName]="$index">
+                  <td class="journal-line-index">{{ $index + 1 }}</td>
+                  <td class="journal-line-account">
+                    <app-smooth-select
+                      formControlName="countingId"
+                      [options]="accountOptions()"
+                      [placeholder]="'Select account' | translate"
+                      [ariaLabel]="'Account' | translate"
+                      [disabled]="loadingAccounts()"
+                    />
+                  </td>
+                  <td class="journal-line-amount">
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      class="form-control text-end"
+                      formControlName="debtir"
+                      (input)="onDebitInput($index)"
+                    />
+                  </td>
+                  <td class="journal-line-amount">
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      class="form-control text-end"
+                      formControlName="credit"
+                      (input)="onCreditInput($index)"
+                    />
+                  </td>
+                  <td>
+                    <input type="text" class="form-control" formControlName="node" />
+                  </td>
+                  <td class="text-end">
+                    <button
+                      class="btn btn-cancel btn-sm"
+                      type="button"
+                      (click)="removeLine($index)"
+                      [disabled]="detailsArray.length <= 2"
+                    >
+                      {{ 'Delete' | translate }}
+                    </button>
+                  </td>
+                </tr>
+                @if (line.touched && line.errors?.['debitCreditRequired']) {
+                  <tr class="journal-line-validation">
+                    <td colspan="6">
+                      {{ 'Each line must have debit or credit only' | translate }}
+                    </td>
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <div class="journal-summary">
+          <div class="journal-summary__item">
+            <span>{{ 'Total Debit' | translate }}</span>
+            <strong>{{ formatAmount(totalDebit()) }}</strong>
+          </div>
+          <div class="journal-summary__item">
+            <span>{{ 'Total Credit' | translate }}</span>
+            <strong>{{ formatAmount(totalCredit()) }}</strong>
+          </div>
+          <div class="journal-summary__item" [class.is-balanced]="isBalanced()" [class.is-unbalanced]="!isBalanced()">
+            <span>{{ 'Difference' | translate }}</span>
+            <strong>{{ formatAmount(difference()) }}</strong>
+          </div>
+        </div>
+
+        @if (!hasMinimumLines()) {
+          <div class="journal-validation-hint">{{ 'At least two lines are required' | translate }}</div>
+        }
+
+        @if (!isBalanced()) {
+          <div class="journal-validation-hint journal-validation-hint--danger">
+            {{ 'Entry must be balanced before save' | translate }}
+          </div>
+        }
+      </div>
+    </div>
+
+    @if (form.invalid && form.touched) {
+      <div class="text-danger small mt-3">{{ 'Required field' | translate }}</div>
+    }
+
+    <div class="journal-actions mt-4">
+      <button class="btn btn-primary" type="submit" [disabled]="!canSave()">
+        @if (loading()) {
+          <span class="spinner-border spinner-border-sm me-2"></span>
+        }
+        {{ 'Create' | translate }}
+      </button>
+      <a class="btn btn-cancel" routerLink="/journals">{{ 'Cancel' | translate }}</a>
+    </div>
+  </form>
 </div>

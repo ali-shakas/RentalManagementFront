@@ -1,0 +1,149 @@
+:host {
+  display: block;
+}
+
+.journal-card {
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.journal-section-title {
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.journal-lines-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.journal-lines-state {
+  margin-top: 1rem;
+  display: inline-flex;
+  align-items: center;
+  font-weight: 600;
+}
+
+.journal-lines-table {
+  min-width: 920px;
+}
+
+.journal-line-index {
+  width: 48px;
+  font-weight: 700;
+}
+
+.journal-line-account {
+  min-width: 250px;
+}
+
+.journal-line-amount {
+  min-width: 145px;
+}
+
+.journal-line-validation td {
+  font-size: 0.83rem;
+  color: #dc2626;
+  background: rgba(239, 68, 68, 0.07);
+  border-top: 0;
+}
+
+.journal-summary {
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.journal-summary__item {
+  border: 1px solid rgba(148, 163, 184, 0.26);
+  border-radius: 12px;
+  background: rgba(148, 163, 184, 0.08);
+  padding: 0.6rem 0.75rem;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.55rem;
+
+  span {
+    font-size: 0.82rem;
+    font-weight: 600;
+    opacity: 0.9;
+  }
+
+  strong {
+    font-size: 0.92rem;
+    font-weight: 800;
+  }
+
+  &.is-balanced {
+    border-color: rgba(34, 197, 94, 0.45);
+    background: rgba(34, 197, 94, 0.12);
+    color: #15803d;
+  }
+
+  &.is-unbalanced {
+    border-color: rgba(239, 68, 68, 0.45);
+    background: rgba(239, 68, 68, 0.12);
+    color: #b91c1c;
+  }
+}
+
+.journal-validation-hint {
+  margin-top: 0.75rem;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: #92400e;
+
+  &--danger {
+    color: #dc2626;
+  }
+}
+
+.journal-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+:host-context(body.dark-only) {
+  .journal-line-validation td {
+    color: #fecaca;
+    background: rgba(127, 29, 29, 0.32);
+  }
+
+  .journal-summary__item {
+    border-color: rgba(100, 116, 139, 0.42);
+    background: rgba(15, 23, 42, 0.45);
+
+    &.is-balanced {
+      border-color: rgba(74, 222, 128, 0.42);
+      background: rgba(21, 128, 61, 0.25);
+      color: #86efac;
+    }
+
+    &.is-unbalanced {
+      border-color: rgba(248, 113, 113, 0.48);
+      background: rgba(153, 27, 27, 0.35);
+      color: #fecaca;
+    }
+  }
+
+  .journal-validation-hint {
+    color: #facc15;
+
+    &--danger {
+      color: #fca5a5;
+    }
+  }
+}
+
+@media (max-width: 767.98px) {
+  .journal-summary {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,12 +1,18 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { AuthStateService } from '../../../../../core/auth/auth-state.service';
 import { ToastService } from '../../../../../shared/services/toast.service';
 import { PageHeaderComponent } from '../../../../../shared/ui/page-header/page-header.component';
+import {
+  CountingNumberOutOfRangeError,
+  countingNumberByTypeValidator,
+  getCountingAccountTypeRange,
+} from '../../../common/counting-account-ranges';
 import { CreateCountingEntryRequest } from '../../../models/counting/counting-entry.model';
 import { CountingEntryService } from '../../../services/counting/counting-entry.service';
 
@@ -26,17 +32,24 @@ export class CountingEntryFormComponent implements OnInit {
 
   loading = signal(false);
 
-  form = this.fb.group({
-    countingNumber: [0, [Validators.required, Validators.min(0)]],
-    countingMain: [0, [Validators.required, Validators.min(0)]],
-    countingType: [0, [Validators.required, Validators.min(0)]],
-    reportNumber: [0, [Validators.required, Validators.min(0)]],
-    countingLevel: [0, [Validators.required, Validators.min(0)]],
-    balannce: [0, [Validators.required]],
-    nameAr: ['', [Validators.required, Validators.maxLength(255)]],
-    nameEn: ['', [Validators.maxLength(255)]],
-    fleetId: ['', [Validators.required]],
-  });
+  readonly selectedCodeRange = computed(() =>
+    getCountingAccountTypeRange(this.form.controls.countingType.value),
+  );
+
+  form = this.fb.group(
+    {
+      countingNumber: [0, [Validators.required, Validators.min(0)]],
+      countingMain: [0, [Validators.required, Validators.min(0)]],
+      countingType: [1, [Validators.required, Validators.min(1)]],
+      reportNumber: [1, [Validators.required, Validators.min(1)]],
+      countingLevel: [1, [Validators.required, Validators.min(1)]],
+      balannce: [0, [Validators.required]],
+      nameAr: ['', [Validators.required, Validators.maxLength(255)]],
+      nameEn: ['', [Validators.maxLength(255)]],
+      fleetId: ['', [Validators.required]],
+    },
+    { validators: countingNumberByTypeValidator() },
+  );
 
   ngOnInit(): void {
     this.form.controls.fleetId.setValue(this.authState.fleetId() ?? '');
@@ -45,6 +58,9 @@ export class CountingEntryFormComponent implements OnInit {
   onSubmit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      if (this.countingNumberRangeError()) {
+        this.toast.error(this.countingNumberRangeMessage());
+      }
       return;
     }
 
@@ -55,6 +71,8 @@ export class CountingEntryFormComponent implements OnInit {
       countingType: raw.countingType,
       reportNumber: raw.reportNumber,
       countingLevel: raw.countingLevel,
+      debtir: 0,
+      credit: 0,
       balannce: raw.balannce,
       nameAr: raw.nameAr.trim(),
       nameEn: raw.nameEn.trim() || undefined,
@@ -73,5 +91,35 @@ export class CountingEntryFormComponent implements OnInit {
       },
       complete: () => this.loading.set(false),
     });
+  }
+
+  isCountingNumberRangeInvalid(): boolean {
+    return Boolean(
+      this.countingNumberRangeError() &&
+      (this.form.controls.countingNumber.touched || this.form.controls.countingType.touched),
+    );
+  }
+
+  countingNumberRangeMessage(): string {
+    const rangeError = this.countingNumberRangeError();
+    if (!rangeError) {
+      return '';
+    }
+
+    const typeLabel = this.translate.instant(rangeError.typeLabelKey);
+    return this.translate.instant(
+      'Account number must be between {{min}} and {{max}} for {{type}}.',
+      {
+        min: rangeError.min,
+        max: rangeError.max,
+        type: typeLabel,
+      },
+    );
+  }
+
+  private countingNumberRangeError(): CountingNumberOutOfRangeError | null {
+    return (
+      (this.form.errors?.['countingNumberOutOfRange'] as CountingNumberOutOfRangeError) ?? null
+    );
   }
 }

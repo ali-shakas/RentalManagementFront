@@ -1,13 +1,258 @@
-<app-finance-list-shell
-  [title]="'Chart of Accounts'"
-  [subtitle]="'Review accounting structure, balances, and reporting hierarchy.'"
-  [emptyTitle]="'No records found'"
-  [emptyDescription]="'No records were returned for the current fleet context.'"
-  [columns]="columns"
-  [rows]="rows()"
-  [loading]="loading()"
-  [error]="loadError()"
-  [count]="rows().length"
-  [createLink]="'/counting/create'"
-  [createLabel]="'Create Counting Entry'"
-/>
+<div class="container-fluid">
+  <app-page-header
+    [title]="'Accounting Directory' | translate"
+    [subtitle]="
+      'Build and maintain the chart of accounts, then reuse it across vouchers, bank, and cash flows.'
+        | translate
+    "
+  >
+    <button class="btn btn-success" type="button" (click)="onAddNew()">
+      <i class="fa fa-plus me-1" aria-hidden="true"></i>
+      {{ 'Add' | translate }}
+    </button>
+  </app-page-header>
+
+  @if (loadError()) {
+    <div class="alert alert-warning mb-4" role="alert">
+      {{ loadError() }}
+    </div>
+  }
+
+  <div class="row g-3 counting-directory">
+    <div class="col-12 col-xl-5 order-1 order-xl-2">
+      <div class="card counting-card h-100">
+        <div class="card-body">
+          <div class="counting-card__head mb-3">
+            <h5 class="mb-0">{{ 'Account Tree' | translate }}</h5>
+          </div>
+
+          <div class="counting-tree__search mb-3">
+            <label class="form-label">{{ 'Search in accounts' | translate }}</label>
+            <input
+              class="form-control"
+              type="search"
+              [value]="searchTerm()"
+              [placeholder]="'Search in accounts...' | translate"
+              (input)="onSearchChange($event)"
+            />
+          </div>
+
+          <div class="counting-tree" role="tree">
+            @if (loading()) {
+              <div class="counting-tree__state">
+                <span class="spinner-border spinner-border-sm me-2"></span>
+                {{ 'Loading...' | translate }}
+              </div>
+            } @else if (visibleNodes().length === 0) {
+              <div class="counting-tree__state">
+                {{
+                  (entries().length === 0
+                    ? 'No accounts available yet.'
+                    : 'No account matches your search.'
+                  ) | translate
+                }}
+              </div>
+            } @else {
+              @for (node of visibleNodes(); track node.id) {
+                <div
+                  class="counting-tree__row"
+                  role="treeitem"
+                  [attr.aria-expanded]="node.hasChildren ? node.expanded : null"
+                  [class.is-selected]="node.id === selectedId()"
+                  [style.paddingInlineStart.px]="0.7 * 16 + node.level * 1.05 * 16"
+                  (click)="selectNode(node.id)"
+                >
+                  @if (node.hasChildren) {
+                    <button
+                      type="button"
+                      class="counting-tree__toggle"
+                      (click)="toggleExpand(node.id, $event)"
+                    >
+                      <i
+                        class="fa"
+                        [class.fa-angle-down]="node.expanded"
+                        [class.fa-angle-left]="!node.expanded"
+                      ></i>
+                    </button>
+                  } @else {
+                    <span class="counting-tree__toggle counting-tree__toggle--ghost"></span>
+                  }
+
+                  <span class="counting-tree__icon" aria-hidden="true">
+                    <i
+                      class="fa"
+                      [class.fa-folder-open]="node.expanded && node.hasChildren"
+                      [class.fa-folder]="!node.expanded || !node.hasChildren"
+                    ></i>
+                  </span>
+
+                  <span class="counting-tree__label">
+                    <strong>{{ node.countingNumber ?? '-' }}</strong>
+                    <small>{{ node.name }}</small>
+                  </span>
+                </div>
+              }
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-xl-7 order-2 order-xl-1">
+      <div class="card counting-card">
+        <div class="card-body">
+          <div class="counting-card__head mb-3">
+            <h5 class="mb-0">
+              {{ form.controls.id.value ? ('Edit' | translate) : ('New Account' | translate) }}
+            </h5>
+          </div>
+
+          <form [formGroup]="form" (ngSubmit)="onSave()">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label"
+                  >{{ 'Account Number' | translate }} <span class="text-danger">*</span></label
+                >
+                <input
+                  type="number"
+                  class="form-control"
+                  formControlName="countingNumber"
+                  [attr.min]="selectedCodeRange()?.min ?? null"
+                  [attr.max]="selectedCodeRange()?.max ?? null"
+                />
+                @if (selectedCodeRange()) {
+                  <div class="form-text">
+                    {{
+                      'Allowed account number range for {{type
+                    }}: {{ min }}-{{ max }}.' | translate : { type: (selectedCodeRange()?.labelKey
+                    || '') | translate, min: selectedCodeRange()?.min, max: selectedCodeRange()?.max
+                    } }}
+                  </div>
+                }
+                @if (isCountingNumberRangeInvalid()) {
+                  <div class="text-danger small mt-1">
+                    {{ countingNumberRangeMessage() }}
+                  </div>
+                }
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label"
+                  >{{ 'Parent Account' | translate }} <span class="text-danger">*</span></label
+                >
+                <app-smooth-select
+                  formControlName="countingMain"
+                  [options]="parentOptions()"
+                  [placeholder]="'Select parent account' | translate"
+                  [ariaLabel]="'Parent Account' | translate"
+                />
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label"
+                  >{{ 'Name (AR)' | translate }} <span class="text-danger">*</span></label
+                >
+                <input type="text" class="form-control" formControlName="nameAr" />
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">{{ 'Name (EN)' | translate }}</label>
+                <input type="text" class="form-control" formControlName="nameEn" />
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label"
+                  >{{ 'Account Level' | translate }} <span class="text-danger">*</span></label
+                >
+                <input type="number" class="form-control" formControlName="countingLevel" />
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label"
+                  >{{ 'Debit' | translate }} <span class="text-danger">*</span></label
+                >
+                <input type="number" class="form-control" formControlName="debtir" />
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label"
+                  >{{ 'Credit' | translate }} <span class="text-danger">*</span></label
+                >
+                <input type="number" class="form-control" formControlName="credit" />
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label"
+                  >{{ 'Balance' | translate }} <span class="text-danger">*</span></label
+                >
+                <input type="number" class="form-control" formControlName="balannce" />
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label"
+                  >{{ 'Account Type' | translate }} <span class="text-danger">*</span></label
+                >
+                <app-smooth-select
+                  formControlName="countingType"
+                  [options]="accountTypeOptions"
+                  [placeholder]="'Select account type' | translate"
+                  [ariaLabel]="'Account Type' | translate"
+                />
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label"
+                  >{{ 'Final Account' | translate }} <span class="text-danger">*</span></label
+                >
+                <app-smooth-select
+                  formControlName="reportNumber"
+                  [options]="reportNumberOptions"
+                  [placeholder]="'Select final account' | translate"
+                  [ariaLabel]="'Final Account' | translate"
+                />
+              </div>
+            </div>
+
+            @if (form.invalid && form.touched) {
+              <div class="text-danger small mt-3">{{ 'Required field' | translate }}</div>
+            }
+
+            <div class="counting-form__actions mt-4">
+              <button
+                class="btn btn-success"
+                type="button"
+                [disabled]="saving() || deleting()"
+                (click)="onAddNew()"
+              >
+                {{ 'Add' | translate }}
+              </button>
+
+              <button
+                class="btn btn-primary"
+                type="submit"
+                [disabled]="saving() || deleting() || form.invalid"
+              >
+                @if (saving()) {
+                  <span class="spinner-border spinner-border-sm me-2"></span>
+                }
+                {{ 'Save' | translate }}
+              </button>
+
+              <button
+                class="btn btn-cancel"
+                type="button"
+                [disabled]="!form.controls.id.value || deleting() || saving()"
+                (click)="onDelete()"
+              >
+                @if (deleting()) {
+                  <span class="spinner-border spinner-border-sm me-2"></span>
+                }
+                {{ 'Delete' | translate }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

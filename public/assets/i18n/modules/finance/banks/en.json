@@ -9,5 +9,6 @@
   "Failed to save bank": "Failed to save bank",
   "FleetId": "FleetId",
   "Name": "Name",
+  "No dedicated bank account was detected. Showing all available accounts.": "No dedicated bank account was detected. Showing all available accounts.",
   "Register a bank account and link it to a counting record for fleet payments.": "Register a bank account and link it to a counting record for fleet payments."
 }

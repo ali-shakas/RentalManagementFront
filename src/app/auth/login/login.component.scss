@@ -4,7 +4,7 @@
   place-items: center;
   padding: 32px 20px;
   background:
-    linear-gradient(135deg, rgba(245, 248, 255, 0.74), rgba(255, 255, 255, 0.86)),
+    linear-gradient(145deg, rgba(248, 250, 252, 0.94), rgba(241, 245, 249, 0.9)),
     url('/assets/images/login/BG_login.jpg');
   background-position: center;
   background-repeat: no-repeat;
@@ -15,26 +15,48 @@
   width: min(100%, 460px);
   padding: 32px;
   border-radius: 28px;
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid rgba(148, 163, 184, 0.2);
   box-shadow:
-    0 20px 55px rgba(15, 23, 42, 0.08),
-    0 4px 18px rgba(15, 23, 42, 0.04);
-  backdrop-filter: blur(10px);
+    0 20px 54px rgba(15, 23, 42, 0.12),
+    0 4px 14px rgba(15, 23, 42, 0.08);
+  backdrop-filter: blur(12px);
 }
 
 .brand-block {
   display: flex;
-  align-items: center;
-  gap: 18px;
+  align-items: flex-start;
+  gap: 16px;
   margin-bottom: 28px;
+  padding: 14px;
+  border-radius: 18px;
+  background: linear-gradient(140deg, rgba(255, 255, 255, 0.96), rgba(239, 246, 255, 0.9));
+  border: 1px solid rgba(125, 211, 252, 0.28);
+}
+
+.brand-logos {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  padding-inline-end: 12px;
+  border-inline-end: 1px dashed rgba(14, 116, 144, 0.35);
 }
 
 .brand-logo {
-  width: 76px;
-  height: 76px;
+  width: 74px;
+  height: 74px;
   object-fit: contain;
-  flex-shrink: 0;
+  padding: 0;
+  border-radius: 12px;
+  background: transparent;
+  box-shadow: none;
+}
+
+.brand-logo--secondary {
+  width: 90px;
+  height: 74px;
 }
 
 .brand-copy {
@@ -49,19 +71,19 @@
 }
 
 .brand-kicker {
-  margin: 0 0 4px;
-  font-size: 0.78rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
+  margin: 0 0 6px;
+  font-size: 0.84rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
-  opacity: 0.7;
+  color: #0284c7;
 }
 
 .brand-subtitle {
   margin: 0;
-  font-size: 0.94rem;
-  line-height: 1.7;
-  opacity: 0.82;
+  font-size: 0.93rem;
+  line-height: 1.65;
+  color: rgba(51, 65, 85, 0.88);
 }
 
 .auth-form {
@@ -77,21 +99,30 @@
 .form-label {
   margin-bottom: 0;
   font-weight: 600;
+  color: rgba(30, 41, 59, 0.95);
 }
 
 .form-control {
   min-height: 52px;
   border-radius: 16px;
   padding-inline: 16px;
-  border-width: 1px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(255, 255, 255, 0.88);
+  color: rgba(15, 23, 42, 0.96);
   transition:
     border-color 0.18s ease,
     box-shadow 0.18s ease,
     transform 0.18s ease;
 
+  &::placeholder {
+    color: rgba(203, 213, 225, 0.5);
+  }
+
   &:focus {
     transform: translateY(-1px);
-    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+    border-color: rgba(56, 189, 248, 0.48);
+    box-shadow: 0 10px 22px rgba(2, 132, 199, 0.18);
+    background: #ffffff;
   }
 }
 
@@ -111,7 +142,9 @@
   font-size: 0.98rem;
   font-weight: 700;
   letter-spacing: 0.01em;
-  box-shadow: 0 14px 30px rgba(48, 126, 243, 0.18);
+  border: 1px solid rgba(125, 211, 252, 0.28);
+  background: linear-gradient(135deg, #0ea5e9, #2563eb);
+  box-shadow: 0 14px 28px rgba(37, 99, 235, 0.3);
 }
 
 .auth-note {
@@ -121,16 +154,16 @@
   gap: 12px;
   margin-top: 24px;
   padding-top: 18px;
-  border-top: 1px solid rgba(15, 23, 42, 0.08);
+  border-top: 1px solid rgba(148, 163, 184, 0.25);
   font-size: 0.84rem;
   line-height: 1.6;
-  opacity: 0.72;
+  color: rgba(71, 85, 105, 0.76);
 }
 
 :host-context(body.dark-only) {
   .auth-shell {
     background:
-      linear-gradient(135deg, rgba(14, 20, 36, 0.84), rgba(13, 17, 31, 0.9)),
+      linear-gradient(135deg, rgba(5, 9, 19, 0.92), rgba(11, 18, 32, 0.9)),
       url('/assets/images/login/BG_login.jpg');
     background-position: center;
     background-repeat: no-repeat;
@@ -151,23 +184,43 @@
     color: rgba(255, 255, 255, 0.72);
   }
 
+  .brand-kicker {
+    color: #7dd3fc;
+  }
+
+  .brand-block {
+    background:
+      linear-gradient(120deg, rgba(14, 165, 233, 0.2), rgba(15, 23, 42, 0.3) 58%),
+      rgba(2, 6, 23, 0.45);
+    border-color: rgba(125, 211, 252, 0.24);
+  }
+
+  .brand-logos {
+    border-inline-end-color: rgba(125, 211, 252, 0.35);
+  }
+
+  .brand-logo {
+    background: transparent;
+    box-shadow: none;
+  }
+
   .brand-copy h1,
   .form-label {
     color: rgba(255, 255, 255, 0.96);
   }
 
   .form-control {
-    background: rgba(255, 255, 255, 0.04);
-    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(15, 23, 42, 0.5);
+    border-color: rgba(148, 163, 184, 0.28);
     color: rgba(255, 255, 255, 0.94);
 
     &::placeholder {
-      color: rgba(255, 255, 255, 0.42);
+      color: rgba(203, 213, 225, 0.5);
     }
 
     &:focus {
-      background: rgba(255, 255, 255, 0.06);
-      border-color: rgba(255, 255, 255, 0.18);
+      background: rgba(15, 23, 42, 0.68);
+      border-color: rgba(56, 189, 248, 0.48);
     }
   }
 
@@ -185,14 +238,27 @@
   }
 
   .brand-block {
-    flex-direction: column;
     align-items: flex-start;
     gap: 14px;
   }
 
+  .brand-logos {
+    flex-direction: row;
+    border-inline-end: 0;
+    padding-inline-end: 0;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed rgba(14, 116, 144, 0.35);
+  }
+
   .brand-logo {
-    width: 64px;
-    height: 64px;
+    width: 58px;
+    height: 58px;
+    padding: 0;
+  }
+
+  .brand-logo--secondary {
+    width: 70px;
+    height: 58px;
   }
 
   .brand-copy h1 {
