@@ -4,6 +4,61 @@
 }
 
 .category-vehicle-table__range {
-  font-weight: 600;
+  min-width: 138px;
   white-space: nowrap;
+}
+
+.range-cell {
+  display: grid;
+  gap: 0.28rem;
+}
+
+.range-cell__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.45rem;
+  padding: 0.24rem 0.45rem;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: rgba(148, 163, 184, 0.08);
+}
+
+.range-cell__row--from {
+  border-color: rgba(59, 130, 246, 0.24);
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.range-cell__row--to {
+  border-color: rgba(34, 197, 94, 0.24);
+  background: rgba(34, 197, 94, 0.1);
+}
+
+.range-cell__label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  opacity: 0.9;
+}
+
+.range-cell__value {
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+:host-context(body.dark-only) {
+  .range-cell__row {
+    border-color: rgba(100, 116, 139, 0.38);
+    background: rgba(15, 23, 42, 0.5);
+  }
+
+  .range-cell__row--from {
+    border-color: rgba(96, 165, 250, 0.36);
+    background: rgba(30, 64, 175, 0.22);
+  }
+
+  .range-cell__row--to {
+    border-color: rgba(74, 222, 128, 0.34);
+    background: rgba(21, 128, 61, 0.22);
+  }
 }

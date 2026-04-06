@@ -2,17 +2,21 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { AuthStateService } from '../../../../../core/auth/auth-state.service';
-import { CategoryVehicle } from '../../../models';
-import { CategoryVehicleService } from '../../../services/category-vehicles/category-vehicle.service';
 import { ToastService } from '../../../../../shared/services/toast.service';
 import { EmptyStateComponent } from '../../../../../shared/ui/empty-state/empty-state.component';
 import { PageHeaderComponent } from '../../../../../shared/ui/page-header/page-header.component';
 import { PaginationBarComponent } from '../../../../../shared/ui/pagination-bar/pagination-bar.component';
-import { SmoothSelectComponent, SmoothSelectOption } from '../../../../../shared/ui/smooth-select/smooth-select.component';
+import {
+  SmoothSelectComponent,
+  SmoothSelectOption,
+} from '../../../../../shared/ui/smooth-select/smooth-select.component';
 import { StatusBadgeComponent } from '../../../../../shared/ui/status-badge/status-badge.component';
+import { CategoryVehicle } from '../../../models';
+import { CategoryVehicleService } from '../../../services/category-vehicles/category-vehicle.service';
 
 @Component({
   selector: 'app-category-vehicle-list',
@@ -72,7 +76,9 @@ export class CategoryVehicleListComponent implements OnInit {
           this.totalPages.set(response.totalPages ?? 0);
         },
         error: err => {
-          this.toast.error(err?.message ?? this.translate.instant('Failed to load vehicle categories'));
+          this.toast.error(
+            err?.message ?? this.translate.instant('Failed to load vehicle categories'),
+          );
           this.loading.set(false);
         },
         complete: () => this.loading.set(false),
@@ -95,17 +101,13 @@ export class CategoryVehicleListComponent implements OnInit {
     this.load();
   }
 
-  formatRange(low?: number, high?: number): string {
-    const lowValue = this.toFiniteNumber(low);
-    const highValue = this.toFiniteNumber(high);
-
-    if (lowValue === null && highValue === null) {
+  formatRangeValue(value?: number): string {
+    const numericValue = this.toFiniteNumber(value);
+    if (numericValue === null) {
       return '-';
     }
 
-    const from = lowValue === null ? '-' : this.formatNumber(lowValue);
-    const to = highValue === null ? '-' : this.formatNumber(highValue);
-    return `${from} - ${to}`;
+    return this.formatNumber(numericValue);
   }
 
   private formatNumber(value: number): string {
@@ -125,12 +127,11 @@ export class CategoryVehicleListComponent implements OnInit {
   }
 
   private getCurrentLocale(): string {
-    const lang = (this.translate.currentLang || this.translate.getDefaultLang() || 'en').toLowerCase();
+    const lang = (
+      this.translate.currentLang ||
+      this.translate.getDefaultLang() ||
+      'en'
+    ).toLowerCase();
     return lang.startsWith('ar') ? 'ar-SA' : 'en-US';
   }
 }
-
-
-
-
-

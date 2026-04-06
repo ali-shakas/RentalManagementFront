@@ -7,6 +7,14 @@ export interface JournalEntry {
   isManual?: boolean;
 }
 
+export interface JournalDetailLineRequest {
+  countingId: string;
+  countingNumber?: number;
+  debtir: number;
+  credit: number;
+  node?: string;
+}
+
 export interface CreateJournalEntryRequest {
   date: string;
   node: string;
@@ -19,5 +27,6 @@ export interface CreateJournalEntryRequest {
   isSystemOperation: boolean;
   idBranch: number;
   fleetId: string;
+  details: JournalDetailLineRequest[];
 }
 

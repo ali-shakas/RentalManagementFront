@@ -14,7 +14,13 @@
             <div class="row g-3">
               <div class="col-md-6">
                 <label class="form-label">{{ 'Counting ID' | translate }} <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" formControlName="countingId" />
+                <app-smooth-select
+                  formControlName="countingId"
+                  [options]="countingOptions()"
+                  [placeholder]="'Select account from chart' | translate"
+                  [disabled]="loadingAccounts()"
+                  [ariaLabel]="'Counting ID' | translate"
+                />
               </div>
 
               <div class="col-md-6">

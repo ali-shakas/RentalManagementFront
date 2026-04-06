@@ -1,9 +1,13 @@
 <div class="container-fluid">
   <app-page-header
     [title]="'Create Counting Entry' | translate"
-    [subtitle]="'Add an account to the reporting hierarchy with its operational balance.' | translate"
+    [subtitle]="
+      'Add an account to the reporting hierarchy with its operational balance.' | translate
+    "
   >
-    <a class="btn btn-outline-secondary" routerLink="/counting">{{ 'Back to Chart of Accounts' | translate }}</a>
+    <a class="btn btn-outline-secondary" routerLink="/counting">{{
+      'Back to Chart of Accounts' | translate
+    }}</a>
   </app-page-header>
 
   <div class="row">
@@ -13,40 +17,74 @@
           <form [formGroup]="form" (ngSubmit)="onSubmit()">
             <div class="row g-3">
               <div class="col-md-4">
-                <label class="form-label">{{ 'Counting Number' | translate }} <span class="text-danger">*</span></label>
-                <input type="number" class="form-control" formControlName="countingNumber" />
+                <label class="form-label"
+                  >{{ 'Counting Number' | translate }} <span class="text-danger">*</span></label
+                >
+                <input
+                  type="number"
+                  class="form-control"
+                  formControlName="countingNumber"
+                  [attr.min]="selectedCodeRange()?.min ?? null"
+                  [attr.max]="selectedCodeRange()?.max ?? null"
+                />
+                @if (selectedCodeRange()) {
+                  <div class="form-text">
+                    {{
+                      'Allowed account number range for {{type
+                    }}: {{ min }}-{{ max }}.' | translate : { type: (selectedCodeRange()?.labelKey
+                    || '') | translate, min: selectedCodeRange()?.min, max: selectedCodeRange()?.max
+                    } }}
+                  </div>
+                }
+                @if (isCountingNumberRangeInvalid()) {
+                  <div class="text-danger small mt-1">
+                    {{ countingNumberRangeMessage() }}
+                  </div>
+                }
               </div>
               <div class="col-md-4">
-                <label class="form-label">{{ 'Main Counting Number' | translate }} <span class="text-danger">*</span></label>
+                <label class="form-label"
+                  >{{ 'Main Counting Number' | translate }}
+                  <span class="text-danger">*</span></label
+                >
                 <input type="number" class="form-control" formControlName="countingMain" />
               </div>
               <div class="col-md-4">
-                <label class="form-label">{{ 'Counting Type' | translate }} <span class="text-danger">*</span></label>
+                <label class="form-label"
+                  >{{ 'Counting Type' | translate }} <span class="text-danger">*</span></label
+                >
                 <input type="number" class="form-control" formControlName="countingType" />
               </div>
 
               <div class="col-md-4">
-                <label class="form-label">{{ 'Report Number' | translate }} <span class="text-danger">*</span></label>
+                <label class="form-label"
+                  >{{ 'Report Number' | translate }} <span class="text-danger">*</span></label
+                >
                 <input type="number" class="form-control" formControlName="reportNumber" />
               </div>
               <div class="col-md-4">
-                <label class="form-label">{{ 'Account Level' | translate }} <span class="text-danger">*</span></label>
+                <label class="form-label"
+                  >{{ 'Account Level' | translate }} <span class="text-danger">*</span></label
+                >
                 <input type="number" class="form-control" formControlName="countingLevel" />
               </div>
               <div class="col-md-4">
-                <label class="form-label">{{ 'Balance' | translate }} <span class="text-danger">*</span></label>
+                <label class="form-label"
+                  >{{ 'Balance' | translate }} <span class="text-danger">*</span></label
+                >
                 <input type="number" class="form-control" formControlName="balannce" />
               </div>
 
               <div class="col-md-6">
-                <label class="form-label">{{ 'Name (AR)' | translate }} <span class="text-danger">*</span></label>
+                <label class="form-label"
+                  >{{ 'Name (AR)' | translate }} <span class="text-danger">*</span></label
+                >
                 <input type="text" class="form-control" formControlName="nameAr" />
               </div>
               <div class="col-md-6">
                 <label class="form-label">{{ 'Name (EN)' | translate }}</label>
                 <input type="text" class="form-control" formControlName="nameEn" />
               </div>
-
             </div>
 
             @if (form.invalid && form.touched) {

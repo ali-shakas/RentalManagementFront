@@ -35,15 +35,42 @@
               </div>
               <div class="col-md-4">
                 <label class="form-label">{{ 'Payment Type' | translate }} <span class="text-danger">*</span></label>
-                <input type="number" class="form-control" formControlName="paymentType" />
+                <app-smooth-select
+                  formControlName="paymentType"
+                  [options]="paymentTypeOptions"
+                  [placeholder]="'Payment Type' | translate"
+                  [ariaLabel]="'Payment Type' | translate"
+                />
               </div>
               <div class="col-md-4">
                 <label class="form-label">{{ 'Bond Type' | translate }} <span class="text-danger">*</span></label>
-                <input type="number" class="form-control" formControlName="bondType" />
+                <app-smooth-select
+                  formControlName="bondType"
+                  [options]="bondTypeOptions"
+                  [placeholder]="'Bond Type' | translate"
+                  [ariaLabel]="'Bond Type' | translate"
+                />
               </div>
               <div class="col-md-4">
                 <label class="form-label">{{ 'Payment Status' | translate }} <span class="text-danger">*</span></label>
-                <input type="number" class="form-control" formControlName="status" />
+                <app-smooth-select
+                  formControlName="status"
+                  [options]="statusOptions"
+                  [placeholder]="'Payment Status' | translate"
+                  [ariaLabel]="'Payment Status' | translate"
+                />
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label"
+                  >{{ 'Accounting Purpose' | translate }} <span class="text-danger">*</span></label
+                >
+                <app-smooth-select
+                  formControlName="accountingPurpose"
+                  [options]="accountingPurposeOptions"
+                  [placeholder]="'Accounting Purpose' | translate"
+                  [ariaLabel]="'Accounting Purpose' | translate"
+                />
               </div>
 
               <div class="col-md-4">
@@ -61,16 +88,48 @@
 
               <div class="col-md-6">
                 <label class="form-label">{{ 'Cash Account ID' | translate }}</label>
-                <input type="text" class="form-control" formControlName="idCash" />
+                <app-smooth-select
+                  formControlName="idCash"
+                  [options]="cashOptions()"
+                  [placeholder]="'Select cash account' | translate"
+                  [disabled]="loadingChannels()"
+                  [ariaLabel]="'Cash Account ID' | translate"
+                />
               </div>
               <div class="col-md-6">
                 <label class="form-label">{{ 'Bank ID' | translate }}</label>
-                <input type="text" class="form-control" formControlName="idBank" />
+                <app-smooth-select
+                  formControlName="idBank"
+                  [options]="bankOptions()"
+                  [placeholder]="'Select bank account' | translate"
+                  [disabled]="loadingChannels()"
+                  [ariaLabel]="'Bank ID' | translate"
+                />
               </div>
 
               <div class="col-12">
                 <label class="form-label">{{ 'Description' | translate }} <span class="text-danger">*</span></label>
                 <textarea class="form-control" rows="3" formControlName="dscription"></textarea>
+              </div>
+
+              <div class="col-12">
+                <div class="alert alert-info mb-0">
+                  <h6 class="mb-2">{{ 'Suggested accounting entry' | translate }}</h6>
+                  <div class="small mb-1">
+                    <strong>{{ 'Debit' | translate }}:</strong>
+                    {{ formatFlowAccount(suggestedVoucherFlow().debit) }}
+                  </div>
+                  <div class="small mb-1">
+                    <strong>{{ 'Credit' | translate }}:</strong>
+                    {{ formatFlowAccount(suggestedVoucherFlow().credit) }}
+                  </div>
+                  <div class="small opacity-75">
+                    {{
+                      'This guidance links vouchers with the core rental accounting flow and can be adjusted by policy.'
+                        | translate
+                    }}
+                  </div>
+                </div>
               </div>
             </div>
 

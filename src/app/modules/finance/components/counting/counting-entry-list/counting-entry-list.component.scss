@@ -1,3 +1,223 @@
 :host {
   display: block;
 }
+
+.counting-card {
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.counting-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.counting-tree {
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 16px;
+  overflow: hidden;
+  max-height: 68vh;
+  overflow-y: auto;
+}
+
+.counting-tree__search .form-label {
+  margin-bottom: 0.45rem;
+}
+
+.counting-tree__state {
+  padding: 1.1rem 1rem;
+  color: rgba(100, 116, 139, 0.95);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+}
+
+.counting-tree__row {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-block: 0.5rem;
+  padding-inline-end: 0.75rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background: rgba(59, 130, 246, 0.08);
+  }
+
+  &.is-selected {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(29, 78, 216, 0.12));
+  }
+}
+
+.counting-tree__toggle {
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: inherit;
+  opacity: 0.9;
+  flex: 0 0 auto;
+
+  &--ghost {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+.counting-tree__icon {
+  width: 20px;
+  display: inline-flex;
+  justify-content: center;
+  color: #f59e0b;
+  flex: 0 0 auto;
+}
+
+.counting-tree__label {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  min-width: 0;
+
+  strong {
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+
+  small {
+    font-size: 0.95rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.counting-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+
+.counting-guide-card {
+  border-radius: 18px;
+}
+
+.counting-guide-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.9rem;
+  flex-wrap: wrap;
+}
+
+.counting-guide-card__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 0.55rem;
+}
+
+.counting-template-chip {
+  min-height: 44px;
+  border: 1px solid rgba(37, 99, 235, 0.25);
+  border-radius: 14px;
+  background: rgba(37, 99, 235, 0.06);
+  color: inherit;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.45rem 0.7rem;
+  text-align: start;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease,
+    background-color 0.2s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 22px rgba(37, 99, 235, 0.13);
+    border-color: rgba(37, 99, 235, 0.5);
+    background: rgba(37, 99, 235, 0.12);
+  }
+
+  &.is-missing {
+    border-color: rgba(217, 119, 6, 0.45);
+    background: rgba(217, 119, 6, 0.1);
+  }
+}
+
+.counting-template-chip__number {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.counting-template-chip__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+:host-context(body.dark-only) {
+  .counting-template-chip {
+    border-color: rgba(96, 165, 250, 0.28);
+    background: rgba(30, 64, 175, 0.22);
+
+    &:hover {
+      border-color: rgba(96, 165, 250, 0.55);
+      background: rgba(30, 64, 175, 0.32);
+      box-shadow: 0 12px 26px rgba(30, 64, 175, 0.34);
+    }
+
+    &.is-missing {
+      border-color: rgba(251, 191, 36, 0.42);
+      background: rgba(146, 64, 14, 0.28);
+    }
+  }
+
+  .counting-tree {
+    border-color: rgba(100, 116, 139, 0.35);
+    background: rgba(15, 23, 42, 0.38);
+  }
+
+  .counting-tree__state {
+    color: rgba(203, 213, 225, 0.85);
+  }
+
+  .counting-tree__row {
+    border-bottom-color: rgba(100, 116, 139, 0.24);
+
+    &:hover {
+      background: rgba(59, 130, 246, 0.14);
+    }
+
+    &.is-selected {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.26), rgba(30, 64, 175, 0.22));
+    }
+  }
+
+  .counting-tree__label small {
+    color: rgba(226, 232, 240, 0.95);
+  }
+}
+
+@media (max-width: 1199.98px) {
+  .counting-tree {
+    max-height: 420px;
+  }
+}
