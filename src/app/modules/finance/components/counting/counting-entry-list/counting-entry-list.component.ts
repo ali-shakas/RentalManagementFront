@@ -4,6 +4,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { firstValueFrom } from 'rxjs';
 
 import { AuthStateService } from '../../../../../core/auth/auth-state.service';
 import { ToastService } from '../../../../../shared/services/toast.service';
@@ -17,6 +18,7 @@ import {
   countingNumberByTypeValidator,
   getCountingAccountTypeRange,
 } from '../../../common/counting-account-ranges';
+import { getCoreCountingAccountTemplates } from '../../../common/finance-accounting-blueprints';
 import {
   CountingEntry,
   CreateCountingEntryRequest,
@@ -62,8 +64,13 @@ export class CountingEntryListComponent implements OnInit {
   loading = signal(false);
   saving = signal(false);
   deleting = signal(false);
+  seedingCoreAccounts = signal(false);
+  seedingBranchLabel = signal<string | null>(null);
+  syncingCoreAccounts = signal(false);
+  syncingBranchLabel = signal<string | null>(null);
   loadError = signal<string | null>(null);
   private languageTick = signal(0);
+  readonly coreAccountTemplates = getCoreCountingAccountTemplates();
 
   readonly accountTypeOptions: SmoothSelectOption[] = [
     { label: 'Assets', value: 1 },
@@ -189,6 +196,275 @@ export class CountingEntryListComponent implements OnInit {
 
   onAddNew(): void {
     this.prepareCreateMode();
+  }
+
+  onSeedAssetsAccounts(): Promise<void> {
+    return this.onSeedBranchAccounts(1000, 1999, 'الأصول');
+  }
+
+  onSyncAssetsAccounts(): Promise<void> {
+    return this.onSyncBranchAccounts(1000, 1999, 'الأصول');
+  }
+
+  onSeedLiabilitiesAccounts(): Promise<void> {
+    return this.onSeedBranchAccounts(2000, 2999, 'الالتزامات');
+  }
+
+  onSyncLiabilitiesAccounts(): Promise<void> {
+    return this.onSyncBranchAccounts(2000, 2999, 'الالتزامات');
+  }
+
+  onSeedEquityAccounts(): Promise<void> {
+    return this.onSeedBranchAccounts(3000, 3999, 'حقوق الملكية');
+  }
+
+  onSeedRevenueAccounts(): Promise<void> {
+    return this.onSeedBranchAccounts(4000, 4999, 'الإيرادات');
+  }
+
+  onSyncRevenueAccounts(): Promise<void> {
+    return this.onSyncBranchAccounts(4000, 4999, 'الإيرادات');
+  }
+
+  onSeedExpenseAccounts(): Promise<void> {
+    return this.onSeedBranchAccounts(5000, 5999, 'المصروفات');
+  }
+
+  onSyncExpenseAccounts(): Promise<void> {
+    return this.onSyncBranchAccounts(5000, 5999, 'المصروفات');
+  }
+
+  private async onSeedBranchAccounts(
+    rangeStart: number,
+    rangeEnd: number,
+    branchLabel: string,
+  ): Promise<void> {
+    if (
+      this.seedingCoreAccounts() ||
+      this.syncingCoreAccounts() ||
+      this.saving() ||
+      this.deleting() ||
+      this.loading()
+    ) {
+      return;
+    }
+
+    const fleetId = this.authState.fleetId() ?? this.form.controls.fleetId.value;
+    if (!fleetId) {
+      this.toast.error(this.translate.instant('FleetId is required'));
+      return;
+    }
+
+    const existingNumbers = new Set<number>();
+    for (const item of this.entries()) {
+      const number = Number(item.countingNumber ?? 0);
+      if (Number.isFinite(number) && number > 0) {
+        existingNumbers.add(number);
+      }
+    }
+
+    const missingTemplates = this.coreAccountTemplates
+      .filter(
+        template =>
+          template.countingNumber >= rangeStart && template.countingNumber <= rangeEnd,
+      )
+      .filter(template => !existingNumbers.has(template.countingNumber))
+      .sort((left, right) => {
+        if (left.countingLevel !== right.countingLevel) {
+          return left.countingLevel - right.countingLevel;
+        }
+        return left.countingNumber - right.countingNumber;
+      });
+
+    if (missingTemplates.length === 0) {
+      this.toast.info(`كل حسابات فرع ${branchLabel} موجودة مسبقًا`);
+      return;
+    }
+
+    this.seedingCoreAccounts.set(true);
+    this.seedingBranchLabel.set(branchLabel);
+    let createdCount = 0;
+    let skippedCount = 0;
+
+    try {
+      for (const template of missingTemplates) {
+        if (existingNumbers.has(template.countingNumber)) {
+          continue;
+        }
+
+        if (template.parentCountingNumber > 0 && !existingNumbers.has(template.parentCountingNumber)) {
+          skippedCount += 1;
+          continue;
+        }
+
+        await firstValueFrom(
+          this.countingService.create({
+            countingNumber: template.countingNumber,
+            countingMain: template.parentCountingNumber,
+            countingType: template.countingType,
+            reportNumber: template.reportNumber,
+            countingLevel: template.countingLevel,
+            debtir: 0,
+            credit: 0,
+            balannce: 0,
+            nameAr: template.nameAr,
+            nameEn: template.nameEn,
+            fleetId,
+          }),
+        );
+
+        existingNumbers.add(template.countingNumber);
+        createdCount += 1;
+      }
+
+      if (createdCount > 0) {
+        this.toast.success(`تمت تهيئة ${createdCount} حسابًا في فرع ${branchLabel}`);
+      }
+
+      if (skippedCount > 0) {
+        this.toast.warning(
+          this.translate.instant('Skipped {{count}} accounts because parent account was missing', {
+            count: skippedCount,
+          }),
+        );
+      }
+
+      if (createdCount === 0 && skippedCount === 0) {
+        this.toast.info(`كل حسابات فرع ${branchLabel} موجودة مسبقًا`);
+      }
+
+      this.loadEntries();
+    } catch (err) {
+      const errorMessage = (err as { message?: string } | null)?.message;
+      this.toast.error(errorMessage ?? this.translate.instant('Failed to create recommended accounts'));
+    } finally {
+      this.seedingCoreAccounts.set(false);
+      this.seedingBranchLabel.set(null);
+    }
+  }
+
+  private async onSyncBranchAccounts(
+    rangeStart: number,
+    rangeEnd: number,
+    branchLabel: string,
+  ): Promise<void> {
+    if (
+      this.syncingCoreAccounts() ||
+      this.seedingCoreAccounts() ||
+      this.saving() ||
+      this.deleting() ||
+      this.loading()
+    ) {
+      return;
+    }
+
+    const fleetId = this.authState.fleetId() ?? this.form.controls.fleetId.value;
+    if (!fleetId) {
+      this.toast.error(this.translate.instant('FleetId is required'));
+      return;
+    }
+
+    const branchTemplates = this.coreAccountTemplates
+      .filter(
+        template =>
+          template.countingNumber >= rangeStart && template.countingNumber <= rangeEnd,
+      )
+      .sort((left, right) => {
+        if (left.countingLevel !== right.countingLevel) {
+          return left.countingLevel - right.countingLevel;
+        }
+        return left.countingNumber - right.countingNumber;
+      });
+
+    if (branchTemplates.length === 0) {
+      this.toast.info(`لا توجد قوالب لحسابات فرع ${branchLabel}`);
+      return;
+    }
+
+    const existingByNumber = new Map<number, CountingEntry>();
+    for (const item of this.entries()) {
+      const number = Number(item.countingNumber ?? 0);
+      if (Number.isFinite(number) && number > 0 && !existingByNumber.has(number)) {
+        existingByNumber.set(number, item);
+      }
+    }
+
+    this.syncingCoreAccounts.set(true);
+    this.syncingBranchLabel.set(branchLabel);
+    let createdCount = 0;
+    let updatedCount = 0;
+
+    try {
+      for (const template of branchTemplates) {
+        const existing = existingByNumber.get(template.countingNumber);
+
+        if (!existing) {
+          await firstValueFrom(
+            this.countingService.create({
+              countingNumber: template.countingNumber,
+              countingMain: template.parentCountingNumber,
+              countingType: template.countingType,
+              reportNumber: template.reportNumber,
+              countingLevel: template.countingLevel,
+              debtir: 0,
+              credit: 0,
+              balannce: 0,
+              nameAr: template.nameAr,
+              nameEn: template.nameEn,
+              fleetId,
+            }),
+          );
+          createdCount += 1;
+          continue;
+        }
+
+        const needsUpdate =
+          Number(existing.countingMain ?? 0) !== template.parentCountingNumber ||
+          Number(existing.countingType ?? 0) !== template.countingType ||
+          Number(existing.reportNumber ?? 0) !== template.reportNumber ||
+          Number(existing.countingLevel ?? 0) !== template.countingLevel ||
+          (existing.nameAr ?? '').trim() !== template.nameAr ||
+          (existing.nameEn ?? '').trim() !== template.nameEn;
+
+        if (!needsUpdate) {
+          continue;
+        }
+
+        await firstValueFrom(
+          this.countingService.update({
+            id: existing.id,
+            countingNumber: template.countingNumber,
+            countingMain: template.parentCountingNumber,
+            countingType: template.countingType,
+            reportNumber: template.reportNumber,
+            countingLevel: template.countingLevel,
+            debtir: Number(existing.debtir ?? 0),
+            credit: Number(existing.credit ?? 0),
+            balannce: Number(existing.balannce ?? 0),
+            nameAr: template.nameAr,
+            nameEn: template.nameEn,
+            fleetId,
+          }),
+        );
+        updatedCount += 1;
+      }
+
+      if (createdCount === 0 && updatedCount === 0) {
+        this.toast.info(`فرع ${branchLabel} متطابق بالفعل`);
+      } else {
+        this.toast.success(
+          `تمت مزامنة فرع ${branchLabel}: إضافة ${createdCount} وتحديث ${updatedCount}`,
+        );
+      }
+
+      this.loadEntries();
+    } catch (err) {
+      const errorMessage = (err as { message?: string } | null)?.message;
+      this.toast.error(errorMessage ?? `فشل مزامنة فرع ${branchLabel}`);
+    } finally {
+      this.syncingCoreAccounts.set(false);
+      this.syncingBranchLabel.set(null);
+    }
   }
 
   onSave(): void {

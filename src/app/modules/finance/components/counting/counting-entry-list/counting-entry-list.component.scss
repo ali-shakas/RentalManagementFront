@@ -2,9 +2,38 @@
   display: block;
 }
 
+.counting-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  justify-content: flex-start;
+  width: 100%;
+}
+
+.counting-header-actions-bar {
+  border: 1px solid var(--bs-border-color, #e5e7eb);
+  border-radius: 0.75rem;
+  background: var(--bs-body-bg, #fff);
+  padding: 0.5rem;
+}
+
+.counting-header-actions__btn {
+  --bs-btn-padding-y: 0.2rem;
+  --bs-btn-padding-x: 0.5rem;
+  --bs-btn-font-size: 0.74rem;
+  --bs-btn-border-radius: 0.45rem;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
 .counting-card {
   border-radius: 18px;
   overflow: hidden;
+}
+
+.counting-card--form,
+.counting-card--form .card-body {
+  overflow: visible;
 }
 
 .counting-card__head {
@@ -113,6 +142,11 @@
   gap: 0.7rem;
 }
 
+.counting-parent-select-col {
+  position: relative;
+  z-index: 80;
+}
+
 .counting-guide-card {
   border-radius: 18px;
 }
@@ -217,6 +251,11 @@
 }
 
 @media (max-width: 1199.98px) {
+  .counting-header-actions {
+    justify-content: flex-start;
+    max-width: 100%;
+  }
+
   .counting-tree {
     max-height: 420px;
   }

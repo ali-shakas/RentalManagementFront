@@ -62,8 +62,7 @@ export class SmoothSelectComponent implements ControlValueAccessor {
     return this.options[0]?.label ?? '';
   });
 
-  toggle(event: Event): void {
-    event.stopPropagation();
+  toggle(): void {
     if (this.isDisabled()) {
       return;
     }

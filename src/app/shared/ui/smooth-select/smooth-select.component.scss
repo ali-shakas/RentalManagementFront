@@ -1,6 +1,8 @@
 :host {
   display: block;
   width: 100%;
+  position: relative;
+  z-index: 0;
 }
 
 .app-soft-select {
@@ -126,9 +128,15 @@
 }
 
 .app-soft-select--open {
+  z-index: 5000;
+
   .app-soft-select__caret {
     transform: rotate(180deg);
     opacity: 1;
+  }
+
+  .app-soft-select__menu {
+    z-index: 5001;
   }
 }
 
