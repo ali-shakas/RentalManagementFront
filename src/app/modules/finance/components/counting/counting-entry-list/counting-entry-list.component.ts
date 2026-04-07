@@ -4,7 +4,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, startWith } from 'rxjs';
 
 import { AuthStateService } from '../../../../../core/auth/auth-state.service';
 import { ToastService } from '../../../../../shared/services/toast.service';
@@ -49,6 +49,37 @@ interface CountingTreeNode {
   styleUrl: './counting-entry-list.component.scss',
 })
 export class CountingEntryListComponent implements OnInit {
+  /*
+   * Accounting tree quick notes (saved for future reuse):
+   *
+   * 1) Hierarchical template source:
+   *    - All suggested accounts are defined in:
+   *      src/app/modules/finance/common/finance-accounting-blueprints.ts
+   *    - Main structure fields:
+   *      countingNumber (account number)
+   *      parentCountingNumber (parent account number)
+   *      countingLevel (tree level)
+   *      countingType and reportNumber
+   *
+   * 2) Template loading inside accounting directory page:
+   *    - This component calls getCoreCountingAccountTemplates()
+   *      and stores the result in coreAccountTemplates.
+   *
+   * 3) Seed workflow (onSeedBranchAccounts):
+   *    - Filters templates by range (e.g. assets 1000-1999)
+   *    - Adds only missing accounts
+   *    - Verifies parent exists before creating child
+   *    - Sends create request via countingService
+   *
+   * 4) Sync workflow (onSyncBranchAccounts):
+   *    - Adds missing branch accounts
+   *    - Updates existing records if they differ from template
+   *      (parent/type/level/name)
+   *
+   * 5) Tree rendering:
+   *    - buildTree(...) links countingMain with parent's countingNumber
+   *    - Then renders nodes in hierarchical order (parent -> child)
+   */
   private fb = inject(NonNullableFormBuilder);
   private authState = inject(AuthStateService);
   private countingService = inject(CountingEntryService);
@@ -60,6 +91,7 @@ export class CountingEntryListComponent implements OnInit {
   selectedId = signal<string | null>(null);
   searchTerm = signal('');
   expandedIds = signal<Set<string>>(new Set());
+  selectedLegendLevel = signal<number | null>(null);
 
   loading = signal(false);
   saving = signal(false);
@@ -116,7 +148,12 @@ export class CountingEntryListComponent implements OnInit {
 
   readonly visibleNodes = computed<CountingTreeNode[]>(() => {
     this.languageTick();
-    return this.buildTree(this.entries(), this.searchTerm());
+    const nodes = this.buildTree(this.entries(), this.searchTerm());
+    const minLevel = this.selectedLegendLevel();
+    if (minLevel === null) {
+      return nodes;
+    }
+    return nodes.filter(node => node.level <= minLevel);
   });
 
   readonly selectedCodeRange = computed(() =>
@@ -146,6 +183,14 @@ export class CountingEntryListComponent implements OnInit {
       this.languageTick.update(value => value + 1);
     });
 
+    this.form.controls.countingNumber.valueChanges
+      .pipe(startWith(this.form.controls.countingNumber.value), takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.syncParentAccountSelection());
+
+    this.form.controls.countingType.valueChanges
+      .pipe(startWith(this.form.controls.countingType.value), takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.syncParentAccountSelection());
+
     this.form.controls.fleetId.setValue(this.authState.fleetId() ?? '');
     this.loadEntries();
     this.prepareCreateMode();
@@ -154,6 +199,10 @@ export class CountingEntryListComponent implements OnInit {
   onSearchChange(event: Event): void {
     const target = event.target as HTMLInputElement | null;
     this.searchTerm.set(target?.value?.trim() ?? '');
+  }
+
+  onLegendLevelSelect(level: number): void {
+    this.selectedLegendLevel.update(current => (current === level ? null : level));
   }
 
   toggleExpand(nodeId: string, event: Event): void {
@@ -597,6 +646,44 @@ export class CountingEntryListComponent implements OnInit {
       reportNumber: selected?.reportNumber ?? 1,
       fleetId: this.authState.fleetId() ?? '',
     });
+
+    this.syncParentAccountSelection();
+  }
+
+  private syncParentAccountSelection(): void {
+    // Keep auto-parent logic only for create mode.
+    if (this.form.controls.id.value) {
+      return;
+    }
+
+    const currentNumber = Number(this.form.controls.countingNumber.value ?? 0);
+    const currentType = Number(this.form.controls.countingType.value ?? 0);
+    const currentParent = Number(this.form.controls.countingMain.value ?? 0);
+
+    const candidates = this.entries()
+      .filter(item => !item.isDeleted)
+      .filter(item => Number(item.countingNumber ?? 0) > 0)
+      .filter(item => Number(item.countingType ?? 0) === currentType)
+      .filter(item => (currentNumber > 0 ? Number(item.countingNumber ?? 0) < currentNumber : true))
+      .sort((left, right) => Number(left.countingNumber ?? 0) - Number(right.countingNumber ?? 0));
+
+    const allowedParents = new Set<number>([0, ...candidates.map(item => Number(item.countingNumber ?? 0))]);
+    if (allowedParents.has(currentParent)) {
+      return;
+    }
+
+    const suggestedParent = candidates.length > 0 ? Number(candidates[candidates.length - 1].countingNumber ?? 0) : 0;
+    this.form.controls.countingMain.setValue(suggestedParent);
+
+    if (suggestedParent > 0) {
+      const parent = candidates.find(item => Number(item.countingNumber ?? 0) === suggestedParent);
+      const suggestedLevel = Number(parent?.countingLevel ?? 0) + 1;
+      if (suggestedLevel > 0) {
+        this.form.controls.countingLevel.setValue(suggestedLevel);
+      }
+    } else {
+      this.form.controls.countingLevel.setValue(1);
+    }
   }
 
   private buildTree(items: CountingEntry[], query: string): CountingTreeNode[] {

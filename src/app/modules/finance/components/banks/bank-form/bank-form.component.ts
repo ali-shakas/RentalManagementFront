@@ -48,7 +48,7 @@ export class BankFormComponent implements OnInit {
     { label: 'Select account from chart', value: '' },
     ...this.countingEntries().map(entry => ({
       label: this.formatAccountLabel(entry),
-      value: String(entry.countingNumber ?? entry.id),
+      value: entry.id,
     })),
   ]);
 
@@ -95,27 +95,91 @@ export class BankFormComponent implements OnInit {
   }
 
   private loadCountingEntries(): void {
-    const fleetId = this.authState.fleetId();
+    const fleetId = this.authState.fleetId() ?? this.form.controls.fleetId.value;
     this.loadingAccounts.set(true);
     this.countingService.getList(fleetId).subscribe({
-      next: entries => {
-        const activeEntries = entries.filter(entry => !entry.isDeleted);
-        const bankEntries = activeEntries.filter(isBankCountingCandidate);
-        this.countingEntries.set(bankEntries.length > 0 ? bankEntries : activeEntries);
-        if (bankEntries.length === 0 && activeEntries.length > 0) {
-          this.toast.info(
-            this.translate.instant(
-              'No dedicated bank account was detected. Showing all available accounts.',
-            ),
-          );
-        }
-      },
+      next: entries => this.applyCountingEntries(entries, fleetId),
       error: err => {
+        if (fleetId) {
+          this.countingService.getList(null).subscribe({
+            next: fallbackEntries => this.applyCountingEntries(fallbackEntries, null),
+            error: fallbackErr => {
+              this.toast.error(
+                fallbackErr?.message ?? err?.message ?? this.translate.instant('Failed to load accounts'),
+              );
+              this.loadingAccounts.set(false);
+            },
+            complete: () => {},
+          });
+          return;
+        }
+
         this.toast.error(err?.message ?? this.translate.instant('Failed to load accounts'));
         this.loadingAccounts.set(false);
       },
-      complete: () => this.loadingAccounts.set(false),
+      complete: () => {},
     });
+  }
+
+  private applyCountingEntries(entries: CountingEntry[], fleetId?: string | null): void {
+    const activeEntries = entries.filter(entry => !entry.isDeleted);
+    const sourceEntries = activeEntries.length > 0 ? activeEntries : entries;
+    const sortedEntries = [...sourceEntries].sort((left, right) => {
+      const leftIsBank = isBankCountingCandidate(left);
+      const rightIsBank = isBankCountingCandidate(right);
+      if (leftIsBank !== rightIsBank) {
+        return leftIsBank ? -1 : 1;
+      }
+
+      const leftNumber = Number(left.countingNumber ?? Number.MAX_SAFE_INTEGER);
+      const rightNumber = Number(right.countingNumber ?? Number.MAX_SAFE_INTEGER);
+      if (leftNumber !== rightNumber) {
+        return leftNumber - rightNumber;
+      }
+
+      return this.formatAccountLabel(left).localeCompare(this.formatAccountLabel(right), 'ar', {
+        sensitivity: 'base',
+      });
+    });
+
+    if (sortedEntries.length > 0) {
+      this.countingEntries.set(sortedEntries);
+      if (!sortedEntries.some(isBankCountingCandidate)) {
+        this.toast.info(
+          this.translate.instant('No dedicated bank account was detected. Showing all available accounts.'),
+        );
+      }
+      this.loadingAccounts.set(false);
+      return;
+    }
+
+    if (fleetId) {
+      this.countingService.getList(null).subscribe({
+        next: fallbackEntries => {
+          const fallbackActiveEntries = fallbackEntries.filter(entry => !entry.isDeleted);
+          const fallbackSource = fallbackActiveEntries.length > 0 ? fallbackActiveEntries : fallbackEntries;
+          this.countingEntries.set(
+            [...fallbackSource].sort(
+              (left, right) =>
+                Number(left.countingNumber ?? Number.MAX_SAFE_INTEGER) -
+                Number(right.countingNumber ?? Number.MAX_SAFE_INTEGER),
+            ),
+          );
+
+          if (this.countingEntries().length === 0) {
+            this.toast.warning(this.translate.instant('No accounts found in chart of accounts'));
+          }
+        },
+        error: () => {
+          this.toast.warning(this.translate.instant('No accounts found in chart of accounts'));
+        },
+        complete: () => this.loadingAccounts.set(false),
+      });
+      return;
+    }
+
+    this.toast.warning(this.translate.instant('No accounts found in chart of accounts'));
+    this.loadingAccounts.set(false);
   }
 
   private formatAccountLabel(entry: CountingEntry): string {

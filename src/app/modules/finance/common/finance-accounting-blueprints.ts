@@ -1,3 +1,11 @@
+/*
+ * Core accounting hierarchy blueprint:
+ * - This file is the source of truth for suggested chart-of-accounts templates.
+ * - Each record defines:
+ *   countingNumber, parentCountingNumber, countingLevel, countingType, reportNumber.
+ * - Seed logic uses these templates to add missing accounts.
+ * - Sync logic uses these templates to add/update accounts to match the standard structure.
+ */
 export interface CoreCountingAccountTemplate {
   key: string;
   countingNumber: number;

@@ -18,8 +18,8 @@ import { PaginationBarComponent } from '../../../../../shared/ui/pagination-bar/
 export class FinanceListShellComponent {
   @Input() title = '';
   @Input() subtitle = '';
-  @Input() emptyTitle = 'No records found';
-  @Input() emptyDescription = 'No records were returned for the current fleet context.';
+  @Input() emptyTitle = 'لم يتم إرجاع أي سجلات ضمن سياق الأسطول الحالي.';
+  @Input() emptyDescription = 'لم يتم إرجاع أي سجلات ضمن سياق الأسطول الحالي.';
   @Input() error: string | null = null;
   @Input() loading = false;
   @Input() count = 0;
