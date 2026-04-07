@@ -1,4 +1,5 @@
 import { Injectable, inject } from '@angular/core';
+
 import { catchError, map, Observable } from 'rxjs';
 
 import { BaseService } from '../../../../shared/services/base/base.service';
@@ -18,11 +19,11 @@ export class CountingEntryService {
   private readonly base = 'Counting';
 
   getList(fleetId?: string | null): Observable<CountingEntry[]> {
-    return this.api.getData<unknown[]>(`${this.base}/List`, {
-      ...buildFleetQueryParams(fleetId, 'both'),
-    }).pipe(
-      map(items => (items ?? []).map(normalizeCountingEntry)),
-    );
+    return this.api
+      .getData<unknown[]>(`${this.base}/List`, {
+        ...buildFleetQueryParams(fleetId, 'both'),
+      })
+      .pipe(map(items => (items ?? []).map(normalizeCountingEntry)));
   }
 
   getById(id: string, fleetId: string): Observable<CountingEntry> {
@@ -130,4 +131,3 @@ export class CountingEntryService {
     return requestBody;
   }
 }
-

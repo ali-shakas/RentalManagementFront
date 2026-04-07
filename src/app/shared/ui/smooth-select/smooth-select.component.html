@@ -10,7 +10,7 @@
     [attr.aria-expanded]="isOpen()"
     aria-haspopup="listbox"
     [disabled]="isDisabled()"
-    (click)="toggle($event)"
+    (click)="toggle()"
   >
     <span class="app-soft-select__label">{{ selectedLabel() | translate }}</span>
     <i class="fa fa-angle-down app-soft-select__caret" aria-hidden="true"></i>
