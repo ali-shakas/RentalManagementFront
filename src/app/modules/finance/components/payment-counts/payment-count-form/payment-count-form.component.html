@@ -86,26 +86,30 @@
                 <input type="number" class="form-control" formControlName="stutusbooking" />
               </div>
 
-              <div class="col-md-6">
-                <label class="form-label">{{ 'Cash Account ID' | translate }}</label>
-                <app-smooth-select
-                  formControlName="idCash"
-                  [options]="cashOptions()"
-                  [placeholder]="'Select cash account' | translate"
-                  [disabled]="loadingChannels()"
-                  [ariaLabel]="'Cash Account ID' | translate"
-                />
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">{{ 'Bank ID' | translate }}</label>
-                <app-smooth-select
-                  formControlName="idBank"
-                  [options]="bankOptions()"
-                  [placeholder]="'Select bank account' | translate"
-                  [disabled]="loadingChannels()"
-                  [ariaLabel]="'Bank ID' | translate"
-                />
-              </div>
+              @if (showCashAccountField()) {
+                <div class="col-md-6">
+                  <label class="form-label">{{ 'Cash Account ID' | translate }}</label>
+                  <app-smooth-select
+                    formControlName="idCash"
+                    [options]="cashOptions()"
+                    [placeholder]="'Select cash account' | translate"
+                    [disabled]="isCashAccountDisabled()"
+                    [ariaLabel]="'Cash Account ID' | translate"
+                  />
+                </div>
+              }
+              @if (showBankAccountField()) {
+                <div class="col-md-6">
+                  <label class="form-label">{{ 'Bank ID' | translate }}</label>
+                  <app-smooth-select
+                    formControlName="idBank"
+                    [options]="bankOptions()"
+                    [placeholder]="'Select bank account' | translate"
+                    [disabled]="isBankAccountDisabled()"
+                    [ariaLabel]="'Bank ID' | translate"
+                  />
+                </div>
+              }
 
               <div class="col-12">
                 <label class="form-label">{{ 'Description' | translate }} <span class="text-danger">*</span></label>

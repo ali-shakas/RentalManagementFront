@@ -43,7 +43,18 @@ export class PaymentCountListComponent implements OnInit {
       bookingId: formatFinanceNumber(item.idBooking, this.translate),
       customerId: formatFinanceNumber(item.idCustomer, this.translate),
       amount: formatFinanceNumber(item.paid, this.translate),
-      paymentType: item.paymentType === 2 ? this.translate.instant('Bank') : this.translate.instant('Cash'),
+      paymentType:
+        item.paymentType === 1
+          ? this.translate.instant('نقدا')
+          : item.paymentType === 2
+            ? this.translate.instant('شبكة')
+            : item.paymentType === 3
+              ? this.translate.instant('شيك')
+              : item.paymentType === 4
+                ? this.translate.instant('تحويل بنكي')
+                : item.paymentType === 5
+                  ? this.translate.instant('بنك/كاش')
+                  : this.translate.instant('Unknown'),
       status:
         item.status === 1
           ? this.translate.instant('Confirmed')
