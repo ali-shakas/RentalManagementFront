@@ -3,7 +3,11 @@ import { map, Observable } from 'rxjs';
 
 import { BaseService } from '../../../../shared/services/base/base.service';
 import { buildFleetQueryParams } from '../../../../shared/utils/fleet-query.utils';
-import { CreatePaymentCountRequest, PaymentCount } from '../../models/payment-counts/payment-count.model';
+import {
+  CreatePaymentCountRequest,
+  PaymentCount,
+  PaymentCountDetailLineRequest,
+} from '../../models/payment-counts/payment-count.model';
 import { normalizePaymentCount } from '../../models/payment-counts/payment-count.normalizer';
 
 @Injectable({
@@ -84,8 +88,37 @@ export class PaymentCountService {
       IdBooking: payload.idBooking,
       stutusbooking: payload.stutusbooking,
       Stutusbooking: payload.stutusbooking,
+      idFinancialYear: payload.idFinancialYear,
+      IdFinancialYear: payload.idFinancialYear,
       fleetId: payload.fleetId,
       FleetId: payload.fleetId,
+      details: payload.details?.map((line, index) => this.toCreateDetailPayload(line, index)),
+      paymentCountDetails: payload.details?.map((line, index) => this.toCreateDetailPayload(line, index)),
+      PaymentCountDetails: payload.details?.map((line, index) => this.toCreateDetailPayload(line, index)),
+    };
+  }
+
+  private toCreateDetailPayload(
+    line: PaymentCountDetailLineRequest,
+    index: number,
+  ): Record<string, unknown> {
+    const idCounting = String(line.idCounting ?? '').trim();
+    const price = Number(line.price ?? 0);
+    return {
+      idCounting,
+      IdCounting: idCounting,
+      countingId: idCounting,
+      CountingId: idCounting,
+      price,
+      Price: price,
+      node: line.node,
+      Node: line.node,
+      idBranch: line.idBranch,
+      IdBranch: line.idBranch,
+      idFinancialYear: line.idFinancialYear,
+      IdFinancialYear: line.idFinancialYear,
+      lineOrder: index + 1,
+      LineOrder: index + 1,
     };
   }
 }

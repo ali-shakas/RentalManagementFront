@@ -48,6 +48,7 @@ export interface UserCreateRequest {
   nameEn?: string;
   isActive: boolean;
   expirationDate?: string;
+  branchId?: number;
   fleetId?: string;
   rolesId: string[];
 }

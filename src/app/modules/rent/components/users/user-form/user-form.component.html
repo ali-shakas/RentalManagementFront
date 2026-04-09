@@ -70,6 +70,30 @@
                 <div class="form-text">{{ 'Hint User Expiration Date' | translate }}</div>
               </div>
 
+              @if (requireFleetInput()) {
+                <div class="col-md-6">
+                  <label class="form-label">{{ 'Fleet' | translate }}</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    formControlName="fleetId"
+                    [placeholder]="'Example Fleet ID' | translate"
+                  />
+                  <div class="form-text">{{ 'Fleet is optional for user creation.' | translate }}</div>
+                </div>
+              }
+
+              <div class="col-md-6">
+                <label class="form-label">{{ 'Branch ID' | translate }}</label>
+                <select class="form-select" formControlName="branchId" [disabled]="loadingBranches()">
+                  <option [ngValue]="''">{{ 'Select branch' | translate }}</option>
+                  @for (branch of branches(); track branch.id) {
+                    <option [ngValue]="branch.id">{{ branchDisplay(branch) }}</option>
+                  }
+                </select>
+                <div class="form-text">{{ 'Hint User Branch' | translate }}</div>
+              </div>
+
               <div class="col-md-6">
                 <label class="form-label">{{ 'Name (Ar)' | translate }} <span class="text-danger">*</span></label>
                 <input

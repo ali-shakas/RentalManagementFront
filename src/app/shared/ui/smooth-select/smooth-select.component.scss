@@ -70,10 +70,7 @@
 }
 
 .app-soft-select__menu {
-  position: absolute;
-  inset-inline-start: 0;
-  inset-inline-end: 0;
-  top: calc(100% + 0.45rem);
+  position: fixed;
   overflow-y: auto;
   padding: 0.42rem;
   border: 1px solid rgba(148, 163, 184, 0.3);
@@ -83,8 +80,27 @@
     0 22px 34px -24px rgba(15, 23, 42, 0.42),
     0 10px 20px -18px rgba(59, 130, 246, 0.2);
   backdrop-filter: blur(10px);
-  z-index: 1400;
+  z-index: 15000;
   animation: soft-select-fade 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.app-soft-select__search-wrap {
+  margin-bottom: 0.35rem;
+}
+
+.app-soft-select__search {
+  width: 100%;
+  min-height: 38px;
+  border: 1px solid rgba(148, 163, 184, 0.34);
+  border-radius: 10px;
+  padding: 0.45rem 0.6rem;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.app-soft-select__empty {
+  padding: 0.65rem 0.6rem;
+  opacity: 0.75;
+  font-size: 0.88rem;
 }
 
 .app-soft-select__option {
@@ -137,6 +153,12 @@
 
   .app-soft-select__menu {
     z-index: 5001;
+  }
+
+  .app-soft-select__search {
+    border-color: rgba(100, 116, 139, 0.52);
+    background: rgba(15, 23, 42, 0.6);
+    color: rgba(241, 245, 249, 0.96);
   }
 }
 

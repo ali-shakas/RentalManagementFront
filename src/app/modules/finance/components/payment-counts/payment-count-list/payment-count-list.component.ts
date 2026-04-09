@@ -30,37 +30,58 @@ export class PaymentCountListComponent implements OnInit {
   private languageTick = signal(0);
 
   readonly columns: FinanceListColumn[] = [
-    { key: 'bookingId', label: 'Booking ID', align: 'end' },
-    { key: 'customerId', label: 'Customer', align: 'end' },
-    { key: 'amount', label: 'Amount', align: 'end' },
+    { key: 'paymentNumber', label: 'Payment Number', align: 'end' },
+    { key: 'amount', label: 'Paid', align: 'end' },
+    { key: 'status', label: 'Status' },
+    { key: 'bondType', label: 'Bond Type' },
     { key: 'paymentType', label: 'Payment Type' },
-    { key: 'status', label: 'Payment Status' },
+    { key: 'customerId', label: 'Customer', align: 'end' },
+    { key: 'vehicleId', label: 'Vehicle', align: 'end' },
+    { key: 'branchId', label: 'Branch', align: 'end' },
+    { key: 'cashId', label: 'Cash' },
+    { key: 'bankId', label: 'Bank' },
+    { key: 'paidCash', label: 'Paid Cash', align: 'end' },
+    { key: 'paidBank', label: 'Paid Bank', align: 'end' },
+    { key: 'bookingId', label: 'Booking', align: 'end' },
   ];
 
   readonly rows = computed<FinanceListRow[]>(() => {
     this.languageTick();
     return this.items().map(item => ({
-      bookingId: formatFinanceNumber(item.idBooking, this.translate),
-      customerId: formatFinanceNumber(item.idCustomer, this.translate),
+      paymentNumber: formatFinanceNumber(item.paymentNumber, this.translate),
       amount: formatFinanceNumber(item.paid, this.translate),
-      paymentType:
-        item.paymentType === 1
-          ? this.translate.instant('نقدا')
-          : item.paymentType === 2
-            ? this.translate.instant('شبكة')
-            : item.paymentType === 3
-              ? this.translate.instant('شيك')
-              : item.paymentType === 4
-                ? this.translate.instant('تحويل بنكي')
-                : item.paymentType === 5
-                  ? this.translate.instant('بنك/كاش')
-                  : this.translate.instant('Unknown'),
       status:
         item.status === 1
           ? this.translate.instant('Confirmed')
           : item.status === 2
             ? this.translate.instant('Pending')
+            : formatFinanceNumber(item.status, this.translate),
+      bondType:
+        item.bondType === 1
+          ? this.translate.instant('Receipt Voucher')
+          : item.bondType === 2
+            ? this.translate.instant('Payment Voucher')
             : this.translate.instant('Unknown'),
+      paymentType:
+        item.paymentType === 1
+          ? this.translate.instant('Cash')
+          : item.paymentType === 2
+            ? this.translate.instant('Network/POS')
+            : item.paymentType === 3
+              ? this.translate.instant('Cheque')
+              : item.paymentType === 4
+                ? this.translate.instant('Bank Transfer')
+                : item.paymentType === 5
+                  ? this.translate.instant('Bank/Cash')
+                  : this.translate.instant('Unknown'),
+      customerId: formatFinanceNumber(item.idCustomer, this.translate),
+      vehicleId: formatFinanceNumber(item.idVehicle, this.translate),
+      branchId: formatFinanceNumber(item.idBranch, this.translate),
+      cashId: item.idCash || '-',
+      bankId: item.idBank || '-',
+      paidCash: formatFinanceNumber(item.paidCash, this.translate),
+      paidBank: formatFinanceNumber(item.paidBank, this.translate),
+      bookingId: formatFinanceNumber(item.idBooking, this.translate),
     }));
   });
 

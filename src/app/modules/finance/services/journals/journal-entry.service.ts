@@ -1,13 +1,15 @@
 import { Injectable, inject } from '@angular/core';
 
 import { map, Observable } from 'rxjs';
+import { PaginatedAggregatorResponse } from '../../../../core/interfaces';
 
 import { BaseService } from '../../../../shared/services/base/base.service';
 import { buildFleetQueryParams } from '../../../../shared/utils/fleet-query.utils';
+import { normalizePaginatedResponse } from '../../../../shared/utils/paginated-response.normalizer';
 import {
   CreateJournalEntryRequest,
-  JournalDetailLineRequest,
   JournalEntry,
+  JournalEntryPaginatedRequest,
 } from '../../models/journals/journal-entry.model';
 import { normalizeJournalEntry } from '../../models/journals/journal-entry.normalizer';
 
@@ -26,68 +28,55 @@ export class JournalEntryService {
       .pipe(map(items => (items ?? []).map(normalizeJournalEntry)));
   }
 
+  getPaginated(params: JournalEntryPaginatedRequest): Observable<PaginatedAggregatorResponse<JournalEntry>> {
+    return this.api
+      .getData<unknown>(`${this.base}/Paginated`, {
+        PageSize: params.pageSize,
+        PageNumber: params.pageNumber,
+        FleetId: params.fleetId ?? undefined,
+        BRANCHID: params.branchId ?? undefined,
+        Search: params.search?.trim() || undefined,
+        DateFrom: params.dateFrom || undefined,
+        DateTo: params.dateTo || undefined,
+        OrderByDirection: params.orderByDirection ?? undefined,
+        OrderBy: params.orderBy ?? undefined,
+        pageSize: params.pageSize,
+        pageNumber: params.pageNumber,
+        fleetId: params.fleetId ?? undefined,
+        branchId: params.branchId ?? undefined,
+        search: params.search?.trim() || undefined,
+        dateFrom: params.dateFrom || undefined,
+        dateTo: params.dateTo || undefined,
+        orderByDirection: params.orderByDirection ?? undefined,
+        orderBy: params.orderBy ?? undefined,
+      })
+      .pipe(map(response => normalizePaginatedResponse(response, normalizeJournalEntry)));
+  }
+
   create(payload: CreateJournalEntryRequest): Observable<unknown> {
-    return this.api.postData<unknown>(this.base, this.toApiPayload(payload));
-  }
-
-  private toApiPayload(payload: CreateJournalEntryRequest): Record<string, unknown> {
-    const details = payload.details.map((line, index) => this.toApiDetailLine(line, index));
-
-    return {
+    return this.api.postData<unknown>(this.base, {
       date: payload.date,
-      Date: payload.date,
       node: payload.node,
-      Node: payload.node,
       journalType: payload.journalType,
-      JournalType: payload.journalType,
       debtir: payload.debtir,
-      Debtir: payload.debtir,
       credit: payload.credit,
-      Credit: payload.credit,
       balannce: payload.balannce,
-      Balannce: payload.balannce,
       operationType: payload.operationType,
-      OperationType: payload.operationType,
       status: payload.status,
-      Status: payload.status,
-      isSystemOperation: payload.isSystemOperation,
-      IsSystemOperation: payload.isSystemOperation,
+      isSystemOperation: payload.isSystemOperation ?? false,
+      idFinancialYear: payload.idFinancialYear,
       idBranch: payload.idBranch,
-      IdBranch: payload.idBranch,
       fleetId: payload.fleetId,
-      FleetId: payload.fleetId,
-      details,
-      Details: details,
-      journalDetails: details,
-      JournalDetails: details,
-    };
-  }
-
-  private toApiDetailLine(line: JournalDetailLineRequest, index: number): Record<string, unknown> {
-    const parsedCountingId = Number(line.countingId);
-    const normalizedCountingId =
-      Number.isFinite(parsedCountingId) && parsedCountingId > 0
-        ? parsedCountingId
-        : (line.countingNumber ?? 0);
-    const balance = (line.debtir ?? 0) - (line.credit ?? 0);
-
-    return {
-      idCounting: normalizedCountingId,
-      IdCounting: normalizedCountingId,
-      countingId: normalizedCountingId,
-      CountingId: normalizedCountingId,
-      countingNumber: line.countingNumber,
-      CountingNumber: line.countingNumber,
-      debtir: line.debtir,
-      Debtir: line.debtir,
-      credit: line.credit,
-      Credit: line.credit,
-      balannce: balance,
-      Balannce: balance,
-      node: line.node,
-      Node: line.node,
-      lineOrder: index + 1,
-      LineOrder: index + 1,
-    };
+      details: payload.details.map(line => ({
+        idCounting: line.idCounting,
+        debtir: line.debtir,
+        credit: line.credit,
+        balannce: line.balannce,
+        node: line.node,
+        status: line.status ?? null,
+        idVehicle: line.idVehicle ?? null,
+        customerId: line.customerId ?? null,
+      })),
+    });
   }
 }

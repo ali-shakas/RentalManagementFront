@@ -29,7 +29,15 @@
   "Search": "Search",
   "Search subscription offers...": "Search subscription offers...",
   "Status": "Status",
+  "Any value zero or greater": "Any value zero or greater",
+  "Must be greater than value": "Must be greater than {{value}}",
+  "Must be less than value": "Must be less than {{value}}",
+  "Must be between values": "Must be between {{min}} and {{max}}",
+  "Subscription sequence guidance": "Subscription order matters: on create, both approved-after and discount must be greater than the last subscription; on update, both values must remain between previous and next subscriptions.",
   "Subscription offer created": "Subscription offer created",
   "Subscription offer updated": "Subscription offer updated",
+  "Subscription order create rule violation": "Subscription approved-after and discount must both be greater than the last subscription values.",
+  "Subscription order previous rule violation": "Subscription approved-after and discount must both be greater than the previous subscription values.",
+  "Subscription order next rule violation": "Subscription approved-after and discount must both be lower than the next subscription values.",
   "Update Subscription Offer": "Update Subscription Offer"
 }

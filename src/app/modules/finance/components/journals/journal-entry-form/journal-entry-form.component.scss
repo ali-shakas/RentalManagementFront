@@ -4,7 +4,11 @@
 
 .journal-card {
   border-radius: 18px;
-  overflow: hidden;
+  overflow: visible;
+}
+
+.journal-card .card-body {
+  overflow: visible;
 }
 
 .journal-section-title {
@@ -27,21 +31,60 @@
   font-weight: 600;
 }
 
-.journal-lines-table {
-  min-width: 920px;
-}
-
 .journal-line-index {
   width: 48px;
   font-weight: 700;
 }
 
 .journal-line-account {
-  min-width: 250px;
+  min-width: 270px;
 }
 
 .journal-line-amount {
-  min-width: 145px;
+  min-width: 132px;
+}
+
+.journal-lines-grid {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.journal-line-card {
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 14px;
+  background: rgba(148, 163, 184, 0.06);
+  padding: 0.75rem;
+}
+
+.journal-line-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.65rem;
+  font-weight: 700;
+}
+
+.journal-line-card__grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.journal-field {
+  grid-column: span 3;
+}
+
+.journal-field--wide {
+  grid-column: span 6;
+}
+
+:host ::ng-deep .journal-lines-grid app-smooth-select .app-soft-select__trigger {
+  min-height: 46px;
+}
+
+:host ::ng-deep .journal-lines-grid app-smooth-select .app-soft-select__menu {
+  z-index: 6000;
 }
 
 .journal-line-validation td {
@@ -145,5 +188,13 @@
 @media (max-width: 767.98px) {
   .journal-summary {
     grid-template-columns: 1fr;
+  }
+
+  .journal-field {
+    grid-column: span 12;
+  }
+
+  .journal-field--wide {
+    grid-column: span 12;
   }
 }

@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Router } from '@angular/router';
+import { TranslateService } from '@ngx-translate/core';
 import { Observable, tap, map, catchError, of } from 'rxjs';
 
 import { AuthStateService } from '../../../core/auth/auth-state.service';
@@ -15,6 +16,7 @@ export class AuthService {
   private router = inject(Router);
   private toast = inject(ToastService);
   private authState = inject(AuthStateService);
+  private translate = inject(TranslateService);
 
   private readonly loginEndpoint = 'Auth/Login';
 
@@ -32,7 +34,10 @@ export class AuthService {
         if (succeeded && token) {
           this.authState.createSession(token);
         } else if (res.succeeded === false) {
-          const message = res.errors?.length ? res.errors.join(' ') : (res as any).message ?? 'فشل تسجيل الدخول';
+          const message =
+            res.errors?.length
+              ? res.errors.join(' ')
+              : (res as any).message ?? this.translate.instant('Login failed. Check username and password.');
           this.showError(message);
         }
       }),
@@ -49,7 +54,7 @@ export class AuthService {
         const message =
           err?.error?.errors?.length > 0
             ? err.error.errors.join(' ')
-            : err?.error?.message || err?.message || 'حدث خطأ غير متوقع، حاول لاحقاً';
+            : err?.error?.message || err?.message || this.translate.instant('Unexpected error. Please try again later.');
         this.showError(message);
         return of({ success: false, message });
       }),
