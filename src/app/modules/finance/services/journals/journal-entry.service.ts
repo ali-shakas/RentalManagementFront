@@ -29,6 +29,7 @@ export class JournalEntryService {
   }
 
   getPaginated(params: JournalEntryPaginatedRequest): Observable<PaginatedAggregatorResponse<JournalEntry>> {
+    const normalizedDirection = params.orderByDirection?.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
     return this.api
       .getData<unknown>(`${this.base}/Paginated`, {
         PageSize: params.pageSize,
@@ -38,7 +39,7 @@ export class JournalEntryService {
         Search: params.search?.trim() || undefined,
         DateFrom: params.dateFrom || undefined,
         DateTo: params.dateTo || undefined,
-        OrderByDirection: params.orderByDirection ?? undefined,
+        OrderByDirection: params.orderByDirection ? normalizedDirection : undefined,
         OrderBy: params.orderBy ?? undefined,
         pageSize: params.pageSize,
         pageNumber: params.pageNumber,
@@ -47,7 +48,7 @@ export class JournalEntryService {
         search: params.search?.trim() || undefined,
         dateFrom: params.dateFrom || undefined,
         dateTo: params.dateTo || undefined,
-        orderByDirection: params.orderByDirection ?? undefined,
+        orderByDirection: params.orderByDirection ? normalizedDirection.toLowerCase() : undefined,
         orderBy: params.orderBy ?? undefined,
       })
       .pipe(map(response => normalizePaginatedResponse(response, normalizeJournalEntry)));

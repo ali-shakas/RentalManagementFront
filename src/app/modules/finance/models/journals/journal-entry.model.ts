@@ -26,7 +26,7 @@ export interface JournalEntryPaginatedRequest {
   search?: string;
   dateFrom?: string;
   dateTo?: string;
-  orderByDirection?: 'asc' | 'desc';
+  orderByDirection?: 'ASC' | 'DESC';
   orderBy?: string;
 }
 

@@ -144,7 +144,7 @@
 
 .app-soft-select--open {
   position: relative;
-  z-index: 5000;
+  z-index: 20000;
 
   .app-soft-select__caret {
     transform: rotate(180deg);
@@ -152,7 +152,7 @@
   }
 
   .app-soft-select__menu {
-    z-index: 5001;
+    z-index: 20001;
   }
 
   .app-soft-select__search {

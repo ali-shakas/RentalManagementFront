@@ -1,8 +1,10 @@
 import { Injectable, inject } from '@angular/core';
 import { map, Observable } from 'rxjs';
+import { PaginatedAggregatorResponse } from '../../../../core/interfaces';
 
 import { BaseService } from '../../../../shared/services/base/base.service';
 import { buildFleetQueryParams } from '../../../../shared/utils/fleet-query.utils';
+import { normalizePaginatedResponse } from '../../../../shared/utils/paginated-response.normalizer';
 import {
   CreatePaymentCountRequest,
   PaymentCount,
@@ -28,22 +30,35 @@ export class PaymentCountService {
 
   getPaginated(params: {
     fleetId?: string | null;
+    branchId?: number | null;
     pageSize?: number;
     pageNumber?: number;
     search?: string;
-    orderByDirection?: string;
+    orderByDirection?: 'ASC' | 'DESC';
     orderBy?: string;
-  }): Observable<unknown> {
+  }): Observable<PaginatedAggregatorResponse<PaymentCount>> {
     const fleetId = params.fleetId?.trim();
-    return this.api.getData<unknown>(`${this.base}/Paginated`, {
-      FleetId: fleetId || undefined,
-      IdFleet: fleetId || undefined,
-      PageSize: params.pageSize,
-      PageNumber: params.pageNumber,
-      Search: params.search,
-      OrderByDirection: params.orderByDirection,
-      OrderBy: params.orderBy,
-    });
+    const normalizedDirection = params.orderByDirection?.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+    return this.api
+      .getData<unknown>(`${this.base}/Paginated`, {
+        FleetId: fleetId || undefined,
+        IdFleet: fleetId || undefined,
+        BRANCHID: params.branchId ?? undefined,
+        BranchId: params.branchId ?? undefined,
+        PageSize: params.pageSize,
+        PageNumber: params.pageNumber,
+        Search: params.search?.trim() || undefined,
+        OrderByDirection: params.orderByDirection ? normalizedDirection : undefined,
+        OrderBy: params.orderBy,
+        pageSize: params.pageSize,
+        pageNumber: params.pageNumber,
+        fleetId: fleetId || undefined,
+        branchId: params.branchId ?? undefined,
+        search: params.search?.trim() || undefined,
+        orderByDirection: params.orderByDirection ? normalizedDirection.toLowerCase() : undefined,
+        orderBy: params.orderBy,
+      })
+      .pipe(map(response => normalizePaginatedResponse(response, normalizePaymentCount)));
   }
 
   getById(id: string, fleetId: string): Observable<PaymentCount> {

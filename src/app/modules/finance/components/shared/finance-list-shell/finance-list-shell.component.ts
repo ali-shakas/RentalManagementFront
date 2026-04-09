@@ -44,7 +44,7 @@ export class FinanceListShellComponent {
   @Input() searchValue = '';
   @Input() enableSearch = false;
   @Input() orderByValue = '';
-  @Input() orderByDirectionValue: 'asc' | 'desc' = 'desc';
+  @Input() orderByDirectionValue: 'ASC' | 'DESC' = 'DESC';
   @Input() orderByOptions: SmoothSelectOption[] = [];
   @Input() enableSorting = false;
   @Input() enableDateRangeFilter = false;
@@ -58,14 +58,14 @@ export class FinanceListShellComponent {
 
   @Output() searchChange = new EventEmitter<string>();
   @Output() orderByChange = new EventEmitter<string>();
-  @Output() orderByDirectionChange = new EventEmitter<'asc' | 'desc'>();
+  @Output() orderByDirectionChange = new EventEmitter<'ASC' | 'DESC'>();
   @Output() dateRangeChange = new EventEmitter<DateRangeValue>();
   @Output() pageChange = new EventEmitter<number>();
   @Output() pageSizeChange = new EventEmitter<number>();
 
   readonly orderByDirectionOptions: SmoothSelectOption[] = [
-    { label: 'Newest', value: 'desc' },
-    { label: 'Oldest', value: 'asc' },
+    { label: 'Newest', value: 'DESC' },
+    { label: 'Oldest', value: 'ASC' },
   ];
 
   onSearchChange(value: string): void {
@@ -77,7 +77,7 @@ export class FinanceListShellComponent {
   }
 
   onOrderByDirectionChange(value: string | number | null): void {
-    const normalized = String(value ?? '').toLowerCase() === 'asc' ? 'asc' : 'desc';
+    const normalized = String(value ?? '').toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
     this.orderByDirectionChange.emit(normalized);
   }
 
