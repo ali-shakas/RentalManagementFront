@@ -8,26 +8,49 @@
 
   <div class="row">
     <div class="col-12">
-      <div class="card">
+      <div class="card voucher-card">
         <div class="card-body">
           <form [formGroup]="form" (ngSubmit)="onSubmit()">
             <div class="row g-3">
               <div class="col-md-4">
-                <label class="form-label">{{ 'Customer ID' | translate }} <span class="text-danger">*</span></label>
-                <input type="number" class="form-control" formControlName="idCustomer" />
+                <label class="form-label">{{ 'Customer ID' | translate }}</label>
+                <app-smooth-select
+                  formControlName="idCustomer"
+                  [options]="customerOptions()"
+                  [placeholder]="'Select customer' | translate"
+                  [ariaLabel]="'Customer ID' | translate"
+                  [searchable]="true"
+                />
               </div>
               <div class="col-md-4">
-                <label class="form-label">{{ 'Vehicle ID' | translate }} <span class="text-danger">*</span></label>
-                <input type="number" class="form-control" formControlName="idVehicle" />
+                <label class="form-label">{{ 'Vehicle ID' | translate }}</label>
+                <app-smooth-select
+                  formControlName="idVehicle"
+                  [options]="vehicleOptions()"
+                  [placeholder]="'Select vehicle' | translate"
+                  [ariaLabel]="'Vehicle ID' | translate"
+                  [searchable]="true"
+                />
               </div>
               <div class="col-md-4">
-                <label class="form-label">{{ 'Booking ID' | translate }} <span class="text-danger">*</span></label>
-                <input type="number" class="form-control" formControlName="idBooking" />
+                <label class="form-label">{{ 'Booking ID' | translate }}</label>
+                <app-smooth-select
+                  formControlName="idBooking"
+                  [options]="bookingOptions()"
+                  [placeholder]="'Select booking' | translate"
+                  [ariaLabel]="'Booking ID' | translate"
+                  [searchable]="true"
+                />
               </div>
 
               <div class="col-md-4">
                 <label class="form-label">{{ 'Branch ID' | translate }} <span class="text-danger">*</span></label>
-                <input type="number" class="form-control" formControlName="idBranch" />
+                <app-smooth-select
+                  formControlName="idBranch"
+                  [options]="branchOptions()"
+                  [placeholder]="'Select branch' | translate"
+                  [ariaLabel]="'Branch ID' | translate"
+                />
               </div>
               <div class="col-md-4">
                 <label class="form-label">{{ 'Amount' | translate }} <span class="text-danger">*</span></label>
@@ -62,6 +85,17 @@
               </div>
 
               <div class="col-md-4">
+                <label class="form-label">{{ 'Financial Year' | translate }} <span class="text-danger">*</span></label>
+                <app-smooth-select
+                  formControlName="idFinancialYear"
+                  [options]="financialYearOptions()"
+                  [placeholder]="'Select financial year' | translate"
+                  [ariaLabel]="'Financial Year' | translate"
+                  [disabled]="loadingFinancialYears()"
+                />
+              </div>
+
+              <div class="col-md-4">
                 <label class="form-label"
                   >{{ 'Accounting Purpose' | translate }} <span class="text-danger">*</span></label
                 >
@@ -83,30 +117,36 @@
               </div>
               <div class="col-md-4">
                 <label class="form-label">{{ 'Booking Status' | translate }} <span class="text-danger">*</span></label>
-                <input type="number" class="form-control" formControlName="stutusbooking" />
+                <app-smooth-select
+                  formControlName="stutusbooking"
+                  [options]="bookingStatusOptions()"
+                  [placeholder]="'Select booking status' | translate"
+                  [ariaLabel]="'Booking Status' | translate"
+                  [disabled]="form.controls.stutusbooking.disabled"
+                />
               </div>
 
               @if (showCashAccountField()) {
                 <div class="col-md-6">
-                  <label class="form-label">{{ 'Cash Account ID' | translate }}</label>
+                  <label class="form-label">{{ 'Cash Box' | translate }}</label>
                   <app-smooth-select
                     formControlName="idCash"
                     [options]="cashOptions()"
-                    [placeholder]="'Select cash account' | translate"
+                    [placeholder]="'Select cash box' | translate"
                     [disabled]="isCashAccountDisabled()"
-                    [ariaLabel]="'Cash Account ID' | translate"
+                    [ariaLabel]="'Cash Box' | translate"
                   />
                 </div>
               }
               @if (showBankAccountField()) {
                 <div class="col-md-6">
-                  <label class="form-label">{{ 'Bank ID' | translate }}</label>
+                  <label class="form-label">{{ 'Bank' | translate }}</label>
                   <app-smooth-select
                     formControlName="idBank"
                     [options]="bankOptions()"
-                    [placeholder]="'Select bank account' | translate"
+                    [placeholder]="'Select bank' | translate"
                     [disabled]="isBankAccountDisabled()"
-                    [ariaLabel]="'Bank ID' | translate"
+                    [ariaLabel]="'Bank' | translate"
                   />
                 </div>
               }
@@ -135,6 +175,80 @@
                   </div>
                 </div>
               </div>
+
+              <div class="col-12">
+                <div class="voucher-lines-head">
+                  <h6 class="voucher-section-title mb-0">{{ 'Payment Details Distribution' | translate }}</h6>
+                  <button class="btn btn-primary btn-sm" type="button" (click)="addLine()">
+                    <i class="fa fa-plus me-1"></i>
+                    {{ 'Add Line' | translate }}
+                  </button>
+                </div>
+
+                <div class="voucher-lines-grid" formArrayName="details">
+                  @for (line of detailsArray.controls; track trackByIndex($index)) {
+                    <div class="voucher-line-card" [formGroupName]="$index">
+                      <div class="voucher-line-card__head">
+                        <span>#{{ $index + 1 }}</span>
+                        <button
+                          class="btn btn-cancel btn-sm"
+                          type="button"
+                          (click)="removeLine($index)"
+                          [disabled]="detailsArray.length <= 1"
+                        >
+                          {{ 'Delete' | translate }}
+                        </button>
+                      </div>
+
+                      <div class="voucher-line-card__grid">
+                        <div class="voucher-field">
+                          <label class="form-label">{{ 'Account' | translate }}</label>
+                          <app-smooth-select
+                            formControlName="idCounting"
+                            [options]="accountOptions()"
+                            [placeholder]="'Select account' | translate"
+                            [ariaLabel]="'Account' | translate"
+                            [searchable]="true"
+                          />
+                        </div>
+                        <div class="voucher-field">
+                          <label class="form-label">{{ 'Amount' | translate }}</label>
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            class="form-control text-end"
+                            formControlName="price"
+                          />
+                        </div>
+                        <div class="voucher-field voucher-field--wide">
+                          <label class="form-label">{{ 'Note' | translate }}</label>
+                          <input type="text" class="form-control" formControlName="node" />
+                        </div>
+                      </div>
+                    </div>
+                  }
+                </div>
+
+                <div class="voucher-summary">
+                  <div class="voucher-summary__item">
+                    <span>{{ 'Paid' | translate }}</span>
+                    <strong>{{ form.controls.paid.value }}</strong>
+                  </div>
+                  <div class="voucher-summary__item">
+                    <span>{{ 'Distributed' | translate }}</span>
+                    <strong>{{ totalDetails() }}</strong>
+                  </div>
+                  <div
+                    class="voucher-summary__item"
+                    [class.is-balanced]="isDetailsBalanced()"
+                    [class.is-unbalanced]="!isDetailsBalanced()"
+                  >
+                    <span>{{ 'Difference' | translate }}</span>
+                    <strong>{{ detailsDifference() }}</strong>
+                  </div>
+                </div>
+              </div>
             </div>
 
             @if (form.invalid && form.touched) {
@@ -142,7 +256,11 @@
             }
 
             <div class="mt-4 d-flex gap-2">
-              <button class="btn btn-primary" type="submit" [disabled]="loading() || form.invalid">
+              <button
+                class="btn btn-primary"
+                type="submit"
+                [disabled]="loading() || form.invalid || !isDetailsBalanced()"
+              >
                 @if (loading()) {
                   <span class="spinner-border spinner-border-sm me-2"></span>
                 }

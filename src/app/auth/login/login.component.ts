@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, ElementRef, OnInit, ViewChild, inject } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { TranslateService } from '@ngx-translate/core';
 
 import { AuthStateService } from '../../core/auth/auth-state.service';
 import { AuthService } from '../../shared/services/auth/auth.service';
@@ -24,6 +25,7 @@ export class LoginComponent implements OnInit {
   private tokenService = inject(TokenService);
   private toast = inject(ToastService);
   private layout = inject(LayoutService);
+  private translate = inject(TranslateService);
 
   loading = false;
   loginDisabled = false;
@@ -60,15 +62,16 @@ export class LoginComponent implements OnInit {
         this.loading = false;
         if (result.success) {
           if (!this.tokenService.getToken()) {
-            this.errorMessage = 'Login succeeded but no auth token was stored.';
-            this.toast.error(this.errorMessage);
+            const msg = this.translate.instant('Login succeeded but no auth token was stored.');
+            this.errorMessage = msg;
+            this.toast.error(msg);
             return;
           }
 
-          this.toast.success('Login successful');
+          this.toast.success(this.translate.instant('Login successful'));
           this.router.navigate(['/dashboard']);
         } else {
-          const msg = result.message ?? 'Login failed. Check username and password.';
+          const msg = result.message ?? this.translate.instant('Login failed. Check username and password.');
           this.errorMessage = msg;
           this.toast.error(msg);
           this.loginDisabled = true;
@@ -83,7 +86,7 @@ export class LoginComponent implements OnInit {
         const message =
           err?.error?.errors?.length > 0
             ? err.error.errors.join(' ')
-            : err?.message ?? 'Login failed. Check username and password.';
+            : err?.message ?? this.translate.instant('Login failed. Check username and password.');
         this.errorMessage = message;
         this.toast.error(message);
       },

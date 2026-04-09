@@ -1,11 +1,15 @@
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslateService } from '@ngx-translate/core';
+import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 
 import { AuthStateService } from '../../../../../core/auth/auth-state.service';
 import { ToastService } from '../../../../../shared/services/toast.service';
+import { SmoothSelectOption } from '../../../../../shared/ui/smooth-select/smooth-select.component';
+import { BranchService } from '../../../../rent/services/branches/branch.service';
 import { JournalEntry } from '../../../models/journals/journal-entry.model';
 import { FinanceListColumn, FinanceListRow } from '../../../models/shared/finance-list.model';
+import { FinancialYearService } from '../../../services/financial-years/financial-year.service';
 import { JournalEntryService } from '../../../services/journals/journal-entry.service';
 import { FinanceListShellComponent } from '../../shared/finance-list-shell/finance-list-shell.component';
 import { formatFinanceDate, formatFinanceNumber } from '../../shared/finance-list-formatters';
@@ -20,21 +24,45 @@ import { formatFinanceDate, formatFinanceNumber } from '../../shared/finance-lis
 export class JournalEntryListComponent implements OnInit {
   private authState = inject(AuthStateService);
   private journalService = inject(JournalEntryService);
+  private financialYearService = inject(FinancialYearService);
+  private branchService = inject(BranchService);
   private toast = inject(ToastService);
   private translate = inject(TranslateService);
   private destroyRef = inject(DestroyRef);
 
   items = signal<JournalEntry[]>([]);
+  financialYearNames = signal<Record<string, string>>({});
+  branchNames = signal<Record<string, string>>({});
   loading = signal(false);
   loadError = signal<string | null>(null);
+  pageNumber = signal(1);
+  pageSize = signal(10);
+  totalPages = signal(1);
+  totalCount = signal(0);
+  search = signal('');
+  dateFrom = signal('');
+  dateTo = signal('');
+  orderBy = signal('CreatedAt');
+  orderByDirection = signal<'asc' | 'desc'>('desc');
+  private searchInput$ = new Subject<string>();
   private languageTick = signal(0);
 
+  readonly orderByOptions: SmoothSelectOption[] = [
+    { label: 'Created At', value: 'CreatedAt' },
+    { label: 'Name', value: 'Name' },
+  ];
+
   readonly columns: FinanceListColumn[] = [
-    { key: 'number', label: 'Entry Number', align: 'end' },
+    { key: 'number', label: 'Journal Number', align: 'end' },
     { key: 'date', label: 'Date' },
-    { key: 'note', label: 'Note' },
-    { key: 'amount', label: 'Balance', align: 'end' },
-    { key: 'entryType', label: 'Payment Type', align: 'end' },
+    { key: 'status', label: 'Status' },
+    { key: 'journalType', label: 'Journal Type' },
+    { key: 'operationType', label: 'Operation Type' },
+    { key: 'debit', label: 'Debit', align: 'end' },
+    { key: 'credit', label: 'Credit', align: 'end' },
+    { key: 'balance', label: 'Balance', align: 'end' },
+    { key: 'branch', label: 'Branch' },
+    { key: 'financialYear', label: 'Financial Year' },
   ];
 
   readonly rows = computed<FinanceListRow[]>(() => {
@@ -42,9 +70,14 @@ export class JournalEntryListComponent implements OnInit {
     return this.items().map(item => ({
       number: formatFinanceNumber(item.journalNumper, this.translate),
       date: formatFinanceDate(item.date, this.translate),
-      note: item.node || '-',
-      amount: formatFinanceNumber(item.balannce, this.translate),
-      entryType: item.isManual ? this.translate.instant('Manual') : this.translate.instant('Automatic'),
+      status: this.formatStatus(item.status),
+      journalType: this.formatJournalType(item.journalType),
+      operationType: this.formatOperationType(item.operationType),
+      debit: formatFinanceNumber(item.debtir, this.translate),
+      credit: formatFinanceNumber(item.credit, this.translate),
+      balance: formatFinanceNumber(item.balannce, this.translate),
+      branch: this.resolveBranchDisplay(item),
+      financialYear: this.resolveFinancialYearDisplay(item),
     }));
   });
 
@@ -52,17 +85,110 @@ export class JournalEntryListComponent implements OnInit {
     this.translate.onLangChange.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       this.languageTick.update(value => value + 1);
     });
+    this.searchInput$
+      .pipe(debounceTime(350), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
+      .subscribe(search => {
+        this.search.set(search.trim());
+        this.pageNumber.set(1);
+        this.load();
+      });
+    this.loadBranches();
+    this.loadFinancialYears();
     this.load();
+  }
+
+  private loadBranches(): void {
+    const fleetId = this.authState.fleetId();
+    if (!fleetId) {
+      this.branchNames.set({});
+      return;
+    }
+
+    this.branchService
+      .getPaginated({ fleetId, pageNumber: 1, pageSize: 200, search: '' }, { suppressErrorToast: true })
+      .subscribe({
+        next: response => {
+          const dictionary: Record<string, string> = {};
+          for (const branch of response.items ?? []) {
+            const key = String(branch.id ?? '').trim();
+            if (!key) {
+              continue;
+            }
+            const name = (branch.nameAr || branch.nameEn || '').trim();
+            dictionary[key] = name || String(branch.id);
+          }
+          this.branchNames.set(dictionary);
+        },
+        error: () => this.branchNames.set({}),
+      });
+  }
+
+  private loadFinancialYears(): void {
+    const fleetId = this.authState.fleetId();
+    this.financialYearService.getList(fleetId).subscribe({
+      next: years => {
+        const dictionary: Record<string, string> = {};
+        for (const year of years) {
+          const key = String(year.id ?? '').trim();
+          if (!key) {
+            continue;
+          }
+          dictionary[key] = year.name?.trim() || String(year.financialYearNumber ?? '');
+        }
+        this.financialYearNames.set(dictionary);
+      },
+      error: () => this.financialYearNames.set({}),
+    });
   }
 
   private load(): void {
     const fleetId = this.authState.fleetId();
+    const fromDate = this.dateFrom();
+    const toDate = this.dateTo();
+    const hasDateFilter = Boolean(fromDate || toDate);
+    const requestedPageNumber = this.pageNumber();
+    const requestedPageSize = this.pageSize();
 
     this.loading.set(true);
     this.loadError.set(null);
 
-    this.journalService.getList(fleetId).subscribe({
-      next: items => this.items.set(items),
+    this.journalService
+      .getPaginated({
+        fleetId,
+        branchId: Number(this.authState.branchId() ?? 0) || undefined,
+        pageNumber: hasDateFilter ? 1 : requestedPageNumber,
+        pageSize: hasDateFilter ? 1000 : requestedPageSize,
+        search: this.search(),
+        dateFrom: this.dateFrom() || undefined,
+        dateTo: this.dateTo() || undefined,
+        orderBy: this.orderBy(),
+        orderByDirection: this.orderByDirection(),
+      })
+      .subscribe({
+      next: response => {
+        const sourceItems = response.items ?? [];
+        if (!hasDateFilter) {
+          this.items.set(sourceItems);
+          this.pageNumber.set(response.pageNumber || 1);
+          this.pageSize.set(response.pageSize || requestedPageSize);
+          this.totalPages.set(response.totalPages || 1);
+          this.totalCount.set(response.totalCount || 0);
+          return;
+        }
+
+        const filtered = sourceItems.filter(item => this.matchesDateRange(item, fromDate, toDate));
+        const totalCount = filtered.length;
+        const totalPages = Math.max(1, Math.ceil(totalCount / requestedPageSize));
+        const pageNumber = Math.min(requestedPageNumber, totalPages);
+        const start = (pageNumber - 1) * requestedPageSize;
+        const paged = filtered.slice(start, start + requestedPageSize);
+
+        this.items.set(paged);
+        this.pageNumber.set(pageNumber);
+        this.pageSize.set(requestedPageSize);
+        this.totalPages.set(totalPages);
+        this.totalCount.set(totalCount);
+      },
       error: err => {
         const message = err?.message ?? this.translate.instant('No records found');
         this.loadError.set(message);
@@ -71,6 +197,169 @@ export class JournalEntryListComponent implements OnInit {
       },
       complete: () => this.loading.set(false),
     });
+  }
+
+  private matchesDateRange(item: JournalEntry, fromDate: string, toDate: string): boolean {
+    const rawDate = String(item.date ?? '').trim();
+    if (!rawDate) {
+      return false;
+    }
+
+    const parsed = new Date(rawDate);
+    if (Number.isNaN(parsed.getTime())) {
+      return false;
+    }
+
+    const itemDate = new Date(parsed);
+    itemDate.setHours(0, 0, 0, 0);
+
+    if (fromDate) {
+      const from = new Date(fromDate);
+      if (!Number.isNaN(from.getTime())) {
+        from.setHours(0, 0, 0, 0);
+        if (itemDate < from) {
+          return false;
+        }
+      }
+    }
+
+    if (toDate) {
+      const to = new Date(toDate);
+      if (!Number.isNaN(to.getTime())) {
+        to.setHours(0, 0, 0, 0);
+        if (itemDate > to) {
+          return false;
+        }
+      }
+    }
+
+    return true;
+  }
+
+  onSearchChange(value: string): void {
+    this.searchInput$.next(value ?? '');
+  }
+
+  onOrderByChange(value: string): void {
+    const normalized = value?.trim() || 'CreatedAt';
+    if (this.orderBy() === normalized) {
+      return;
+    }
+    this.orderBy.set(normalized);
+    this.pageNumber.set(1);
+    this.load();
+  }
+
+  onOrderByDirectionChange(value: 'asc' | 'desc'): void {
+    if (this.orderByDirection() === value) {
+      return;
+    }
+    this.orderByDirection.set(value);
+    this.pageNumber.set(1);
+    this.load();
+  }
+
+  onDateRangeChange(range: { from: string; to: string }): void {
+    const nextFrom = (range?.from ?? '').trim();
+    const nextTo = (range?.to ?? '').trim();
+    if (this.dateFrom() === nextFrom && this.dateTo() === nextTo) {
+      return;
+    }
+    this.dateFrom.set(nextFrom);
+    this.dateTo.set(nextTo);
+    this.pageNumber.set(1);
+    this.load();
+  }
+
+  onPageChange(page: number): void {
+    const target = Math.max(1, Number(page) || 1);
+    if (target === this.pageNumber()) {
+      return;
+    }
+    this.pageNumber.set(target);
+    this.load();
+  }
+
+  onPageSizeChange(size: number): void {
+    const normalized = Math.max(1, Number(size) || 10);
+    if (normalized === this.pageSize()) {
+      return;
+    }
+    this.pageSize.set(normalized);
+    this.pageNumber.set(1);
+    this.load();
+  }
+
+  private formatStatus(status?: number): string {
+    if (status === 1) {
+      return this.translate.instant('Confirmed');
+    }
+    if (status === 2) {
+      return this.translate.instant('Pending');
+    }
+    if (status === 3) {
+      return this.translate.instant('Cancelled');
+    }
+    return formatFinanceNumber(status, this.translate);
+  }
+
+  private formatJournalType(journalType?: number | boolean): string {
+    if (journalType === true || journalType === 1) {
+      return this.translate.instant('General Journal');
+    }
+    if (journalType === false || journalType === 0) {
+      return this.translate.instant('Adjustment Journal');
+    }
+    return '-';
+  }
+
+  private formatOperationType(operationType?: number): string {
+    switch (operationType) {
+      case 1:
+        return this.translate.instant('Rental Operation');
+      case 2:
+        return this.translate.instant('Payment Operation');
+      case 3:
+        return this.translate.instant('Adjustment Operation');
+      case 4:
+        return this.translate.instant('Opening Balance Operation');
+      case 5:
+        return this.translate.instant('Other Operation');
+      default:
+        return formatFinanceNumber(operationType, this.translate);
+    }
+  }
+
+  private resolveFinancialYearDisplay(item: JournalEntry): string {
+    if (item.financialYearName?.trim()) {
+      return item.financialYearName;
+    }
+
+    const key = String(item.idFinancialYear ?? '').trim();
+    if (key) {
+      const byLookup = this.financialYearNames()[key];
+      if (byLookup) {
+        return byLookup;
+      }
+    }
+
+    return formatFinanceNumber(item.idFinancialYear, this.translate);
+  }
+
+  private resolveBranchDisplay(item: JournalEntry): string {
+    if (item.branchName?.trim()) {
+      return item.branchName;
+    }
+
+    const key = String(item.idBranch ?? '').trim();
+    if (key) {
+      const byLookup = this.branchNames()[key];
+      if (byLookup) {
+        return byLookup;
+      }
+    }
+
+    return formatFinanceNumber(item.idBranch, this.translate);
   }
 }
 

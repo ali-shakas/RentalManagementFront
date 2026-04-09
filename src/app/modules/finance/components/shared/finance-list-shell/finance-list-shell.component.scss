@@ -24,6 +24,14 @@
   padding-block: 0.95rem;
 }
 
+.finance-search-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 120px;
+  justify-content: center;
+}
+
 @media (max-width: 767.98px) {
   .finance-list-shell__card .table td,
   .finance-list-shell__card .table th {
@@ -33,5 +41,9 @@
   .finance-list-shell__header-actions {
     width: 100%;
     justify-content: flex-start;
+  }
+
+  .finance-search-btn {
+    width: 100%;
   }
 }

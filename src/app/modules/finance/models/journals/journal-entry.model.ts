@@ -3,8 +3,31 @@ export interface JournalEntry {
   journalNumper?: number;
   date?: string;
   node?: string;
+  journalType?: number | boolean;
+  status?: number;
+  debtir?: number;
+  credit?: number;
   balannce?: number;
   isManual?: boolean;
+  operationType?: number;
+  isSystemOperation?: boolean;
+  idFinancialYear?: string | number;
+  financialYearName?: string;
+  idBranch?: number;
+  branchName?: string;
+  fleetId?: string;
+}
+
+export interface JournalEntryPaginatedRequest {
+  pageNumber: number;
+  pageSize: number;
+  fleetId?: string | null;
+  branchId?: number | null;
+  search?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  orderByDirection?: 'asc' | 'desc';
+  orderBy?: string;
 }
 
 export interface JournalDetailLineRequest {
@@ -13,6 +36,10 @@ export interface JournalDetailLineRequest {
   debtir: number;
   credit: number;
   node?: string;
+  idVehicle?: number;
+  idCustomer?: number;
+  idBranch?: number;
+  fleetId?: string;
 }
 
 export interface CreateJournalEntryRequest {
@@ -24,9 +51,21 @@ export interface CreateJournalEntryRequest {
   balannce: number;
   operationType: number;
   status: number;
-  isSystemOperation: boolean;
+  isSystemOperation?: boolean;
+  idFinancialYear?: string;
   idBranch: number;
   fleetId: string;
-  details: JournalDetailLineRequest[];
+  details: CreateJournalDetailRequest[];
+}
+
+export interface CreateJournalDetailRequest {
+  idCounting: string;
+  debtir: number;
+  credit: number;
+  balannce: number;
+  node?: string;
+  status?: number;
+  idVehicle?: number;
+  customerId?: number;
 }
 

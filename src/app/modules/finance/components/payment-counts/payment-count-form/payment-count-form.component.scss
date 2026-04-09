@@ -1,0 +1,124 @@
+:host {
+  display: block;
+}
+
+.voucher-card {
+  border-radius: 18px;
+  overflow: visible;
+}
+
+.voucher-card .card-body {
+  overflow: visible;
+}
+
+.voucher-section-title {
+  font-weight: 700;
+}
+
+.voucher-lines-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.7rem;
+}
+
+.voucher-lines-grid {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.voucher-line-card {
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 14px;
+  background: rgba(148, 163, 184, 0.06);
+  padding: 0.75rem;
+  overflow: visible;
+}
+
+.voucher-line-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.65rem;
+  font-weight: 700;
+}
+
+.voucher-line-card__grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.voucher-field {
+  grid-column: span 4;
+}
+
+.voucher-field--wide {
+  grid-column: span 4;
+}
+
+:host ::ng-deep .voucher-lines-grid app-smooth-select .app-soft-select__trigger {
+  min-height: 46px;
+}
+
+:host ::ng-deep .voucher-lines-grid app-smooth-select .app-soft-select__menu {
+  z-index: 12000;
+}
+
+.voucher-summary {
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.voucher-summary__item {
+  border: 1px solid rgba(148, 163, 184, 0.26);
+  border-radius: 12px;
+  background: rgba(148, 163, 184, 0.08);
+  padding: 0.6rem 0.75rem;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.55rem;
+
+  span {
+    font-size: 0.82rem;
+    font-weight: 600;
+    opacity: 0.9;
+  }
+
+  strong {
+    font-size: 0.92rem;
+    font-weight: 800;
+  }
+
+  &.is-balanced {
+    border-color: rgba(34, 197, 94, 0.45);
+    background: rgba(34, 197, 94, 0.12);
+    color: #15803d;
+  }
+
+  &.is-unbalanced {
+    border-color: rgba(239, 68, 68, 0.45);
+    background: rgba(239, 68, 68, 0.12);
+    color: #b91c1c;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .voucher-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .voucher-field {
+    grid-column: span 12;
+  }
+
+  .voucher-field--wide {
+    grid-column: span 12;
+  }
+}

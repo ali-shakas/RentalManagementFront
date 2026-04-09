@@ -17,18 +17,45 @@
           </div>
 
           <div class="col-lg-4">
-            <label class="form-label">{{ 'Branch ID' | translate }} <span class="text-danger">*</span></label>
-            <input type="number" class="form-control" formControlName="idBranch" />
+            <label class="form-label">{{ 'Branch' | translate }} <span class="text-danger">*</span></label>
+            <app-smooth-select
+              formControlName="idBranch"
+              [options]="branchOptions()"
+              [placeholder]="'Select branch' | translate"
+              [ariaLabel]="'Branch' | translate"
+              [disabled]="false"
+            />
           </div>
 
-          <div class="col-lg-2">
+          <div class="col-lg-4">
+            <label class="form-label">{{ 'Financial Year' | translate }} <span class="text-danger">*</span></label>
+            <app-smooth-select
+              formControlName="idFinancialYear"
+              [options]="financialYearOptions()"
+              [placeholder]="'Select financial year' | translate"
+              [ariaLabel]="'Financial Year' | translate"
+              [disabled]="loadingFinancialYears()"
+            />
+          </div>
+
+          <div class="col-lg-3">
             <label class="form-label">{{ 'Operation Type' | translate }} <span class="text-danger">*</span></label>
-            <input type="number" class="form-control" formControlName="operationType" />
+            <app-smooth-select
+              formControlName="operationType"
+              [options]="operationTypeOptions()"
+              [placeholder]="'Select operation type' | translate"
+              [ariaLabel]="'Operation Type' | translate"
+            />
           </div>
 
-          <div class="col-lg-2">
+          <div class="col-lg-3">
             <label class="form-label">{{ 'Status' | translate }} <span class="text-danger">*</span></label>
-            <input type="number" class="form-control" formControlName="status" />
+            <app-smooth-select
+              formControlName="status"
+              [options]="statusOptions()"
+              [placeholder]="'Select status' | translate"
+              [ariaLabel]="'Status' | translate"
+            />
           </div>
 
           <div class="col-12">
@@ -37,23 +64,17 @@
           </div>
 
           <div class="col-md-3 col-sm-6">
-            <div class="form-check">
-              <input class="form-check-input" type="checkbox" id="journalType" formControlName="journalType" />
-              <label class="form-check-label" for="journalType">{{ 'Journal Type' | translate }}</label>
-            </div>
+            <label class="form-label">{{ 'Journal Type' | translate }} <span class="text-danger">*</span></label>
+            <app-smooth-select
+              formControlName="journalType"
+              [options]="journalTypeOptions()"
+              [placeholder]="'Select journal type' | translate"
+              [ariaLabel]="'Journal Type' | translate"
+            />
           </div>
 
-          <div class="col-md-3 col-sm-6">
-            <div class="form-check">
-              <input
-                class="form-check-input"
-                type="checkbox"
-                id="isSystemOperation"
-                formControlName="isSystemOperation"
-              />
-              <label class="form-check-label" for="isSystemOperation">{{ 'System Operation' | translate }}</label>
-            </div>
-          </div>
+          <input type="hidden" formControlName="isManual" />
+          <input type="hidden" formControlName="isSystemOperation" />
         </div>
       </div>
     </div>
@@ -77,75 +98,102 @@
           <div class="alert alert-warning mb-0 mt-3">{{ 'No active accounts available' | translate }}</div>
         }
 
-        <div class="table-responsive mt-3">
-          <table class="table table-striped align-middle journal-lines-table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>{{ 'Account' | translate }}</th>
-                <th class="text-end">{{ 'Debit' | translate }}</th>
-                <th class="text-end">{{ 'Credit' | translate }}</th>
-                <th>{{ 'Line Note' | translate }}</th>
-                <th class="text-end">{{ 'Actions' | translate }}</th>
-              </tr>
-            </thead>
-            <tbody formArrayName="details">
-              @for (line of detailsArray.controls; track trackByIndex($index)) {
-                <tr [formGroupName]="$index">
-                  <td class="journal-line-index">{{ $index + 1 }}</td>
-                  <td class="journal-line-account">
-                    <app-smooth-select
-                      formControlName="countingId"
-                      [options]="accountOptions()"
-                      [placeholder]="'Select account' | translate"
-                      [ariaLabel]="'Account' | translate"
-                      [disabled]="loadingAccounts()"
-                    />
-                  </td>
-                  <td class="journal-line-amount">
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      class="form-control text-end"
-                      formControlName="debtir"
-                      (input)="onDebitInput($index)"
-                    />
-                  </td>
-                  <td class="journal-line-amount">
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      class="form-control text-end"
-                      formControlName="credit"
-                      (input)="onCreditInput($index)"
-                    />
-                  </td>
-                  <td>
-                    <input type="text" class="form-control" formControlName="node" />
-                  </td>
-                  <td class="text-end">
-                    <button
-                      class="btn btn-cancel btn-sm"
-                      type="button"
-                      (click)="removeLine($index)"
-                      [disabled]="detailsArray.length <= 2"
-                    >
-                      {{ 'Delete' | translate }}
-                    </button>
-                  </td>
-                </tr>
-                @if (line.touched && line.errors?.['debitCreditRequired']) {
-                  <tr class="journal-line-validation">
-                    <td colspan="6">
-                      {{ 'Each line must have debit or credit only' | translate }}
-                    </td>
-                  </tr>
-                }
+        <div class="journal-lines-grid" formArrayName="details">
+          @for (line of detailsArray.controls; track trackByIndex($index)) {
+            <div class="journal-line-card" [formGroupName]="$index">
+              <div class="journal-line-card__head">
+                <span>#{{ $index + 1 }}</span>
+                <button
+                  class="btn btn-cancel btn-sm"
+                  type="button"
+                  (click)="removeLine($index)"
+                  [disabled]="detailsArray.length <= 2"
+                >
+                  {{ 'Delete' | translate }}
+                </button>
+              </div>
+
+              <div class="journal-line-card__grid">
+                <div class="journal-field">
+                  <label class="form-label">{{ 'Account' | translate }}</label>
+                  <app-smooth-select
+                    formControlName="countingId"
+                    [options]="accountOptions()"
+                    [placeholder]="'Select account' | translate"
+                    [ariaLabel]="'Account' | translate"
+                    [disabled]="false"
+                    [menuMaxHeight]="220"
+                    [searchable]="true"
+                  />
+                </div>
+
+                <div class="journal-field">
+                  <label class="form-label">{{ 'Vehicle' | translate }}</label>
+                  <app-smooth-select
+                    formControlName="idVehicle"
+                    [options]="vehicleOptions()"
+                    [placeholder]="'Select vehicle (optional)' | translate"
+                    [ariaLabel]="'Vehicle' | translate"
+                    [disabled]="false"
+                    [menuMaxHeight]="220"
+                    [searchable]="true"
+                    [searchPlaceholder]="'Search vehicle...'"
+                    (searchChange)="onVehicleSearch($event)"
+                  />
+                </div>
+
+                <div class="journal-field">
+                  <label class="form-label">{{ 'Customer' | translate }}</label>
+                  <app-smooth-select
+                    formControlName="idCustomer"
+                    [options]="customerOptions()"
+                    [placeholder]="'Select customer (optional)' | translate"
+                    [ariaLabel]="'Customer' | translate"
+                    [disabled]="false"
+                    [menuMaxHeight]="220"
+                    [searchable]="true"
+                    [searchPlaceholder]="'Search customer...'"
+                    (searchChange)="onCustomerSearch($event)"
+                  />
+                </div>
+
+                <div class="journal-field">
+                  <label class="form-label">{{ 'Debit' | translate }}</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    class="form-control text-end"
+                    formControlName="debtir"
+                    (input)="onDebitInput($index)"
+                  />
+                </div>
+
+                <div class="journal-field">
+                  <label class="form-label">{{ 'Credit' | translate }}</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    class="form-control text-end"
+                    formControlName="credit"
+                    (input)="onCreditInput($index)"
+                  />
+                </div>
+
+                <div class="journal-field journal-field--wide">
+                  <label class="form-label">{{ 'Line Note' | translate }}</label>
+                  <input type="text" class="form-control" formControlName="node" />
+                </div>
+              </div>
+
+              @if (line.touched && line.errors?.['debitCreditRequired']) {
+                <div class="journal-line-validation">
+                  {{ 'Each line must have debit or credit only' | translate }}
+                </div>
               }
-            </tbody>
-          </table>
+            </div>
+          }
         </div>
 
         <div class="journal-summary">

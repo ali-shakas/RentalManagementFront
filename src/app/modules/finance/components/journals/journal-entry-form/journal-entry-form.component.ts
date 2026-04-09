@@ -11,6 +11,7 @@ import {
 import { Router, RouterLink } from '@angular/router';
 
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 
 import { AuthStateService } from '../../../../../core/auth/auth-state.service';
 import { ToastService } from '../../../../../shared/services/toast.service';
@@ -20,12 +21,19 @@ import {
   SmoothSelectOption,
 } from '../../../../../shared/ui/smooth-select/smooth-select.component';
 import { CountingEntry } from '../../../models/counting/counting-entry.model';
+import { FinancialYear } from '../../../models/financial-years/financial-year.model';
 import {
   CreateJournalEntryRequest,
-  JournalDetailLineRequest,
 } from '../../../models/journals/journal-entry.model';
 import { CountingEntryService } from '../../../services/counting/counting-entry.service';
+import { FinancialYearService } from '../../../services/financial-years/financial-year.service';
 import { JournalEntryService } from '../../../services/journals/journal-entry.service';
+import { Customer } from '../../../../rent/models/customers/customer.model';
+import { Vehicle } from '../../../../rent/models/vehicles/vehicle.model';
+import { Branch } from '../../../../rent/models/branches/branch.model';
+import { CustomerService } from '../../../../rent/services/customers/customer.service';
+import { VehicleService } from '../../../../rent/services/vehicles/vehicle.service';
+import { BranchService } from '../../../../rent/services/branches/branch.service';
 
 @Component({
   selector: 'app-journal-entry-form',
@@ -46,16 +54,30 @@ export class JournalEntryFormComponent implements OnInit {
   private authState = inject(AuthStateService);
   private destroyRef = inject(DestroyRef);
   private countingService = inject(CountingEntryService);
+  private financialYearService = inject(FinancialYearService);
   private journalService = inject(JournalEntryService);
+  private customerService = inject(CustomerService);
+  private vehicleService = inject(VehicleService);
+  private branchService = inject(BranchService);
   private toast = inject(ToastService);
   private translate = inject(TranslateService);
   private router = inject(Router);
   private languageTick = signal(0);
   private readonly minimumRequiredLines = 2;
+  private customerSearch$ = new Subject<string>();
+  private vehicleSearch$ = new Subject<string>();
 
   loading = signal(false);
   loadingAccounts = signal(false);
+  loadingFinancialYears = signal(false);
+  loadingCustomers = signal(false);
+  loadingVehicles = signal(false);
+  loadingBranches = signal(false);
   accounts = signal<CountingEntry[]>([]);
+  financialYears = signal<FinancialYear[]>([]);
+  customers = signal<Customer[]>([]);
+  vehicles = signal<Vehicle[]>([]);
+  branches = signal<Branch[]>([]);
 
   readonly accountOptions = computed<SmoothSelectOption[]>(() => {
     this.languageTick();
@@ -68,15 +90,91 @@ export class JournalEntryFormComponent implements OnInit {
     ];
   });
 
+  readonly financialYearOptions = computed<SmoothSelectOption[]>(() => {
+    this.languageTick();
+    return [
+      { label: this.translate.instant('Select financial year'), value: '' },
+      ...this.financialYears().map(year => ({
+        label: this.formatFinancialYearLabel(year),
+        value: String(year.id),
+      })),
+    ];
+  });
+
+  readonly customerOptions = computed<SmoothSelectOption[]>(() => {
+    this.languageTick();
+    return [
+      { label: this.translate.instant('Select customer (optional)'), value: '' },
+      ...this.customers().map(customer => ({
+        label: this.formatCustomerLabel(customer),
+        value: String(customer.id),
+      })),
+    ];
+  });
+
+  readonly vehicleOptions = computed<SmoothSelectOption[]>(() => {
+    this.languageTick();
+    return [
+      { label: this.translate.instant('Select vehicle (optional)'), value: '' },
+      ...this.vehicles().map(vehicle => ({
+        label: this.formatVehicleLabel(vehicle),
+        value: String(vehicle.id),
+      })),
+    ];
+  });
+
+  readonly branchOptions = computed<SmoothSelectOption[]>(() => {
+    this.languageTick();
+    return [
+      { label: this.translate.instant('Select branch'), value: '' },
+      ...this.branches().map(branch => ({
+        label: this.formatBranchLabel(branch),
+        value: branch.id,
+      })),
+    ];
+  });
+
+  readonly operationTypeOptions = computed<SmoothSelectOption[]>(() => {
+    this.languageTick();
+    return [
+      { label: this.translate.instant('Select operation type'), value: '' },
+      { label: this.translate.instant('Rental Operation'), value: 1 },
+      { label: this.translate.instant('Payment Operation'), value: 2 },
+      { label: this.translate.instant('Adjustment Operation'), value: 3 },
+      { label: this.translate.instant('Opening Balance Operation'), value: 4 },
+      { label: this.translate.instant('Other Operation'), value: 5 },
+    ];
+  });
+
+  readonly statusOptions = computed<SmoothSelectOption[]>(() => {
+    this.languageTick();
+    return [
+      { label: this.translate.instant('Select status'), value: '' },
+      { label: this.translate.instant('Confirmed'), value: 1 },
+      { label: this.translate.instant('Pending'), value: 2 },
+      { label: this.translate.instant('Cancelled'), value: 3 },
+    ];
+  });
+
+  readonly journalTypeOptions = computed<SmoothSelectOption[]>(() => {
+    this.languageTick();
+    return [
+      { label: this.translate.instant('Select journal type'), value: '' },
+      { label: this.translate.instant('General Journal'), value: 1 },
+      { label: this.translate.instant('Adjustment Journal'), value: 0 },
+    ];
+  });
+
   form = this.fb.group({
     date: ['', [Validators.required]],
     node: ['', [Validators.required, Validators.maxLength(500)]],
-    journalType: [true],
-    operationType: [1, [Validators.required, Validators.min(0)]],
-    status: [1, [Validators.required, Validators.min(0)]],
+    journalType: [1 as number | '', [Validators.required]],
+    isManual: [true],
+    operationType: [1, [Validators.required, Validators.min(1)]],
+    status: [1, [Validators.required, Validators.min(1)]],
     isSystemOperation: [false],
+    idFinancialYear: ['', [Validators.required]],
     idBranch: [Number(this.authState.branchId() ?? 0), [Validators.required, Validators.min(1)]],
-    fleetId: ['', [Validators.required]],
     details: this.fb.array([this.createDetailLineForm(), this.createDetailLineForm()]),
   });
 
@@ -89,8 +187,20 @@ export class JournalEntryFormComponent implements OnInit {
       this.languageTick.update(value => value + 1);
     });
 
-    this.form.controls.fleetId.setValue(this.authState.fleetId() ?? '');
+    this.form.controls.isManual.setValue(true, { emitEvent: false });
+    this.form.controls.isSystemOperation.setValue(false, { emitEvent: false });
+    this.customerSearch$
+      .pipe(debounceTime(250), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
+      .subscribe(search => this.loadCustomers(search));
+    this.vehicleSearch$
+      .pipe(debounceTime(250), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
+      .subscribe(search => this.loadVehicles(search));
+
+    this.loadFinancialYears();
+    this.loadBranches();
     this.loadActiveAccounts();
+    this.loadCustomers('');
+    this.loadVehicles('');
   }
 
   addLine(): void {
@@ -154,7 +264,13 @@ export class JournalEntryFormComponent implements OnInit {
     return (
       !this.loading() &&
       !this.loadingAccounts() &&
+      !this.loadingFinancialYears() &&
+      !this.loadingCustomers() &&
+      !this.loadingVehicles() &&
+      !this.loadingBranches() &&
       this.accounts().length > 0 &&
+      this.financialYears().length > 0 &&
+      this.branches().length > 0 &&
       this.form.valid &&
       this.hasMinimumLines() &&
       this.isBalanced()
@@ -179,34 +295,55 @@ export class JournalEntryFormComponent implements OnInit {
     }
 
     const raw = this.form.getRawValue();
+    if (this.toRequiredPositiveInteger(raw.idBranch) <= 0) {
+      this.toast.error(this.translate.instant('Please select a valid branch'));
+      return;
+    }
+    const fleetId = (this.authState.fleetId() ?? '').trim();
+    if (!fleetId) {
+      this.toast.error(this.translate.instant('Fleet context is missing'));
+      return;
+    }
     const parsedDate = new Date(raw.date);
-    const details = raw.details.map(detail => this.toDetailRequest(detail));
     const totalDebit = this.totalDebit();
     const totalCredit = this.totalCredit();
 
-    const body: CreateJournalEntryRequest = {
+    const createBody: CreateJournalEntryRequest = {
       date: Number.isNaN(parsedDate.getTime()) ? raw.date : parsedDate.toISOString(),
       node: raw.node.trim(),
-      journalType: raw.journalType,
+      journalType: Number(raw.journalType) === 1,
       debtir: totalDebit,
       credit: totalCredit,
       balannce: totalDebit - totalCredit,
       operationType: raw.operationType,
       status: raw.status,
-      isSystemOperation: raw.isSystemOperation,
-      idBranch: raw.idBranch,
-      fleetId: raw.fleetId.trim(),
-      details,
+      isSystemOperation: false,
+      idFinancialYear: raw.idFinancialYear,
+      idBranch: this.toRequiredPositiveInteger(raw.idBranch),
+      fleetId,
+      details: raw.details.map(line => ({
+        idCounting: String(line.countingId).trim(),
+        debtir: this.toPositiveNumber(line.debtir),
+        credit: this.toPositiveNumber(line.credit),
+        balannce: this.toPositiveNumber(line.debtir) - this.toPositiveNumber(line.credit),
+        node: line.node?.trim() || undefined,
+        status: raw.status,
+        idVehicle: this.toOptionalPositiveInteger(line.idVehicle),
+        customerId: this.toOptionalPositiveInteger(line.idCustomer),
+      })),
     };
 
     this.loading.set(true);
-    this.journalService.create(body).subscribe({
+    this.journalService.create(createBody).subscribe({
       next: () => {
         this.toast.success(this.translate.instant('Journal entry created successfully'));
         this.router.navigate(['/journals']);
       },
       error: err => {
-        this.toast.error(err?.message ?? this.translate.instant('Failed to save journal entry'));
+        // Keep raw error in console to inspect backend validation details quickly.
+        // eslint-disable-next-line no-console
+        console.error('Create journal failed:', err);
+        this.toast.error(this.resolveSaveErrorMessage(err));
         this.loading.set(false);
       },
       complete: () => this.loading.set(false),
@@ -229,6 +366,8 @@ export class JournalEntryFormComponent implements OnInit {
     return this.fb.group(
       {
         countingId: ['', [Validators.required]],
+        idVehicle: [''],
+        idCustomer: [''],
         debtir: [0, [Validators.min(0)]],
         credit: [0, [Validators.min(0)]],
         node: ['', [Validators.maxLength(250)]],
@@ -310,21 +449,101 @@ export class JournalEntryFormComponent implements OnInit {
     return true;
   }
 
-  private toDetailRequest(rawLine: {
-    countingId: string;
-    debtir: number;
-    credit: number;
-    node: string;
-  }): JournalDetailLineRequest {
-    const account = this.accounts().find(item => String(item.id) === String(rawLine.countingId));
+  private loadFinancialYears(): void {
+    const fleetId = this.authState.fleetId();
+    this.loadingFinancialYears.set(true);
 
-    return {
-      countingId: rawLine.countingId,
-      countingNumber: account?.countingNumber,
-      debtir: this.toPositiveNumber(rawLine.debtir),
-      credit: this.toPositiveNumber(rawLine.credit),
-      node: rawLine.node?.trim() || undefined,
-    };
+    this.financialYearService.getList(fleetId).subscribe({
+      next: years => {
+        this.financialYears.set(years);
+        const currentYear = years.find(year => year.isCurrentYear) ?? years.at(0);
+        if (currentYear) {
+          this.form.controls.idFinancialYear.setValue(String(currentYear.id), { emitEvent: false });
+        }
+      },
+      error: err => {
+        this.toast.error(err?.message ?? this.translate.instant('Failed to load financial years'));
+        this.loadingFinancialYears.set(false);
+      },
+      complete: () => this.loadingFinancialYears.set(false),
+    });
+  }
+
+  private loadBranches(): void {
+    const fleetId = this.authState.fleetId() ?? undefined;
+    this.loadingBranches.set(true);
+
+    this.branchService
+      .getPaginated({ fleetId, pageNumber: 1, pageSize: 200, search: '' })
+      .subscribe({
+        next: response => {
+          const branches = (response.items ?? []).filter(branch => branch.isActive !== false);
+          this.branches.set(branches);
+
+          const currentBranchId = Number(this.authState.branchId() ?? 0);
+          const fallbackBranch = branches.find(branch => branch.id === currentBranchId) ?? branches.at(0);
+          if (fallbackBranch) {
+            this.form.controls.idBranch.setValue(fallbackBranch.id, { emitEvent: false });
+          }
+        },
+        error: err => {
+          this.toast.error(err?.message ?? this.translate.instant('Failed to load branches'));
+          this.loadingBranches.set(false);
+        },
+        complete: () => this.loadingBranches.set(false),
+      });
+  }
+
+  onCustomerSearch(term: string): void {
+    this.customerSearch$.next(term);
+  }
+
+  onVehicleSearch(term: string): void {
+    this.vehicleSearch$.next(term);
+  }
+
+  private loadCustomers(search: string): void {
+    const fleetId = this.authState.fleetId() ?? undefined;
+    this.loadingCustomers.set(true);
+
+    this.customerService
+      .getPaginated({ fleetId, pageNumber: 1, pageSize: 50, search, isActive: true })
+      .subscribe({
+        next: response => {
+          this.customers.set(response.items ?? []);
+        },
+        error: err => {
+          this.toast.error(err?.message ?? this.translate.instant('Failed to load customers'));
+          this.loadingCustomers.set(false);
+        },
+        complete: () => this.loadingCustomers.set(false),
+      });
+  }
+
+  private loadVehicles(search: string): void {
+    const fleetId = this.authState.fleetId() ?? undefined;
+    const branchId = Number(this.authState.branchId() ?? 0) || undefined;
+    this.loadingVehicles.set(true);
+
+    this.vehicleService
+      .getPaginated({
+        fleetId,
+        branchId,
+        pageNumber: 1,
+        pageSize: 50,
+        search,
+        status: '',
+      })
+      .subscribe({
+        next: response => {
+          this.vehicles.set(response.items ?? []);
+        },
+        error: err => {
+          this.toast.error(err?.message ?? this.translate.instant('Failed to load vehicles'));
+          this.loadingVehicles.set(false);
+        },
+        complete: () => this.loadingVehicles.set(false),
+      });
   }
 
   private formatAccountLabel(account: CountingEntry): string {
@@ -335,6 +554,39 @@ export class JournalEntryFormComponent implements OnInit {
     return `${number} - ${name}`;
   }
 
+  private formatFinancialYearLabel(year: FinancialYear): string {
+    const yearNumber = year.financialYearNumber != null ? String(year.financialYearNumber) : '';
+    const name = year.name?.trim() || '';
+    const dateRange = [year.startDate, year.endDate].filter(Boolean).join(' - ');
+    return [yearNumber, name, dateRange].filter(Boolean).join(' | ') || String(year.id);
+  }
+
+  private formatCustomerLabel(customer: Customer): string {
+    const isArabic = this.translate.currentLang?.startsWith('ar');
+    const name =
+      (isArabic ? customer.nameAr : customer.nameEn) ||
+      customer.fullName ||
+      customer.nameAr ||
+      customer.nameEn ||
+      '-';
+    const mobile = customer.firstMobileNumber || customer.phoneNumber || '';
+    return [name, mobile].filter(Boolean).join(' - ');
+  }
+
+  private formatVehicleLabel(vehicle: Vehicle): string {
+    const vehicleName = [vehicle.make, vehicle.model].filter(Boolean).join(' ');
+    const plate = vehicle.plateNumber || '';
+    const serial = vehicle.serialNumber || '';
+    return [vehicleName || '-', plate, serial].filter(Boolean).join(' - ');
+  }
+
+  private formatBranchLabel(branch: Branch): string {
+    const isArabic = this.translate.currentLang?.startsWith('ar');
+    const name = (isArabic ? branch.nameAr : branch.nameEn) || branch.nameAr || branch.nameEn || '-';
+    const code = branch.code?.trim() || '';
+    return [name, code].filter(Boolean).join(' - ');
+  }
+
   private toPositiveNumber(value: unknown): number {
     const numeric = Number(value ?? 0);
     if (!Number.isFinite(numeric)) {
@@ -342,5 +594,55 @@ export class JournalEntryFormComponent implements OnInit {
     }
 
     return numeric < 0 ? 0 : numeric;
+  }
+
+  private toOptionalPositiveInteger(value: unknown): number | undefined {
+    const normalized = String(value ?? '').trim();
+    if (!normalized) {
+      return undefined;
+    }
+    const numeric = Number(normalized);
+    if (!Number.isFinite(numeric) || numeric <= 0) {
+      return undefined;
+    }
+    return Math.trunc(numeric);
+  }
+
+  private toRequiredPositiveInteger(value: unknown): number {
+    const numeric = Number(value ?? 0);
+    return Number.isFinite(numeric) && numeric > 0 ? Math.trunc(numeric) : 0;
+  }
+
+  private resolveSaveErrorMessage(error: unknown): string {
+    const fallback = this.translate.instant('Failed to save journal entry');
+    const source = error as {
+      error?: {
+        errors?: string[] | Record<string, string[]>;
+        propertyErrors?: Record<string, string[]>;
+        message?: string;
+      };
+      message?: string;
+    };
+
+    const apiErrors = source?.error?.errors;
+    if (Array.isArray(apiErrors) && apiErrors.length) {
+      return apiErrors.join(' | ');
+    }
+    if (apiErrors && typeof apiErrors === 'object') {
+      const flattenedErrors = Object.values(apiErrors).flat().filter(Boolean);
+      if (flattenedErrors.length) {
+        return flattenedErrors.join(' | ');
+      }
+    }
+
+    const propertyErrors = source?.error?.propertyErrors;
+    if (propertyErrors) {
+      const flattened = Object.values(propertyErrors).flat().filter(Boolean);
+      if (flattened.length) {
+        return flattened.join(' | ');
+      }
+    }
+
+    return source?.error?.message ?? source?.message ?? fallback;
   }
 }

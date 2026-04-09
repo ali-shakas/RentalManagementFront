@@ -11,6 +11,7 @@ import { AppRoutingModule } from './app.routes';
 import { AuthenticationModule } from './auth/authentication.module';
 import { jwtInterceptor } from './shared/http-interceptors/jwt.interceptor';
 import { httpErrorInterceptor } from './shared/http-interceptors/http-error.interceptor';
+import { bootstrapI18nFromStorage } from './shared/i18n/i18n-bootstrap.initializer';
 import { MultiTranslateLoader } from './shared/i18n/multi-translate.loader';
 import { SharedModule } from './shared/shared.module';
 
@@ -33,6 +34,7 @@ export function HttpLoaderFactory(http: HttpClient) {
     }),
   ],
   providers: [
+    provideAppInitializer(() => bootstrapI18nFromStorage()),
     provideAppInitializer(() => {
       inject(AuthStateService).restoreSession();
     }),

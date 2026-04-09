@@ -29,7 +29,15 @@
   "Search": "بحث",
   "Search subscription offers...": "ابحث في عروض الاشتراك...",
   "Status": "الحالة",
+  "Any value zero or greater": "أي قيمة تساوي 0 أو أكبر",
+  "Must be greater than value": "يجب أن تكون أكبر من {{value}}",
+  "Must be less than value": "يجب أن تكون أقل من {{value}}",
+  "Must be between values": "يجب أن تكون بين {{min}} و {{max}}",
+  "Subscription sequence guidance": "ترتيب الاشتراكات مهم: عند الإضافة يجب أن تكون قيمتا (التفعيل بعد الحجوزات) و(نسبة الخصم) أكبر من آخر اشتراك، وعند التعديل يجب أن تبقيا بين الاشتراك السابق والاشتراك التالي.",
   "Subscription offer created": "تم إنشاء عرض الاشتراك",
   "Subscription offer updated": "تم تحديث عرض الاشتراك",
+  "Subscription order create rule violation": "يجب أن تكون قيمة التفعيل بعد الاشتراك أكبر من آخر قيمة، وأن يكون الخصم أكبر من آخر خصم.",
+  "Subscription order previous rule violation": "يجب أن تكون قيمة التفعيل بعد الاشتراك والخصم أكبر من قيمة الاشتراك السابق.",
+  "Subscription order next rule violation": "يجب أن تكون قيمة التفعيل بعد الاشتراك والخصم أقل من قيمة الاشتراك التالي.",
   "Update Subscription Offer": "تحديث عرض الاشتراك"
 }

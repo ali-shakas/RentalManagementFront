@@ -18,6 +18,66 @@
   } @else {
     <div class="card finance-list-shell__card">
       <div class="card-body">
+        @if (enableSearch || enableSorting || enableDateRangeFilter) {
+          <div class="app-filters-toolbar">
+            @if (enableSearch) {
+              <div class="app-filter-field app-filter-field--search">
+                <label class="app-filter-label">{{ 'Search' | translate }}</label>
+                <div class="app-search-control">
+                  <input
+                    type="search"
+                    class="form-control"
+                    [placeholder]="searchPlaceholder | translate"
+                    [ngModel]="searchValue"
+                    (ngModelChange)="onSearchChange($event)"
+                  />
+                  <button
+                    class="btn app-search-btn finance-search-btn"
+                    type="button"
+                    (click)="onSearchChange(searchValue)"
+                  >
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <span>{{ 'Search' | translate }}</span>
+                  </button>
+                </div>
+              </div>
+            }
+
+            @if (enableSorting) {
+              <div class="app-filter-field app-filter-field--narrow">
+                <label class="app-filter-label">{{ 'Sort by' | translate }}</label>
+                <app-smooth-select
+                  [options]="orderByOptions"
+                  [value]="orderByValue"
+                  [placeholder]="'Sort by' | translate"
+                  (valueChange)="onOrderByChange($event)"
+                />
+              </div>
+              <div class="app-filter-field app-filter-field--narrow">
+                <label class="app-filter-label">{{ 'Direction' | translate }}</label>
+                <app-smooth-select
+                  [options]="orderByDirectionOptions"
+                  [value]="orderByDirectionValue"
+                  [placeholder]="'Direction' | translate"
+                  (valueChange)="onOrderByDirectionChange($event)"
+                />
+              </div>
+            }
+
+            @if (enableDateRangeFilter) {
+              <app-date-range-filter
+                [from]="dateFrom"
+                [to]="dateTo"
+                [fromLabel]="'From date'"
+                [toLabel]="'To date'"
+                [fromPlaceholder]="'From date'"
+                [toPlaceholder]="'To date'"
+                (rangeChange)="onDateRangeChange($event)"
+              />
+            }
+          </div>
+        }
+
         @if (loading) {
           <div class="text-center py-5">
             <div class="spinner-border text-primary"></div>
@@ -45,11 +105,14 @@
           </div>
 
           <app-pagination-bar
-            [pageNumber]="1"
-            [totalPages]="1"
+            [pageNumber]="pageNumber"
+            [totalPages]="totalPages"
             [totalCount]="count"
-            [pageSize]="rows.length"
-            [showPageSize]="false"
+            [pageSize]="pageSize"
+            [showPageSize]="showPageSize"
+            [pageSizeOptions]="pageSizeOptions"
+            (pageChange)="pageChange.emit($event)"
+            (pageSizeChange)="pageSizeChange.emit($event)"
           />
         }
       </div>

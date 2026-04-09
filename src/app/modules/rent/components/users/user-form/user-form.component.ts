@@ -6,14 +6,21 @@ import { TranslateModule } from '@ngx-translate/core';
 import { AuthStateService } from '../../../../../core/auth/auth-state.service';
 import { UserService } from '../../../services/users/user.service';
 import { RoleService } from '../../../services/roles/role.service';
+import { BranchService } from '../../../services/branches/branch.service';
 import { ToastService } from '../../../../../shared/services/toast.service';
-import { RoleLookup, UserCreateRequest } from '../../../models';
+import { Branch, RoleLookup, UserCreateRequest } from '../../../models';
 import { PageHeaderComponent } from '../../../../../shared/ui/page-header/page-header.component';
 
 @Component({
   selector: 'app-user-form',
   standalone: true,
-  imports: [ReactiveFormsModule, FormsModule, RouterLink, TranslateModule, PageHeaderComponent],
+  imports: [
+    ReactiveFormsModule,
+    FormsModule,
+    RouterLink,
+    TranslateModule,
+    PageHeaderComponent,
+  ],
   templateUrl: './user-form.component.html',
   styleUrl: './user-form.component.scss',
 })
@@ -26,6 +33,7 @@ export class UserFormComponent implements OnInit {
   private authState = inject(AuthStateService);
   private userService = inject(UserService);
   private roleService = inject(RoleService);
+  private branchService = inject(BranchService);
   private toast = inject(ToastService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -33,8 +41,11 @@ export class UserFormComponent implements OnInit {
   isEdit = signal(false);
   userId = signal<string | null>(null);
   roles = signal<RoleLookup[]>([]);
+  branches = signal<Branch[]>([]);
   roleSearch = signal('');
   loading = signal(false);
+  loadingBranches = signal(false);
+  requireFleetInput = signal(false);
   filteredRoles = computed(() => {
     const keyword = this.roleSearch().trim().toLowerCase();
     if (!keyword) {
@@ -56,6 +67,7 @@ export class UserFormComponent implements OnInit {
     nameEn: ['', [Validators.maxLength(255), Validators.pattern(UserFormComponent.ENGLISH_NAME_REGEX)]],
     isActive: [true],
     expirationDate: [''],
+    branchId: ['' as number | ''],
     fleetId: [''],
     rolesId: [[] as string[]],
   });
@@ -64,7 +76,14 @@ export class UserFormComponent implements OnInit {
     const userFleetId = this.authState.fleetId();
     if (userFleetId) {
       this.form.controls.fleetId.setValue(userFleetId);
+      this.loadBranches(userFleetId);
+      this.requireFleetInput.set(false);
+      this.form.controls.fleetId.clearValidators();
+    } else {
+      this.requireFleetInput.set(true);
+      this.form.controls.fleetId.clearValidators();
     }
+    this.form.controls.fleetId.updateValueAndValidity({ emitEvent: false });
 
     this.roleService.getList().subscribe({
       next: list => this.roles.set(list ?? []),
@@ -84,6 +103,7 @@ export class UserFormComponent implements OnInit {
             nameEn: user.nameEn || '',
             isActive: user.isActive,
             expirationDate: user.expirationDate ? user.expirationDate.slice(0, 10) : '',
+            branchId: user.branchId ?? '',
             fleetId: user.fleetId || this.resolveFleetId(),
             rolesId:
               user.roleIds ??
@@ -107,10 +127,6 @@ export class UserFormComponent implements OnInit {
     }
     const raw = this.form.getRawValue();
     const fleetId = this.resolveFleetId(raw.fleetId);
-    if (!fleetId) {
-      this.toast.error('FleetId is required');
-      return;
-    }
 
     this.loading.set(true);
     const body: UserCreateRequest = {
@@ -121,6 +137,7 @@ export class UserFormComponent implements OnInit {
       nameEn: raw.nameEn.trim() || undefined,
       isActive: raw.isActive,
       expirationDate: raw.expirationDate || undefined,
+      branchId: this.toOptionalPositiveInteger(raw.branchId),
       fleetId,
       rolesId: raw.rolesId,
     };
@@ -174,6 +191,34 @@ export class UserFormComponent implements OnInit {
 
   private resolveFleetId(rawFleetId?: string): string | undefined {
     return rawFleetId || this.authState.fleetId() || undefined;
+  }
+
+  private loadBranches(fleetId: string): void {
+    this.loadingBranches.set(true);
+    this.branchService
+      .getPaginated({ fleetId, pageNumber: 1, pageSize: 200, search: '' })
+      .subscribe({
+        next: response => {
+          const activeBranches = (response.items ?? []).filter(branch => branch.isActive !== false);
+          this.branches.set(activeBranches);
+        },
+        error: () => {
+          this.toast.error('Failed to load branches');
+          this.loadingBranches.set(false);
+        },
+        complete: () => this.loadingBranches.set(false),
+      });
+  }
+
+  branchDisplay(branch: Branch): string {
+    const name = branch.nameAr || branch.nameEn || '-';
+    const code = branch.code?.trim() || '';
+    return [name, code].filter(Boolean).join(' - ');
+  }
+
+  private toOptionalPositiveInteger(value: unknown): number | undefined {
+    const numeric = Number(value ?? 0);
+    return Number.isFinite(numeric) && numeric > 0 ? Math.trunc(numeric) : undefined;
   }
 }
 
