@@ -43,7 +43,7 @@ export class JournalEntryListComponent implements OnInit {
   dateFrom = signal('');
   dateTo = signal('');
   orderBy = signal('CreatedAt');
-  orderByDirection = signal<'asc' | 'desc'>('desc');
+  orderByDirection = signal<'ASC' | 'DESC'>('DESC');
   private searchInput$ = new Subject<string>();
   private languageTick = signal(0);
 
@@ -143,9 +143,6 @@ export class JournalEntryListComponent implements OnInit {
 
   private load(): void {
     const fleetId = this.authState.fleetId();
-    const fromDate = this.dateFrom();
-    const toDate = this.dateTo();
-    const hasDateFilter = Boolean(fromDate || toDate);
     const requestedPageNumber = this.pageNumber();
     const requestedPageSize = this.pageSize();
 
@@ -156,8 +153,8 @@ export class JournalEntryListComponent implements OnInit {
       .getPaginated({
         fleetId,
         branchId: Number(this.authState.branchId() ?? 0) || undefined,
-        pageNumber: hasDateFilter ? 1 : requestedPageNumber,
-        pageSize: hasDateFilter ? 1000 : requestedPageSize,
+        pageNumber: requestedPageNumber,
+        pageSize: requestedPageSize,
         search: this.search(),
         dateFrom: this.dateFrom() || undefined,
         dateTo: this.dateTo() || undefined,
@@ -166,28 +163,11 @@ export class JournalEntryListComponent implements OnInit {
       })
       .subscribe({
       next: response => {
-        const sourceItems = response.items ?? [];
-        if (!hasDateFilter) {
-          this.items.set(sourceItems);
-          this.pageNumber.set(response.pageNumber || 1);
-          this.pageSize.set(response.pageSize || requestedPageSize);
-          this.totalPages.set(response.totalPages || 1);
-          this.totalCount.set(response.totalCount || 0);
-          return;
-        }
-
-        const filtered = sourceItems.filter(item => this.matchesDateRange(item, fromDate, toDate));
-        const totalCount = filtered.length;
-        const totalPages = Math.max(1, Math.ceil(totalCount / requestedPageSize));
-        const pageNumber = Math.min(requestedPageNumber, totalPages);
-        const start = (pageNumber - 1) * requestedPageSize;
-        const paged = filtered.slice(start, start + requestedPageSize);
-
-        this.items.set(paged);
-        this.pageNumber.set(pageNumber);
-        this.pageSize.set(requestedPageSize);
-        this.totalPages.set(totalPages);
-        this.totalCount.set(totalCount);
+        this.items.set(response.items ?? []);
+        this.pageNumber.set(response.pageNumber || 1);
+        this.pageSize.set(response.pageSize || requestedPageSize);
+        this.totalPages.set(response.totalPages || 1);
+        this.totalCount.set(response.totalCount || 0);
       },
       error: err => {
         const message = err?.message ?? this.translate.instant('No records found');
@@ -197,43 +177,6 @@ export class JournalEntryListComponent implements OnInit {
       },
       complete: () => this.loading.set(false),
     });
-  }
-
-  private matchesDateRange(item: JournalEntry, fromDate: string, toDate: string): boolean {
-    const rawDate = String(item.date ?? '').trim();
-    if (!rawDate) {
-      return false;
-    }
-
-    const parsed = new Date(rawDate);
-    if (Number.isNaN(parsed.getTime())) {
-      return false;
-    }
-
-    const itemDate = new Date(parsed);
-    itemDate.setHours(0, 0, 0, 0);
-
-    if (fromDate) {
-      const from = new Date(fromDate);
-      if (!Number.isNaN(from.getTime())) {
-        from.setHours(0, 0, 0, 0);
-        if (itemDate < from) {
-          return false;
-        }
-      }
-    }
-
-    if (toDate) {
-      const to = new Date(toDate);
-      if (!Number.isNaN(to.getTime())) {
-        to.setHours(0, 0, 0, 0);
-        if (itemDate > to) {
-          return false;
-        }
-      }
-    }
-
-    return true;
   }
 
   onSearchChange(value: string): void {
@@ -250,7 +193,7 @@ export class JournalEntryListComponent implements OnInit {
     this.load();
   }
 
-  onOrderByDirectionChange(value: 'asc' | 'desc'): void {
+  onOrderByDirectionChange(value: 'ASC' | 'DESC'): void {
     if (this.orderByDirection() === value) {
       return;
     }

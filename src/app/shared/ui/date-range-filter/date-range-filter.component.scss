@@ -1,10 +1,20 @@
 .app-date-range-filter {
-  display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
 }
 
-.app-filter-field--date {
-  min-width: 180px;
-  flex: 1 1 180px;
+.app-date-range-filter__field {
+  min-width: 0;
+}
+
+.app-date-range-filter__field .form-control {
+  min-height: 44px;
+  border-radius: 14px;
+}
+
+@media (max-width: 767.98px) {
+  .app-date-range-filter {
+    grid-template-columns: 1fr;
+  }
 }

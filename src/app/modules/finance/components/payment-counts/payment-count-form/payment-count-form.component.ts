@@ -164,8 +164,8 @@ export class PaymentCountFormComponent implements OnInit {
   ];
 
   readonly bondTypeOptions: SmoothSelectOption[] = [
-    { label: 'Receipt Voucher', value: 1 },
-    { label: 'Payment Voucher', value: 2 },
+    { label: 'Payment Voucher', value: 1 },
+    { label: 'Receipt Voucher', value: 2 },
   ];
 
   readonly statusOptions: SmoothSelectOption[] = [

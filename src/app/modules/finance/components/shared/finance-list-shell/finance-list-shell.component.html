@@ -65,15 +65,17 @@
             }
 
             @if (enableDateRangeFilter) {
-              <app-date-range-filter
-                [from]="dateFrom"
-                [to]="dateTo"
-                [fromLabel]="'From date'"
-                [toLabel]="'To date'"
-                [fromPlaceholder]="'From date'"
-                [toPlaceholder]="'To date'"
-                (rangeChange)="onDateRangeChange($event)"
-              />
+              <div class="app-filter-field app-filter-field--wide finance-filter-range">
+                <app-date-range-filter
+                  [from]="dateFrom"
+                  [to]="dateTo"
+                  [fromLabel]="'From date'"
+                  [toLabel]="'To date'"
+                  [fromPlaceholder]="'From date'"
+                  [toPlaceholder]="'To date'"
+                  (rangeChange)="onDateRangeChange($event)"
+                />
+              </div>
             }
           </div>
         }

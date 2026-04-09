@@ -32,6 +32,26 @@
   justify-content: center;
 }
 
+.finance-list-shell__card .app-filters-toolbar {
+  align-items: end;
+}
+
+.finance-list-shell__card .app-filter-field {
+  padding: 0.58rem;
+}
+
+.finance-list-shell__card .app-filter-field--search {
+  grid-column: span 4;
+}
+
+.finance-list-shell__card .app-filter-field--narrow {
+  grid-column: span 2;
+}
+
+.finance-list-shell__card .finance-filter-range {
+  grid-column: span 4;
+}
+
 @media (max-width: 767.98px) {
   .finance-list-shell__card .table td,
   .finance-list-shell__card .table th {
@@ -45,5 +65,10 @@
 
   .finance-search-btn {
     width: 100%;
+  }
+
+  .finance-list-shell__card .app-filter-field--narrow,
+  .finance-list-shell__card .finance-filter-range {
+    grid-column: span 2;
   }
 }
