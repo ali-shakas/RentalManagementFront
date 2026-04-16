@@ -110,6 +110,17 @@ export class BookingFormComponent implements OnInit {
       value: String(cash.id),
     })),
   ]);
+  paymentTypeSelectOptions = computed<SmoothSelectOption[]>(() => [
+    { label: this.translate.instant('Cash'), value: 1 },
+    { label: this.translate.instant('Network/POS'), value: 2 },
+    { label: this.translate.instant('Cheque'), value: 3 },
+    { label: this.translate.instant('Bank Transfer'), value: 4 },
+    { label: this.translate.instant('Bank/Cash'), value: 5 },
+  ]);
+  discountTypeSelectOptions = computed<SmoothSelectOption[]>(() => [
+    { label: this.translate.instant('Fixed Amount'), value: 'amount' },
+    { label: this.translate.instant('Percentage'), value: 'percent' },
+  ]);
   countingSelectOptions = computed<SmoothSelectOption[]>(() => [
     { label: 'Select customer vehicle counting', value: '' },
     ...this.countingEntries().map(counting => ({

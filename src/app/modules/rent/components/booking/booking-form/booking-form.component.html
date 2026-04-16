@@ -46,12 +46,7 @@
               }
             </div>
           </div>
-          <div class="col-md-2 d-flex align-items-end">
-            <button class="btn btn-outline-secondary w-100" type="button" (click)="customerLookupByIqama()">
-              {{ 'Search' | translate }}
-            </button>
-          </div>
-          <div class="col-md-6">
+          <div class="col-md-8">
             <label class="form-label">{{ 'Rental Contract Number' | translate }} <span class="text-danger">*</span></label>
             <input
               class="form-control"
@@ -138,10 +133,6 @@
             <input class="form-control" [value]="vehicleInfoValue('type')" readonly />
           </div>
           <div class="col-md-3">
-            <label class="form-label">{{ 'Engine' | translate }}</label>
-            <input class="form-control" [value]="vehicleInfoValue('engine')" readonly />
-          </div>
-          <div class="col-md-3">
             <label class="form-label">{{ 'Year' | translate }}</label>
             <input class="form-control" [value]="vehicleInfoValue('year')" readonly />
           </div>
@@ -152,14 +143,6 @@
           <div class="col-md-3">
             <label class="form-label">{{ 'Color' | translate }}</label>
             <input class="form-control" [value]="vehicleInfoValue('color')" readonly />
-          </div>
-          <div class="col-md-3">
-            <label class="form-label">{{ 'Insurance Number' | translate }}</label>
-            <input class="form-control" [value]="vehicleInfoValue('insuranceNumber')" readonly />
-          </div>
-          <div class="col-md-3">
-            <label class="form-label">{{ 'Insurance Type' | translate }}</label>
-            <input class="form-control" [value]="vehicleInfoValue('insuranceType')" readonly />
           </div>
           <div class="col-md-3">
             <label class="form-label">{{ 'Insurance Expiry Date' | translate }}</label>
@@ -174,10 +157,6 @@
             <input class="form-control" [value]="vehicleInfoValue('insurancePolicyNumber')" readonly />
           </div>
           <div class="col-md-3">
-            <label class="form-label">{{ 'Operating Card Date' | translate }}</label>
-            <input class="form-control" [value]="vehicleInfoValue('operatinCard')" readonly />
-          </div>
-          <div class="col-md-3">
             <label class="form-label">{{ 'Registration Expiry Date' | translate }}</label>
             <input class="form-control" [value]="vehicleInfoValue('validityCarRegistration')" readonly />
           </div>
@@ -188,6 +167,51 @@
 
           <div class="col-12 mt-2">
             <h6 class="mb-2 booking-section-title">{{ 'Booking Information' | translate }}</h6>
+          </div>
+          <input type="hidden" formControlName="branchId" />
+          <div class="col-12">
+            <div class="booking-subsection-title">{{ 'Pricing And Discount' | translate }}</div>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">{{ 'Start Date' | translate }} <span class="text-danger">*</span></label>
+            <input class="form-control" type="datetime-local" formControlName="startDate" />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">{{ 'Vehicle Return Date' | translate }} <span class="text-danger">*</span></label>
+            <input class="form-control" type="datetime-local" formControlName="dateReturnVehical" readonly />
+          </div>
+          <div class="col-md-3 booking-key-field">
+            <label class="form-label">{{ 'Count Of Days' | translate }} <span class="text-danger">*</span></label>
+            <input class="form-control" type="number" min="1" formControlName="countOfDay" />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">{{ 'Expected Amount' | translate }}</label>
+            <input class="form-control" [value]="expectedAmount()" readonly />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">{{ 'Discount' | translate }}</label>
+            <input class="form-control" type="number" min="0" step="0.01" formControlName="discount" />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">{{ 'Discount Type' | translate }}</label>
+            <app-smooth-select
+              formControlName="discountType"
+              [ariaLabel]="'Discount Type' | translate"
+              [placeholder]="'Discount Type' | translate"
+              [options]="discountTypeSelectOptions()"
+            />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">{{ 'Total Tax' | translate }}</label>
+            <input class="form-control" type="number" min="0" step="0.01" formControlName="totaltax" />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">{{ 'Amount After Tax And Discount' | translate }}</label>
+            <input class="form-control" [value]="amountAfterTaxAndDiscount()" readonly />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">{{ 'Applied Discount Value' | translate }}</label>
+            <input class="form-control" [value]="discountAppliedValue()" readonly />
           </div>
           <div class="col-12">
             <div class="decision-summary">
@@ -209,65 +233,21 @@
               </div>
             </div>
           </div>
-          <input type="hidden" formControlName="branchId" />
-          <div class="col-12">
-            <div class="booking-subsection-title">{{ 'Pricing And Discount' | translate }}</div>
-          </div>
-          <div class="col-md-3">
-            <label class="form-label">{{ 'Start Date' | translate }} <span class="text-danger">*</span></label>
-            <input class="form-control" type="datetime-local" formControlName="startDate" />
-          </div>
-          <div class="col-md-3">
-            <label class="form-label">{{ 'Vehicle Return Date' | translate }} <span class="text-danger">*</span></label>
-            <input class="form-control" type="datetime-local" formControlName="dateReturnVehical" readonly />
-          </div>
-          <div class="col-md-3 booking-key-field">
-            <label class="form-label">{{ 'Count Of Days' | translate }} <span class="text-danger">*</span></label>
-            <input class="form-control" type="number" min="1" formControlName="countOfDay" />
-          </div>
-          <div class="col-md-3 booking-key-field">
-            <label class="form-label">{{ 'Paid Amount' | translate }}</label>
-            <input class="form-control" type="number" min="0" step="0.01" formControlName="paid" />
-          </div>
-          <div class="col-md-3">
-            <label class="form-label">{{ 'Expected Amount' | translate }}</label>
-            <input class="form-control" [value]="expectedAmount()" readonly />
-          </div>
-          <div class="col-md-3">
-            <label class="form-label">{{ 'Discount' | translate }}</label>
-            <input class="form-control" type="number" min="0" step="0.01" formControlName="discount" />
-          </div>
-          <div class="col-md-3">
-            <label class="form-label">{{ 'Discount Type' | translate }}</label>
-            <select class="form-select" formControlName="discountType">
-              <option value="amount">{{ 'Fixed Amount' | translate }}</option>
-              <option value="percent">{{ 'Percentage' | translate }}</option>
-            </select>
-          </div>
-          <div class="col-md-3">
-            <label class="form-label">{{ 'Total Tax' | translate }}</label>
-            <input class="form-control" type="number" min="0" step="0.01" formControlName="totaltax" />
-          </div>
-          <div class="col-md-3">
-            <label class="form-label">{{ 'Amount After Tax And Discount' | translate }}</label>
-            <input class="form-control" [value]="amountAfterTaxAndDiscount()" readonly />
-          </div>
-          <div class="col-md-3">
-            <label class="form-label">{{ 'Applied Discount Value' | translate }}</label>
-            <input class="form-control" [value]="discountAppliedValue()" readonly />
-          </div>
           <div class="col-12">
             <div class="booking-subsection-title">{{ 'Payment Arrangement' | translate }}</div>
           </div>
           <div class="col-md-3">
             <label class="form-label">{{ 'Payment Type' | translate }}</label>
-            <select class="form-select" formControlName="paymentType">
-              <option [ngValue]="1">{{ 'Cash' | translate }}</option>
-              <option [ngValue]="2">{{ 'Network/POS' | translate }}</option>
-              <option [ngValue]="3">{{ 'Cheque' | translate }}</option>
-              <option [ngValue]="4">{{ 'Bank Transfer' | translate }}</option>
-              <option [ngValue]="5">{{ 'Bank/Cash' | translate }}</option>
-            </select>
+            <app-smooth-select
+              formControlName="paymentType"
+              [ariaLabel]="'Payment Type' | translate"
+              [placeholder]="'Payment Type' | translate"
+              [options]="paymentTypeSelectOptions()"
+            />
+          </div>
+          <div class="col-md-3 booking-key-field">
+            <label class="form-label">{{ 'Paid Amount' | translate }}</label>
+            <input class="form-control" type="number" min="0" step="0.01" formControlName="paid" />
           </div>
           <div class="col-md-3">
             <label class="form-label">{{ 'Paid Cash' | translate }}</label>
