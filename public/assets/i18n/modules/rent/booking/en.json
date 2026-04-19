@@ -196,7 +196,10 @@
   "Booking band km extra min": "Extra km (min)",
   "Booking band km extra max": "Extra km (max)",
   "Booking category pricing bands": "Category pricing bands",
-  "Booking band smart hint": "Band limits (min/max) come from the vehicle class and cannot be changed here. Contract prices default to the upper value and stay within the band. Use the buttons or slider to set the daily / extra hour / extra km contract price to min, mid, or max.",
+  "Booking band smart hint": "Band limits (min/max) come from the vehicle class and cannot be changed here. Contract prices default to the upper value. You may enter any number in the contract fields; if it falls outside the band, a warning appears under the field. Use Min / Mid / Max to snap to the band ends or midpoint.",
+  "Booking contract price band hint daily": "This value ({{current}}) is outside the daily rate band ({{min}}–{{max}}).",
+  "Booking contract price band hint hour": "This value ({{current}}) is outside the extra-hour rate band ({{min}}–{{max}}).",
+  "Booking contract price band hint km": "This value ({{current}}) is outside the extra-km rate band ({{min}}–{{max}}).",
   "Booking band daily block title": "Daily rate band",
   "Booking band hour block title": "Extra hour price band",
   "Booking band km block title": "Extra km price band",
@@ -206,6 +209,5 @@
   "Booking band use max": "Max",
   "Booking band contract value daily": "Contract daily rate (within band)",
   "Booking band contract value hour": "Contract extra-hour rate (within band)",
-  "Booking band contract value km": "Contract extra-km rate (within band)",
-  "Booking band slider label": "Free quick pick (drag within band)"
+  "Booking band contract value km": "Contract extra-km rate (within band)"
 }

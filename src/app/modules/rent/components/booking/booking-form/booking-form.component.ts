@@ -75,6 +75,10 @@ export class BookingFormComponent implements OnInit {
   bookingSettings = signal<Setting | null>(null);
   showBookingDistanceGpsEnabled = computed(() => this.bookingSettings()?.showBookingDistanceGps ?? true);
   contractLimitWarnings = signal<string[]>([]);
+  /** Shown under contract price fields when the value is outside the category band (no auto-clamp). */
+  contractPriceBandHintDaily = signal<string | null>(null);
+  contractPriceBandHintHour = signal<string | null>(null);
+  contractPriceBandHintKm = signal<string | null>(null);
 
   customers = signal<Customer[]>([]);
   vehicles = signal<Vehicle[]>([]);
@@ -88,8 +92,6 @@ export class BookingFormComponent implements OnInit {
   selectedCategory = signal<CategoryVehicle | null>(null);
   /** True when a vehicle is selected but no category row could be loaded (for hints). */
   categoryHintUnavailable = signal(false);
-  /** When true, `priceInDay` came from the vehicle record — band edits do not auto-clamp the daily price. */
-  private dailyPricePinnedToVehicle = signal(false);
   private readonly vehicleCategoryHintsTrigger$ = new Subject<void>();
   loading = signal(false);
   customerSelectOptions = computed<SmoothSelectOption[]>(() => [
@@ -316,6 +318,7 @@ export class BookingFormComponent implements OnInit {
         }
         this.applyAutoTaxFromSettings();
         this.refreshContractLimitWarnings();
+        this.refreshContractBandPriceHints();
         this.applyDefaultCustomerVehicleCounting();
         this.vehicleCategoryHintsTrigger$.next();
       },
@@ -331,7 +334,6 @@ export class BookingFormComponent implements OnInit {
         this.selectedCategory.set(cat);
         this.categoryHintUnavailable.set(Boolean(vehicle) && !cat);
         if (!vehicle) {
-          this.dailyPricePinnedToVehicle.set(false);
           this.form.patchValue(
             {
               priceDayBandLow: 0,
@@ -343,6 +345,7 @@ export class BookingFormComponent implements OnInit {
             },
             { emitEvent: false },
           );
+          this.refreshContractBandPriceHints();
           return;
         }
         this.patchFormFromVehicleAndCategory(vehicle, cat ?? undefined);
@@ -368,18 +371,17 @@ export class BookingFormComponent implements OnInit {
         this.applyAutoTaxFromSettings();
         this.syncBookingTotals();
         this.refreshContractLimitWarnings();
+        this.refreshContractBandPriceHints();
       });
 
     merge(this.form.controls.priceDayBandLow.valueChanges, this.form.controls.priceDayBandHigh.valueChanges)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => {
         this.normalizeBandPair('priceDayBandLow', 'priceDayBandHigh');
-        if (!this.dailyPricePinnedToVehicle()) {
-          this.clampNumericControlToBand('priceInDay', 'priceDayBandLow', 'priceDayBandHigh');
-        }
         this.applyAutoTaxFromSettings();
         this.syncBookingTotals();
         this.refreshContractLimitWarnings();
+        this.refreshContractBandPriceHints();
       });
 
     merge(
@@ -389,40 +391,20 @@ export class BookingFormComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => {
         this.normalizeBandPair('priceHourExtraBandLow', 'priceHourExtraBandHigh');
-        this.clampNumericControlToBand('priceHoureExtra', 'priceHourExtraBandLow', 'priceHourExtraBandHigh');
         this.applyAutoTaxFromSettings();
         this.syncBookingTotals();
         this.refreshContractLimitWarnings();
+        this.refreshContractBandPriceHints();
       });
 
     merge(this.form.controls.priceKmExtraBandLow.valueChanges, this.form.controls.priceKmExtraBandHigh.valueChanges)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => {
         this.normalizeBandPair('priceKmExtraBandLow', 'priceKmExtraBandHigh');
-        this.clampNumericControlToBand('priceKmExtra', 'priceKmExtraBandLow', 'priceKmExtraBandHigh');
         this.applyAutoTaxFromSettings();
         this.syncBookingTotals();
         this.refreshContractLimitWarnings();
-      });
-
-    this.form.controls.priceInDay.valueChanges
-      .pipe(debounceTime(200), takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => {
-        if (!this.dailyPricePinnedToVehicle()) {
-          this.clampNumericControlToBand('priceInDay', 'priceDayBandLow', 'priceDayBandHigh');
-        }
-      });
-
-    this.form.controls.priceHoureExtra.valueChanges
-      .pipe(debounceTime(200), takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => {
-        this.clampNumericControlToBand('priceHoureExtra', 'priceHourExtraBandLow', 'priceHourExtraBandHigh');
-      });
-
-    this.form.controls.priceKmExtra.valueChanges
-      .pipe(debounceTime(200), takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => {
-        this.clampNumericControlToBand('priceKmExtra', 'priceKmExtraBandLow', 'priceKmExtraBandHigh');
+        this.refreshContractBandPriceHints();
       });
 
     this.form.controls.totaltax.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
@@ -1232,6 +1214,86 @@ export class BookingFormComponent implements OnInit {
     return warnings;
   }
 
+  private refreshContractBandPriceHints(): void {
+    const raw = this.form.getRawValue() as Record<string, unknown>;
+    this.contractPriceBandHintDaily.set(
+      this.buildContractBandPriceHintMessage(
+        raw,
+        'priceInDay',
+        'priceDayBandLow',
+        'priceDayBandHigh',
+        'Booking contract price band hint daily',
+      ),
+    );
+    this.contractPriceBandHintHour.set(
+      this.buildContractBandPriceHintMessage(
+        raw,
+        'priceHoureExtra',
+        'priceHourExtraBandLow',
+        'priceHourExtraBandHigh',
+        'Booking contract price band hint hour',
+      ),
+    );
+    this.contractPriceBandHintKm.set(
+      this.buildContractBandPriceHintMessage(
+        raw,
+        'priceKmExtra',
+        'priceKmExtraBandLow',
+        'priceKmExtraBandHigh',
+        'Booking contract price band hint km',
+      ),
+    );
+  }
+
+  private buildContractBandPriceHintMessage(
+    raw: Record<string, unknown>,
+    valueKey: string,
+    lowKey: string,
+    highKey: string,
+    translateKey: string,
+  ): string | null {
+    const lo = Math.max(0, Number(raw[lowKey]) || 0);
+    const hi = Math.max(0, Number(raw[highKey]) || 0);
+    const hasLo = lo > 0;
+    const hasHi = hi > 0;
+    if (!hasLo && !hasHi) {
+      return null;
+    }
+    const minB = hasLo && hasHi ? Math.min(lo, hi) : hasLo ? lo : hi;
+    const maxB = hasLo && hasHi ? Math.max(lo, hi) : hasLo ? lo : hi;
+    const parsed = this.parseOptionalFiniteNumber(raw[valueKey]);
+    if (parsed === null) {
+      return null;
+    }
+    if (parsed >= minB && parsed <= maxB) {
+      return null;
+    }
+    return this.translate.instant(translateKey, {
+      current: this.formatContractBandHintNumber(parsed),
+      min: this.formatContractBandHintNumber(minB),
+      max: this.formatContractBandHintNumber(maxB),
+    });
+  }
+
+  private parseOptionalFiniteNumber(value: unknown): number | null {
+    if (value === null || value === undefined || value === '') {
+      return null;
+    }
+    const n = typeof value === 'number' ? value : Number(value);
+    if (!Number.isFinite(n)) {
+      return null;
+    }
+    return n;
+  }
+
+  private formatContractBandHintNumber(n: number): string {
+    const r = Math.round(n * 100) / 100;
+    if (Math.abs(r - Math.round(r)) < 1e-9) {
+      return String(Math.round(r));
+    }
+    return r.toFixed(2);
+  }
+
   vehicleInfoValue(
     field:
       | 'branch'
@@ -1337,7 +1399,6 @@ export class BookingFormComponent implements OnInit {
       if (v === undefined) {
         return;
       }
-      this.dailyPricePinnedToVehicle.set(false);
       this.form.patchValue({ priceInDay: v }, { emitEvent: true });
       return;
     }
@@ -1358,77 +1419,6 @@ export class BookingFormComponent implements OnInit {
       return;
     }
     this.form.patchValue({ priceKmExtra: v }, { emitEvent: true });
-  }
-
-  /** Discrete steps on the range slider (maps linearly to decimals between band min and max). */
-  readonly bandSliderSteps = 200;
-
-  /** Ordered band ends for slider + min/max attributes on the contract field. */
-  bandSliderEndpoints(kind: 'day' | 'hour' | 'km'): { min: number; max: number } {
-    const r = this.form.getRawValue() as Record<string, unknown>;
-    if (kind === 'day') {
-      return this.orderedBandEndpoints(r['priceDayBandLow'], r['priceDayBandHigh']);
-    }
-    if (kind === 'hour') {
-      return this.orderedBandEndpoints(r['priceHourExtraBandLow'], r['priceHourExtraBandHigh']);
-    }
-    return this.orderedBandEndpoints(r['priceKmExtraBandLow'], r['priceKmExtraBandHigh']);
-  }
-
-  bandSliderIndex(kind: 'day' | 'hour' | 'km'): number {
-    const { min, max } = this.bandSliderEndpoints(kind);
-    if (max <= min) {
-      return 0;
-    }
-    const r = this.form.getRawValue() as Record<string, unknown>;
-    const cur =
-      kind === 'day'
-        ? Number(r['priceInDay']) || 0
-        : kind === 'hour'
-          ? Number(r['priceHoureExtra']) || 0
-          : Number(r['priceKmExtra']) || 0;
-    const clamped = Math.min(max, Math.max(min, cur));
-    return Math.round(((clamped - min) / (max - min)) * this.bandSliderSteps);
-  }
-
-  onBandSlider(kind: 'day' | 'hour' | 'km', rawIndex: string | number): void {
-    const { min, max } = this.bandSliderEndpoints(kind);
-    if (max <= min) {
-      return;
-    }
-    const idx = Math.max(0, Math.min(this.bandSliderSteps, Math.round(Number(rawIndex) || 0)));
-    const v = min + ((max - min) * idx) / this.bandSliderSteps;
-    const rounded = Math.round(v * 100) / 100;
-    if (kind === 'day') {
-      this.dailyPricePinnedToVehicle.set(false);
-      this.form.patchValue({ priceInDay: rounded }, { emitEvent: true });
-      return;
-    }
-    if (kind === 'hour') {
-      this.form.patchValue({ priceHoureExtra: rounded }, { emitEvent: true });
-      return;
-    }
-    this.form.patchValue({ priceKmExtra: rounded }, { emitEvent: true });
-  }
-
-  bandSliderHasRange(kind: 'day' | 'hour' | 'km'): boolean {
-    const { min, max } = this.bandSliderEndpoints(kind);
-    return max > min;
-  }
-
-  private orderedBandEndpoints(lo: unknown, hi: unknown): { min: number; max: number } {
-    const a = Math.max(0, Number(lo) || 0);
-    const b = Math.max(0, Number(hi) || 0);
-    if (a <= 0 && b <= 0) {
-      return { min: 0, max: 0 };
-    }
-    if (a <= 0) {
-      return { min: b, max: b };
-    }
-    if (b <= 0) {
-      return { min: a, max: a };
-    }
-    return { min: Math.min(a, b), max: Math.max(a, b) };
   }
 
   private bandPresetValue(lo: number, hi: number, preset: 'min' | 'mid' | 'max'): number | undefined {
@@ -1456,9 +1446,6 @@ export class BookingFormComponent implements OnInit {
 
   private patchFormFromVehicleAndCategory(vehicle: Vehicle, cat?: CategoryVehicle): void {
     const raw = this.form.getRawValue();
-    const usedVehicleDaily =
-      typeof vehicle.dailyRate === 'number' && Number.isFinite(vehicle.dailyRate) && vehicle.dailyRate > 0;
-    this.dailyPricePinnedToVehicle.set(usedVehicleDaily);
 
     const suggestedDaily = this.resolveSuggestedDailyRate(vehicle, cat);
     const suggestedMonthly = this.resolveSuggestedMonthlyRate(vehicle, cat);
@@ -1532,13 +1519,7 @@ export class BookingFormComponent implements OnInit {
     this.normalizeBandPair('priceDayBandLow', 'priceDayBandHigh');
     this.normalizeBandPair('priceHourExtraBandLow', 'priceHourExtraBandHigh');
     this.normalizeBandPair('priceKmExtraBandLow', 'priceKmExtraBandHigh');
-    if (!usedVehicleDaily && cat) {
-      this.clampNumericControlToBand('priceInDay', 'priceDayBandLow', 'priceDayBandHigh');
-    }
-    if (cat) {
-      this.clampNumericControlToBand('priceHoureExtra', 'priceHourExtraBandLow', 'priceHourExtraBandHigh');
-      this.clampNumericControlToBand('priceKmExtra', 'priceKmExtraBandLow', 'priceKmExtraBandHigh');
-    }
+    this.refreshContractBandPriceHints();
     this.syncDatesFromStartAndDays();
   }
 
@@ -1632,29 +1613,6 @@ export class BookingFormComponent implements OnInit {
     const high = Math.max(lo, hi);
     if (lo !== low || hi !== high) {
       this.form.patchValue({ [lowKey]: low, [highKey]: high } as Record<string, number>, { emitEvent: false });
-    }
-  }
-
-  private clampNumericControlToBand(
-    valueKey: 'priceInDay' | 'priceHoureExtra' | 'priceKmExtra',
-    lowKey: string,
-    highKey: string,
-  ): void {
-    const raw = this.form.getRawValue() as Record<string, unknown>;
-    const lo = Math.max(0, Number(raw[lowKey]) || 0);
-    const hi = Math.max(0, Number(raw[highKey]) || 0);
-    const hasLo = lo > 0;
-    const hasHi = hi > 0;
-    if (!hasLo && !hasHi) {
-      return;
-    }
-    const minB = hasLo && hasHi ? Math.min(lo, hi) : hasLo ? lo : hi;
-    const maxB = hasLo && hasHi ? Math.max(lo, hi) : hasLo ? lo : hi;
-    const p = Math.max(0, Number(raw[valueKey]) || 0);
-    const clamped = Math.min(maxB, Math.max(minB, p));
-    const rounded = Math.round(clamped * 100) / 100;
-    if (rounded !== p) {
-      this.form.patchValue({ [valueKey]: rounded } as Record<string, number>, { emitEvent: false });
     }
   }
 

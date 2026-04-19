@@ -166,19 +166,6 @@
   margin-bottom: 0.25rem;
 }
 
-.booking-band-block__slider-label {
-  display: block;
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: #475569;
-  margin: 0.35rem 0 0.2rem;
-}
-
-.booking-band-block__range {
-  width: 100%;
-  max-width: 640px;
-}
-
 .booking-band-block .form-label {
   color: #334155;
   font-size: 0.76rem;
@@ -197,6 +184,12 @@
   background: rgba(241, 245, 249, 0.98);
   color: #334155;
   -webkit-text-fill-color: #334155;
+}
+
+.booking-band-contract-hint {
+  margin-top: 0.2rem;
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .booking-key-field {
@@ -476,11 +469,6 @@
 
 :host-context([data-bs-theme='dark']) .booking-band-block__preset-label,
 :host-context(body.dark-only) .booking-band-block__preset-label {
-  color: #cbd5e1;
-}
-
-:host-context([data-bs-theme='dark']) .booking-band-block__slider-label,
-:host-context(body.dark-only) .booking-band-block__slider-label {
   color: #cbd5e1;
 }
 

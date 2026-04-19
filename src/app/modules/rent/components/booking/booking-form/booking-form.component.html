@@ -216,9 +216,11 @@
                     inputmode="decimal"
                     autocomplete="off"
                     formControlName="priceInDay"
-                    [attr.min]="bandSliderHasRange('day') ? bandSliderEndpoints('day').min : null"
-                    [attr.max]="bandSliderHasRange('day') ? bandSliderEndpoints('day').max : null"
                   />
+                  @let dailyBandHint = contractPriceBandHintDaily();
+                  @if (dailyBandHint) {
+                    <div class="form-text text-warning booking-band-contract-hint">{{ dailyBandHint }}</div>
+                  }
                 </div>
                 <div class="col-12 col-md-4">
                   <div class="booking-band-block__preset-label">{{ 'Booking band preset label' | translate }}</div>
@@ -234,20 +236,6 @@
                     </button>
                   </div>
                 </div>
-                @if (bandSliderHasRange('day')) {
-                  <div class="col-12">
-                    <label class="booking-band-block__slider-label">{{ 'Booking band slider label' | translate }}</label>
-                    <input
-                      type="range"
-                      class="form-range booking-band-block__range"
-                      min="0"
-                      [max]="bandSliderSteps"
-                      step="1"
-                      [value]="bandSliderIndex('day')"
-                      (input)="onBandSlider('day', $any($event.target).value)"
-                    />
-                  </div>
-                }
               </div>
             </div>
           </div>
@@ -294,9 +282,11 @@
                     inputmode="decimal"
                     autocomplete="off"
                     formControlName="priceHoureExtra"
-                    [attr.min]="bandSliderHasRange('hour') ? bandSliderEndpoints('hour').min : null"
-                    [attr.max]="bandSliderHasRange('hour') ? bandSliderEndpoints('hour').max : null"
                   />
+                  @let hourBandHint = contractPriceBandHintHour();
+                  @if (hourBandHint) {
+                    <div class="form-text text-warning booking-band-contract-hint">{{ hourBandHint }}</div>
+                  }
                 </div>
                 <div class="col-12 col-md-4">
                   <div class="booking-band-block__preset-label">{{ 'Booking band preset label' | translate }}</div>
@@ -312,20 +302,6 @@
                     </button>
                   </div>
                 </div>
-                @if (bandSliderHasRange('hour')) {
-                  <div class="col-12">
-                    <label class="booking-band-block__slider-label">{{ 'Booking band slider label' | translate }}</label>
-                    <input
-                      type="range"
-                      class="form-range booking-band-block__range"
-                      min="0"
-                      [max]="bandSliderSteps"
-                      step="1"
-                      [value]="bandSliderIndex('hour')"
-                      (input)="onBandSlider('hour', $any($event.target).value)"
-                    />
-                  </div>
-                }
               </div>
             </div>
           </div>
@@ -372,9 +348,11 @@
                     inputmode="decimal"
                     autocomplete="off"
                     formControlName="priceKmExtra"
-                    [attr.min]="bandSliderHasRange('km') ? bandSliderEndpoints('km').min : null"
-                    [attr.max]="bandSliderHasRange('km') ? bandSliderEndpoints('km').max : null"
                   />
+                  @let kmBandHint = contractPriceBandHintKm();
+                  @if (kmBandHint) {
+                    <div class="form-text text-warning booking-band-contract-hint">{{ kmBandHint }}</div>
+                  }
                 </div>
                 <div class="col-12 col-md-4">
                   <div class="booking-band-block__preset-label">{{ 'Booking band preset label' | translate }}</div>
@@ -390,20 +368,6 @@
                     </button>
                   </div>
                 </div>
-                @if (bandSliderHasRange('km')) {
-                  <div class="col-12">
-                    <label class="booking-band-block__slider-label">{{ 'Booking band slider label' | translate }}</label>
-                    <input
-                      type="range"
-                      class="form-range booking-band-block__range"
-                      min="0"
-                      [max]="bandSliderSteps"
-                      step="1"
-                      [value]="bandSliderIndex('km')"
-                      (input)="onBandSlider('km', $any($event.target).value)"
-                    />
-                  </div>
-                }
               </div>
             </div>
           </div>
