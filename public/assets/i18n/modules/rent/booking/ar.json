@@ -196,7 +196,10 @@
   "Booking band km extra min": "سعر الكيلومتر الزائد (من)",
   "Booking band km extra max": "سعر الكيلومتر الزائد (إلى)",
   "Booking category pricing bands": "نطاقات تسعير الفئة",
-  "Booking band smart hint": "حدود النطاق (من/إلى) تأتي من فئة المركبة ولا يمكن تعديلها هنا. يُقترَح سعر العقد على أعلى قيمة ويبقى ضمن النطاق. استخدم الأزرار أو الشريط لتعيين السعر اليومي أو سعر الساعة الإضافية أو الكيلو الزائد إلى الأدنى أو الوسط أو الأعلى.",
+  "Booking band smart hint": "حدود النطاق (من/إلى) تأتي من فئة المركبة ولا يمكن تعديلها هنا. يُقترَح سعر العقد على أعلى قيمة. يمكنك إدخال أي رقم في حقول العقد؛ إذا كان خارج النطاق يظهر تنبيه تحت الحقل. استخدم أزرار الأدنى / الوسط / الأعلى للالتقاط داخل النطاق.",
+  "Booking contract price band hint daily": "هذه القيمة ({{current}}) خارج النطاق اليومي المسموح ({{min}}–{{max}}).",
+  "Booking contract price band hint hour": "هذه القيمة ({{current}}) خارج نطاق سعر الساعة الإضافية ({{min}}–{{max}}).",
+  "Booking contract price band hint km": "هذه القيمة ({{current}}) خارج نطاق سعر الكيلومتر الزائد ({{min}}–{{max}}).",
   "Booking band daily block title": "نطاق السعر اليومي",
   "Booking band hour block title": "نطاق سعر الساعة الإضافية",
   "Booking band km block title": "نطاق سعر الكيلومتر الزائد",
@@ -206,6 +209,5 @@
   "Booking band use max": "الأعلى",
   "Booking band contract value daily": "السعر اليومي في العقد (ضمن النطاق)",
   "Booking band contract value hour": "سعر الساعة الإضافية في العقد (ضمن النطاق)",
-  "Booking band contract value km": "سعر الكيلومتر الزائد في العقد (ضمن النطاق)",
-  "Booking band slider label": "اختيار حر سريع (اسحب ضمن النطاق)"
+  "Booking band contract value km": "سعر الكيلومتر الزائد في العقد (ضمن النطاق)"
 }
