@@ -7,16 +7,23 @@
 
   <div class="card">
     <div class="card-body">
-      <div class="app-filters-toolbar">
-        <div class="app-filter-field app-filter-field--wide">
+      <div class="app-filters-toolbar app-filters-toolbar--bookings">
+        <div class="app-filter-field app-filter-field--search">
           <label class="app-filter-label">{{ 'Search' | translate }}</label>
-          <input
-            class="form-control"
-            [placeholder]="'Search booking/customer/vehicle...' | translate"
-            [ngModel]="search()"
-            (ngModelChange)="search.set($event)"
-          />
+          <div class="app-search-control">
+            <input
+              class="form-control"
+              [placeholder]="'Search booking/customer/vehicle...' | translate"
+              [ngModel]="search()"
+              (ngModelChange)="search.set($event)"
+              (keyup.enter)="onSearchSubmit()"
+            />
+            <button class="btn app-search-btn" type="button" (click)="onSearchSubmit()">
+              {{ 'Search' | translate }}
+            </button>
+          </div>
         </div>
+
         <div class="app-filter-field app-filter-field--narrow">
           <label class="app-filter-label">{{ 'Status' | translate }}</label>
           <app-smooth-select
@@ -24,19 +31,18 @@
             [placeholder]="'All statuses'"
             [options]="statusFilterOptions()"
             [value]="status()"
-            (valueChange)="status.set($any($event))"
+            (valueChange)="onStatusFilterChange($any($event))"
           />
         </div>
+
         <div class="app-filter-field app-filter-field--narrow">
           <label class="app-filter-label">{{ 'Date From' | translate }}</label>
-          <input class="form-control" type="date" [ngModel]="dateFrom()" (ngModelChange)="dateFrom.set($event)" />
+          <input class="form-control" type="date" [ngModel]="dateFrom()" (ngModelChange)="onDateFromChange($event)" />
         </div>
+
         <div class="app-filter-field app-filter-field--narrow">
           <label class="app-filter-label">{{ 'Date To' | translate }}</label>
-          <input class="form-control" type="date" [ngModel]="dateTo()" (ngModelChange)="dateTo.set($event)" />
-        </div>
-        <div class="app-filter-field app-filter-field--action">
-          <button class="btn app-search-btn" type="button" (click)="load()">{{ 'Apply' | translate }}</button>
+          <input class="form-control" type="date" [ngModel]="dateTo()" (ngModelChange)="onDateToChange($event)" />
         </div>
       </div>
 
@@ -45,61 +51,60 @@
       } @else if (!bookings().length) {
         <app-empty-state [title]="'No bookings found' | translate" [description]="'Create a booking after selecting a customer and an available vehicle.' | translate" />
       } @else {
-        <div class="table-responsive">
-          <table class="table table-striped align-middle">
-            <thead>
-              <tr>
-                <th>{{ 'Booking' | translate }}</th>
-                <th>{{ 'Customer' | translate }}</th>
-                <th>{{ 'Vehicle' | translate }}</th>
-                <th>{{ 'Dates' | translate }}</th>
-                <th>{{ 'Total' | translate }}</th>
-                <th>{{ 'Status' | translate }}</th>
-                <th class="text-end">{{ 'Actions' | translate }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (booking of bookings(); track booking.id) {
-                <tr>
-                  <td>{{ booking.bookingNumber || booking.id }}</td>
-                  <td>{{ booking.customerName || booking.customerId }}</td>
-                  <td>{{ booking.vehicleName || booking.vehicleId }}</td>
-                  <td>
-                    @if (booking.startDate) {
-                      {{ booking.startDate | date: 'shortDate' }}
-                    } @else {
-                      —
-                    }
-                    <span class="text-muted"> — </span>
-                    @if (booking.endDate) {
-                      {{ booking.endDate | date: 'shortDate' }}
-                    } @else {
-                      —
-                    }
-                  </td>
-                  <td>{{ booking.totalAmount ?? 0 }}</td>
-                  <td>
-                    <app-status-badge
-                      [label]="statusBadgeLabelKey(booking.status) | translate"
-                      [tone]="statusBadgeTone(booking.status)"
-                    />
-                  </td>
-                  <td class="text-end">
-                    <div class="table-actions">
-                      <a
-                        class="table-action-icon table-action-icon--info"
-                        [routerLink]="['/booking', booking.id, 'details']"
-                        [attr.aria-label]="'Details' | translate"
-                        [title]="'Details' | translate"
-                      >
-                        <i class="fa-solid fa-eye"></i>
-                      </a>
-                    </div>
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
+        <div class="booking-cards-grid">
+          @for (booking of bookings(); track booking.id; let cardIndex = $index) {
+            <article class="booking-card">
+              <div class="booking-card__media">
+                <div class="booking-card__media-overlay"></div>
+                <div class="booking-card__media-inner" aria-hidden="true">
+                  <i class="fa-solid fa-file-contract"></i>
+                </div>
+                <div class="booking-card__status">
+                  <app-status-badge
+                    [label]="statusBadgeLabelKey(booking.status) | translate"
+                    [tone]="statusBadgeTone(booking.status)"
+                  />
+                </div>
+                <div class="booking-card__quick-meta">
+                  <span class="booking-chip">{{ formatBookingTotal(booking.totalAmount) }}</span>
+                  <span class="booking-chip booking-chip--ghost">{{ bookingDateRangeLabel(booking) }}</span>
+                </div>
+              </div>
+
+              <div class="booking-card__body">
+                <div class="booking-card__head">
+                  <h6 class="booking-card__title">{{ getBookingTitle(booking) }}</h6>
+                  <span class="booking-card__plate">{{ booking.vehiclePlateNumber || '—' }}</span>
+                </div>
+
+                <div class="booking-card__meta">
+                  <div class="booking-meta">
+                    <span class="booking-meta__label">{{ 'Customer' | translate }}</span>
+                    <span class="booking-meta__value">{{ booking.customerName || booking.customerId }}</span>
+                  </div>
+                  <div class="booking-meta">
+                    <span class="booking-meta__label">{{ 'Vehicle' | translate }}</span>
+                    <span class="booking-meta__value">{{ booking.vehicleName || booking.vehicleId }}</span>
+                  </div>
+                  <div class="booking-meta">
+                    <span class="booking-meta__label">{{ 'Dates' | translate }}</span>
+                    <span class="booking-meta__value">{{ bookingDateRangeLabel(booking) }}</span>
+                  </div>
+                </div>
+
+                <div class="table-actions booking-card__actions">
+                  <a
+                    class="table-action-icon table-action-icon--info booking-card__action"
+                    [routerLink]="['/booking', booking.id, 'details']"
+                    [attr.aria-label]="'Details' | translate"
+                    [title]="'Details' | translate"
+                  >
+                    <i class="fa-solid fa-eye"></i>
+                  </a>
+                </div>
+              </div>
+            </article>
+          }
         </div>
       }
 
@@ -109,7 +114,7 @@
           [totalPages]="totalPages()"
           [totalCount]="totalCount()"
           [pageSize]="pageSize()"
-          [pageSizeOptions]="[10, 20, 50, 100]"
+          [pageSizeOptions]="[12, 16, 24, 48]"
           (pageChange)="goToPage($event)"
           (pageSizeChange)="changePageSize($event)"
         />
@@ -117,4 +122,3 @@
     </div>
   </div>
 </div>
-

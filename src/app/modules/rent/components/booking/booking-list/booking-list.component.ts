@@ -45,7 +45,7 @@ export class BookingListComponent implements OnInit {
   totalCount = signal(0);
   totalPages = signal(0);
   pageNumber = signal(1);
-  pageSize = signal(20);
+  pageSize = signal(12);
   loading = signal(false);
   search = signal('');
   status = signal<BookingStatus | ''>('');
@@ -78,8 +78,58 @@ export class BookingListComponent implements OnInit {
     return bookingStatusTranslationKey(status);
   }
 
+  getBookingTitle(booking: Booking): string {
+    const n = (booking.bookingNumber ?? '').trim();
+    return n || String(booking.id);
+  }
+
+  bookingDateRangeLabel(booking: Booking): string {
+    const fmt = (iso: string | undefined) => {
+      if (!iso?.trim()) {
+        return '—';
+      }
+      const d = new Date(iso);
+      if (Number.isNaN(d.getTime())) {
+        return iso;
+      }
+      return d.toLocaleDateString(this.translate.currentLang || this.translate.getDefaultLang() || 'en', {
+        year: '2-digit',
+        month: 'numeric',
+        day: 'numeric',
+      });
+    };
+    return `${fmt(booking.startDate)} — ${fmt(booking.endDate)}`;
+  }
+
   ngOnInit(): void {
     this.load();
+  }
+
+  onSearchSubmit(): void {
+    this.pageNumber.set(1);
+    this.load();
+  }
+
+  onStatusFilterChange(value: BookingStatus | ''): void {
+    this.status.set(value);
+    this.onSearchSubmit();
+  }
+
+  onDateFromChange(value: string): void {
+    this.dateFrom.set(value);
+    this.onSearchSubmit();
+  }
+
+  onDateToChange(value: string): void {
+    this.dateTo.set(value);
+    this.onSearchSubmit();
+  }
+
+  formatBookingTotal(value: number | null | undefined): string {
+    const n = typeof value === 'number' && Number.isFinite(value) ? value : 0;
+    return new Intl.NumberFormat(this.translate.currentLang || this.translate.getDefaultLang() || 'en', {
+      maximumFractionDigits: 2,
+    }).format(n);
   }
 
   load(): void {
