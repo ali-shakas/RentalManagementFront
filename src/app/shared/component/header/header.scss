@@ -30,18 +30,18 @@
   flex-wrap: nowrap;
   white-space: nowrap;
   color: rgba(226, 232, 240, 0.92);
-  line-height: 1.1;
+  line-height: 1.05;
   justify-content: flex-start;
 }
 
 .header-datetime-item {
   display: inline-flex;
   align-items: baseline;
-  gap: 0.35rem;
+  gap: 0.28rem;
 }
 
 .header-datetime-label {
-  font-size: 0.66rem;
+  font-size: 0.64rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -49,9 +49,19 @@
 }
 
 .header-datetime-value {
-  font-size: 0.79rem;
+  font-size: 0.76rem;
   font-weight: 600;
   color: rgba(241, 245, 249, 0.95);
+}
+
+.header-datetime-value--numeric {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding-inline: 0.35rem;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(148, 163, 184, 0.12);
+  color: rgba(226, 232, 240, 0.92);
 }
 
 .header-datetime-separator {
@@ -95,6 +105,12 @@
   color: rgba(15, 23, 42, 0.9);
 }
 
+:host-context(body.light-only) .header-datetime-value--numeric {
+  border-color: rgba(59, 130, 246, 0.28);
+  background: rgba(59, 130, 246, 0.08);
+  color: rgba(30, 64, 175, 0.9);
+}
+
 :host-context(body.light-only) .header-time-row {
   color: rgba(30, 64, 175, 0.92);
 
@@ -119,7 +135,12 @@
   }
 
   .header-datetime-value {
-    font-size: 0.74rem;
+    font-size: 0.72rem;
+  }
+
+  .header-datetime-value--numeric {
+    font-size: 0.66rem;
+    padding-inline: 0.3rem;
   }
 }
 

@@ -112,13 +112,13 @@ export class VehicleFormComponent implements OnInit {
     this.isViewMode.set(Boolean(this.route.snapshot.data?.['viewOnly']));
     const fleetId = this.authState.fleetId();
     if (fleetId) {
-      this.branchService.getPaginated({ fleetId, pageNumber: 1, pageSize: 100 }).subscribe({
-        next: page => this.branches.set(page.items ?? []),
+      this.branchService.getList(fleetId).subscribe({
+        next: branches => this.branches.set(branches ?? []),
         error: () => this.toast.error(this.translate.instant('Failed to load branches')),
       });
 
-      this.categoryVehicleService.getPaginated({ fleetId, pageNumber: 1, pageSize: 100 }).subscribe({
-        next: page => this.categories.set(page.items ?? []),
+      this.categoryVehicleService.getList(fleetId).subscribe({
+        next: categories => this.categories.set(categories ?? []),
         error: () => this.toast.error(this.translate.instant('Failed to load categories')),
       });
     }

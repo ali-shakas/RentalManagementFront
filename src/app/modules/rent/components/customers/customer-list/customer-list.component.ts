@@ -49,6 +49,8 @@ export class CustomerListComponent implements OnInit {
   searchField = signal<CustomerSearchField>('all');
   pageNumber = signal(1);
   pageSize = signal(10);
+  totalCount = signal(0);
+  totalPages = signal(0);
   loading = signal(false);
   searchFieldOptions: Array<{ value: CustomerSearchField; label: string }> = [
     { value: 'all', label: 'All Fields' },
@@ -66,23 +68,6 @@ export class CustomerListComponent implements OnInit {
       value: option.value,
     })),
   );
-  filteredCustomers = computed(() => {
-    const keyword = this.search().trim().toLowerCase();
-    if (!keyword) {
-      return this.customers();
-    }
-
-    return this.customers().filter(customer => this.matchesSearch(customer, keyword));
-  });
-  totalCount = computed(() => this.filteredCustomers().length);
-  totalPages = computed(() => Math.max(1, Math.ceil(this.totalCount() / this.pageSize())));
-  currentPage = computed(() => Math.min(this.pageNumber(), this.totalPages()));
-  pagedCustomers = computed(() => {
-    const page = this.currentPage();
-    const size = this.pageSize();
-    const start = (page - 1) * size;
-    return this.filteredCustomers().slice(start, start + size);
-  });
 
   ngOnInit(): void {
     this.loadSubscriptions();
@@ -94,13 +79,20 @@ export class CustomerListComponent implements OnInit {
     this.customerService
       .getPaginated({
         fleetId: this.authState.fleetId() || undefined,
-        pageNumber: 1,
-        pageSize: 500,
-        search: undefined,
+        pageNumber: this.pageNumber(),
+        pageSize: this.pageSize(),
+        search: this.search() || undefined,
+        searchField: this.searchField() === 'all' ? undefined : this.searchField(),
         isActive: '',
       })
       .subscribe({
-        next: page => this.customers.set(page.items ?? []),
+        next: page => {
+          this.customers.set(page.items ?? []);
+          this.totalCount.set(page.totalCount ?? page.items?.length ?? 0);
+          this.totalPages.set(page.totalPages ?? 0);
+          this.pageNumber.set(page.pageNumber ?? this.pageNumber());
+          this.pageSize.set(page.pageSize ?? this.pageSize());
+        },
         error: err => this.toast.error(err?.message ?? this.translate.instant('Failed to load customers')),
         complete: () => this.loading.set(false),
       });
@@ -118,19 +110,22 @@ export class CustomerListComponent implements OnInit {
   onSearchSubmit(): void {
     this.search.set(this.search().trim());
     this.pageNumber.set(1);
+    this.load();
   }
 
   onSearchFieldChange(field: CustomerSearchField): void {
     this.searchField.set(field);
     this.pageNumber.set(1);
+    this.load();
   }
 
   goToPage(page: number): void {
-    if (page < 1 || page > this.totalPages() || page === this.currentPage()) {
+    if (page < 1 || page > this.totalPages() || page === this.pageNumber()) {
       return;
     }
 
     this.pageNumber.set(page);
+    this.load();
   }
 
   changePageSize(size: number): void {
@@ -140,6 +135,7 @@ export class CustomerListComponent implements OnInit {
 
     this.pageSize.set(size);
     this.pageNumber.set(1);
+    this.load();
   }
 
   deleteCustomer(customer: Customer): void {
@@ -157,7 +153,7 @@ export class CustomerListComponent implements OnInit {
         this.customerService.softDelete(customer.id).subscribe({
           next: () => {
             this.toast.success(this.translate.instant('Customer deleted successfully'));
-            this.customers.update(items => items.filter(item => item.id !== customer.id));
+            this.load();
           },
           error: err =>
             this.toast.error(err?.message ?? this.translate.instant('Failed to delete customer')),
@@ -210,48 +206,6 @@ export class CustomerListComponent implements OnInit {
 
   getBirthDate(customer: Customer): string {
     return this.formatDateValue(customer.dateOfBirth || customer.birthDay);
-  }
-
-  private matchesSearch(customer: Customer, keyword: string): boolean {
-    const field = this.searchField();
-    if (field === 'all') {
-      const searchableFields: CustomerSearchField[] = [
-        'subscription',
-        'nameAr',
-        'phone',
-        'licenseExpiry',
-        'identity',
-        'license',
-        'birthDate',
-      ];
-
-      return searchableFields.some(searchableField =>
-        this.getSearchFieldValue(customer, searchableField).includes(keyword),
-      );
-    }
-
-    return this.getSearchFieldValue(customer, field).includes(keyword);
-  }
-
-  private getSearchFieldValue(customer: Customer, field: CustomerSearchField): string {
-    switch (field) {
-      case 'subscription':
-        return this.getSubscriptionName(customer).toLowerCase();
-      case 'nameAr':
-        return this.getArabicName(customer).toLowerCase();
-      case 'phone':
-        return this.getPhone(customer).toLowerCase();
-      case 'licenseExpiry':
-        return this.getLicenseExpiry(customer).toLowerCase();
-      case 'identity':
-        return this.getIdentity(customer).toLowerCase();
-      case 'license':
-        return this.getLicense(customer).toLowerCase();
-      case 'birthDate':
-        return this.getBirthDate(customer).toLowerCase();
-      default:
-        return '';
-    }
   }
 
   private formatDateValue(value?: string): string {

@@ -11,7 +11,6 @@ import {
 import { Router, RouterLink } from '@angular/router';
 
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 
 import { AuthStateService } from '../../../../../core/auth/auth-state.service';
 import { ToastService } from '../../../../../shared/services/toast.service';
@@ -66,8 +65,6 @@ export class JournalEntryFormComponent implements OnInit {
   private router = inject(Router);
   private languageTick = signal(0);
   private readonly minimumRequiredLines = 2;
-  private customerSearch$ = new Subject<string>();
-  private vehicleSearch$ = new Subject<string>();
 
   loading = signal(false);
   loadingAccounts = signal(false);
@@ -191,18 +188,11 @@ export class JournalEntryFormComponent implements OnInit {
 
     this.form.controls.isManual.setValue(true, { emitEvent: false });
     this.form.controls.isSystemOperation.setValue(false, { emitEvent: false });
-    this.customerSearch$
-      .pipe(debounceTime(250), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
-      .subscribe(search => this.loadCustomers(search));
-    this.vehicleSearch$
-      .pipe(debounceTime(250), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
-      .subscribe(search => this.loadVehicles(search));
-
     this.loadFinancialYears();
     this.loadBranches();
     this.loadActiveAccounts();
-    this.loadCustomers('');
-    this.loadVehicles('');
+    this.loadCustomers();
+    this.loadVehicles();
   }
 
   addLine(): void {
@@ -477,10 +467,10 @@ export class JournalEntryFormComponent implements OnInit {
     this.loadingBranches.set(true);
 
     this.branchService
-      .getPaginated({ fleetId, pageNumber: 1, pageSize: 200, search: '' })
+      .getList(fleetId)
       .subscribe({
-        next: response => {
-          const branches = (response.items ?? []).filter(branch => branch.isActive !== false);
+        next: branchesList => {
+          const branches = (branchesList ?? []).filter(branch => branch.isActive !== false);
           this.branches.set(branches);
 
           const currentBranchId = Number(this.authState.branchId() ?? 0);
@@ -497,23 +487,19 @@ export class JournalEntryFormComponent implements OnInit {
       });
   }
 
-  onCustomerSearch(term: string): void {
-    this.customerSearch$.next(term);
-  }
+  onCustomerSearch(_term: string): void {}
 
-  onVehicleSearch(term: string): void {
-    this.vehicleSearch$.next(term);
-  }
+  onVehicleSearch(_term: string): void {}
 
-  private loadCustomers(search: string): void {
+  private loadCustomers(): void {
     const fleetId = this.authState.fleetId() ?? undefined;
     this.loadingCustomers.set(true);
 
     this.customerService
-      .getPaginated({ fleetId, pageNumber: 1, pageSize: 50, search, isActive: true })
+      .getList({ fleetId, isActive: true })
       .subscribe({
-        next: response => {
-          this.customers.set(response.items ?? []);
+        next: customers => {
+          this.customers.set(customers ?? []);
         },
         error: err => {
           this.toast.error(err?.message ?? this.translate.instant('Failed to load customers'));
@@ -523,23 +509,16 @@ export class JournalEntryFormComponent implements OnInit {
       });
   }
 
-  private loadVehicles(search: string): void {
+  private loadVehicles(): void {
     const fleetId = this.authState.fleetId() ?? undefined;
     const branchId = Number(this.authState.branchId() ?? 0) || undefined;
     this.loadingVehicles.set(true);
 
     this.vehicleService
-      .getPaginated({
-        fleetId,
-        branchId,
-        pageNumber: 1,
-        pageSize: 50,
-        search,
-        status: '',
-      })
+      .getList({ fleetId, branchId, status: '' })
       .subscribe({
-        next: response => {
-          this.vehicles.set(response.items ?? []);
+        next: vehicles => {
+          this.vehicles.set(vehicles ?? []);
         },
         error: err => {
           this.toast.error(err?.message ?? this.translate.instant('Failed to load vehicles'));

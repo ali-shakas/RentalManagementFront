@@ -52,20 +52,26 @@ export class BaseService {
     });
   }
 
-  post<T>(endpoint: string, body: unknown): Observable<ApiResponse<T>> {
-    return this.http.post<ApiResponse<T> | T>(`${this.baseUrl}/${endpoint}`, body).pipe(
+  post<T>(endpoint: string, body: unknown, options?: BaseRequestOptions): Observable<ApiResponse<T>> {
+    return this.http.post<ApiResponse<T> | T>(`${this.baseUrl}/${endpoint}`, body, {
+      context: this.buildHttpContext(options),
+    }).pipe(
       map(response => this.normalizeResponse<T>(response)),
     );
   }
 
-  put<T>(endpoint: string, body: unknown): Observable<ApiResponse<T>> {
-    return this.http.put<ApiResponse<T> | T>(`${this.baseUrl}/${endpoint}`, body).pipe(
+  put<T>(endpoint: string, body: unknown, options?: BaseRequestOptions): Observable<ApiResponse<T>> {
+    return this.http.put<ApiResponse<T> | T>(`${this.baseUrl}/${endpoint}`, body, {
+      context: this.buildHttpContext(options),
+    }).pipe(
       map(response => this.normalizeResponse<T>(response)),
     );
   }
 
-  patch<T>(endpoint: string, body: unknown): Observable<ApiResponse<T>> {
-    return this.http.patch<ApiResponse<T> | T>(`${this.baseUrl}/${endpoint}`, body).pipe(
+  patch<T>(endpoint: string, body: unknown, options?: BaseRequestOptions): Observable<ApiResponse<T>> {
+    return this.http.patch<ApiResponse<T> | T>(`${this.baseUrl}/${endpoint}`, body, {
+      context: this.buildHttpContext(options),
+    }).pipe(
       map(response => this.normalizeResponse<T>(response)),
     );
   }
@@ -95,20 +101,20 @@ export class BaseService {
     );
   }
 
-  postData<T>(endpoint: string, body: unknown): Observable<T> {
-    return this.post<T>(endpoint, body).pipe(
+  postData<T>(endpoint: string, body: unknown, options?: BaseRequestOptions): Observable<T> {
+    return this.post<T>(endpoint, body, options).pipe(
       map(res => this.unwrapDataOrThrow(endpoint, res)),
     );
   }
 
-  putData<T>(endpoint: string, body: unknown): Observable<T> {
-    return this.put<T>(endpoint, body).pipe(
+  putData<T>(endpoint: string, body: unknown, options?: BaseRequestOptions): Observable<T> {
+    return this.put<T>(endpoint, body, options).pipe(
       map(res => this.unwrapDataOrThrow(endpoint, res)),
     );
   }
 
-  patchData<T>(endpoint: string, body: unknown): Observable<T> {
-    return this.patch<T>(endpoint, body).pipe(
+  patchData<T>(endpoint: string, body: unknown, options?: BaseRequestOptions): Observable<T> {
+    return this.patch<T>(endpoint, body, options).pipe(
       map(res => this.unwrapDataOrThrow(endpoint, res)),
     );
   }

@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
@@ -42,6 +42,7 @@ export class BookingListComponent implements OnInit {
   private authState = inject(AuthStateService);
   private toast = inject(ToastService);
   private translate = inject(TranslateService);
+  private router = inject(Router);
 
   bookings = signal<Booking[]>([]);
   totalCount = signal(0);
@@ -63,7 +64,6 @@ export class BookingListComponent implements OnInit {
       'close',
       'extension',
       'Suspended_due_to_sum_money',
-      'Payment_on_account',
       'Unknown',
     ];
     return [
@@ -149,6 +149,46 @@ export class BookingListComponent implements OnInit {
       return 'booking-card--status-info';
     }
     return 'booking-card--status-neutral';
+  }
+
+  canFinishBooking(booking: Booking): boolean {
+    return booking.status !== 'finsh' && booking.status !== 'close';
+  }
+
+  onCardAction(
+    action: 'edit' | 'suspend' | 'cancel' | 'extend' | 'pay' | 'print' | 'finish',
+    booking: Booking,
+  ): void {
+    if (action === 'finish' && !this.canFinishBooking(booking)) {
+      return;
+    }
+    const actionLabels: Record<typeof action, string> = {
+      edit: 'تعديل',
+      suspend: 'تعليق',
+      cancel: 'إلغاء',
+      extend: 'تمديد',
+      pay: 'دفع',
+      print: 'طباعة',
+      finish: 'إنهاء',
+    };
+    this.toast.info(`${actionLabels[action]}: ${this.translate.instant('Details')}`);
+    this.router.navigate(['/booking', booking.id, 'details'], {
+      queryParams: { action },
+    });
+  }
+
+  updateCustomerTooltip(container: HTMLElement, booking: Booking): void {
+    const valueEl = container.querySelector('.booking-meta__value') as HTMLElement | null;
+    if (!valueEl) {
+      container.removeAttribute('data-tooltip');
+      return;
+    }
+    const isTruncated = valueEl.scrollWidth > valueEl.clientWidth;
+    if (!isTruncated) {
+      container.removeAttribute('data-tooltip');
+      return;
+    }
+    container.setAttribute('data-tooltip', this.customerCardLabel(booking));
   }
 
   onBookingImageError(event: Event): void {

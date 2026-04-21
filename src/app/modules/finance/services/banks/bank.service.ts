@@ -22,7 +22,7 @@ export class BankService {
   }
 
   create(payload: CreateBankRequest): Observable<unknown> {
-    return this.api.postData<unknown>(this.base, payload);
+    return this.api.postData<unknown>(this.base, payload, { suppressErrorToast: true });
   }
 }
 

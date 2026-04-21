@@ -1148,6 +1148,21 @@ html[dir='ltr'] td {
 }
 
 @media (max-width: 991.98px) {
+  html,
+  body {
+    overflow-x: hidden;
+  }
+
+  .page-wrapper.compact-wrapper .page-body-wrapper .page-body {
+    min-width: 0;
+  }
+
+  .page-wrapper.compact-wrapper .page-body-wrapper .page-body .container-fluid {
+    max-width: 100%;
+    overflow-x: clip;
+    padding-inline: 12px;
+  }
+
   .page-wrapper.compact-wrapper .page-body-wrapper::before {
     background-attachment:
       scroll,

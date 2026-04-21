@@ -24,20 +24,18 @@ export class VehicleService {
     const normalizedFleetId = normalizeFleetId(params.fleetId);
     const branchId = params.branchId ?? undefined;
     const status = params.status || undefined;
+    const backendStatus = status ? this.toBackendVehicleStatusEnumName(status) : undefined;
 
     return this.api
       .getData<unknown[]>(
         `${this.base}/List`,
         {
-          // Keep both naming styles to match backend binders.
-          ...buildFleetQueryParams(normalizedFleetId, 'both'),
+          // Match repository parameter names literally: fleetid, branchId, Stutus.
+          fleetid: normalizedFleetId,
           Fleetid: normalizedFleetId,
-          FleetId: normalizedFleetId,
-          Branchid: branchId,
+          branchId,
           BranchId: branchId,
-          Stutus: status ? this.toBackendVehicleStatusEnumName(status) : undefined,
-          Status: status,
-          status,
+          Stutus: backendStatus,
         },
         { suppressErrorToast: true },
       )
@@ -52,19 +50,24 @@ export class VehicleService {
       .getData<unknown>(
         `${this.base}/Paginated`,
         {
-          ...buildFleetQueryParams(params.fleetId, 'both'),
+          // Match repository parameter names literally:
+          // fleetid, branchId, categoryVehiclesId, search, orderingEnum, Stutus, orderByDirection, PageNumber, PageSize
+          fleetid: normalizeFleetId(params.fleetId),
+          Fleetid: normalizeFleetId(params.fleetId),
+          branchId: params.branchId ?? undefined,
           BranchId: params.branchId ?? undefined,
-          status: params.status || undefined,
-          Search: params.search,
-          PageNumber: params.pageNumber,
-          PageSize: params.pageSize,
-          OrderBy: params.orderBy,
-          OrderByDirection: params.orderByDirection,
+          categoryVehiclesId: params.categoryId ?? undefined,
           search: params.search,
+          Search: params.search,
+          orderingEnum: this.toBackendVehicleOrderingEnum(params.orderBy),
+          OrderingEnum: this.toBackendVehicleOrderingEnum(params.orderBy),
+          Stutus: params.status ? this.toBackendVehicleStatusEnumName(params.status) : undefined,
+          orderByDirection: this.toBackendOrderDirection(params.orderByDirection),
+          OrderByDirection: this.toBackendOrderDirection(params.orderByDirection),
           pageNumber: params.pageNumber,
+          PageNumber: params.pageNumber,
           pageSize: params.pageSize,
-          orderBy: params.orderBy,
-          orderByDirection: params.orderByDirection,
+          PageSize: params.pageSize,
         },
         options,
       )
@@ -233,5 +236,25 @@ export class VehicleService {
     }
 
     return 'IsAvalible';
+  }
+
+  private toBackendVehicleOrderingEnum(orderBy?: VehicleFilters['orderBy']): string | undefined {
+    if (!orderBy) {
+      return undefined;
+    }
+
+    if (orderBy === 'Year') {
+      return 'Year';
+    }
+
+    if (orderBy === 'Plantnumber') {
+      return 'Plantnumber';
+    }
+
+    return undefined;
+  }
+
+  private toBackendOrderDirection(direction?: VehicleFilters['orderByDirection']): 'Ascending' | 'Descending' {
+    return direction === 'ASC' ? 'Ascending' : 'Descending';
   }
 }

@@ -19,6 +19,18 @@ export class CategoryVehicleService {
   private api = inject(BaseService);
   private readonly base = 'CategoryVehicle';
 
+  getList(fleetId?: string | null): Observable<CategoryVehicle[]> {
+    return this.api
+      .getData<unknown[]>(
+        `${this.base}/List`,
+        {
+          ...buildFleetQueryParams(fleetId, 'both'),
+        },
+        { suppressErrorToast: true },
+      )
+      .pipe(map(items => (items ?? []).map(normalizeCategoryVehicle)));
+  }
+
   getPaginated(params: CategoryVehicleFilters): Observable<PaginatedAggregatorResponse<CategoryVehicle>> {
     return this.api.getData<unknown>(`${this.base}/Paginated`, {
       ...buildFleetQueryParams(params.fleetId, 'both'),

@@ -38,7 +38,6 @@ export class VehicleListComponent implements OnInit {
   vehicles = signal<Vehicle[]>([]);
   branches = signal<Branch[]>([]);
   categories = signal<CategoryVehicle[]>([]);
-  filteredVehicles = computed(() => this.applyClientSort(this.applyClientFilters(this.vehicles())));
   totalCount = signal(0);
   totalPages = signal(0);
   pageNumber = signal(1);
@@ -182,6 +181,36 @@ export class VehicleListComponent implements OnInit {
     this.load();
   }
 
+  onStatusFilterChange(value: VehicleStatus | ''): void {
+    this.status.set(value);
+    this.pageNumber.set(1);
+    this.load();
+  }
+
+  onBranchFilterChange(value: number | ''): void {
+    this.branchId.set(value);
+    this.pageNumber.set(1);
+    this.load();
+  }
+
+  onCategoryFilterChange(value: string): void {
+    this.categoryId.set(value);
+    this.pageNumber.set(1);
+    this.load();
+  }
+
+  onOrderByChange(value: VehicleOrderBy): void {
+    this.orderBy.set(value);
+    this.pageNumber.set(1);
+    this.load();
+  }
+
+  onOrderDirectionChange(value: VehicleOrderDirection): void {
+    this.orderByDirection.set(value);
+    this.pageNumber.set(1);
+    this.load();
+  }
+
   load(): void {
     this.loading.set(true);
     this.vehicleService
@@ -191,6 +220,8 @@ export class VehicleListComponent implements OnInit {
         pageSize: this.pageSize(),
         search: this.search() || undefined,
         status: this.status(),
+        branchId: Number(this.branchId() || 0) || undefined,
+        categoryId: this.categoryId() || undefined,
         orderBy: this.orderBy(),
         orderByDirection: this.orderByDirection(),
       })
@@ -262,26 +293,16 @@ export class VehicleListComponent implements OnInit {
     const fleetId = this.authState.fleetId() || undefined;
 
     this.branchService
-      .getPaginated({
-        fleetId,
-        pageNumber: 1,
-        pageSize: 500,
-        search: undefined,
-      })
+      .getList(fleetId)
       .subscribe({
-        next: page => this.branches.set(page.items ?? []),
+        next: branches => this.branches.set(branches ?? []),
         error: () => this.branches.set([]),
       });
 
     this.categoryVehicleService
-      .getPaginated({
-        fleetId,
-        pageNumber: 1,
-        pageSize: 500,
-        search: undefined,
-      })
+      .getList(fleetId)
       .subscribe({
-        next: page => this.categories.set(page.items ?? []),
+        next: categories => this.categories.set(categories ?? []),
         error: () => this.categories.set([]),
       });
   }
@@ -291,67 +312,6 @@ export class VehicleListComponent implements OnInit {
     return lang.startsWith('ar');
   }
 
-  private applyClientSort(items: Vehicle[]): Vehicle[] {
-    const directionFactor = this.orderByDirection() === 'ASC' ? 1 : -1;
-    const orderBy = this.orderBy();
-
-    return [...items].sort((left, right) => {
-      const leftValue = this.resolveSortValue(left, orderBy);
-      const rightValue = this.resolveSortValue(right, orderBy);
-
-      if (leftValue < rightValue) {
-        return -1 * directionFactor;
-      }
-
-      if (leftValue > rightValue) {
-        return 1 * directionFactor;
-      }
-
-      return 0;
-    });
-  }
-
-  private applyClientFilters(items: Vehicle[]): Vehicle[] {
-    const selectedStatus = this.status();
-    const selectedBranchId = Number(this.branchId() || 0);
-    const selectedCategoryId = (this.categoryId() || '').trim();
-    const searchText = (this.search() || '').trim().toLowerCase();
-
-    return items.filter(vehicle => {
-      if (selectedStatus && vehicle.status !== selectedStatus) {
-        return false;
-      }
-
-      if (selectedBranchId && Number(vehicle.branchId ?? 0) !== selectedBranchId) {
-        return false;
-      }
-
-      if (selectedCategoryId && !this.matchVehicleCategory(vehicle, selectedCategoryId)) {
-        return false;
-      }
-
-      if (!searchText) {
-        return true;
-      }
-
-      const searchableText = [
-        vehicle.make,
-        vehicle.model,
-        vehicle.plateNumber,
-        vehicle.serialNumber,
-        vehicle.engine,
-        vehicle.color,
-        vehicle.status,
-        this.getBranchName(vehicle),
-        this.getCategoryName(vehicle),
-      ]
-        .filter(Boolean)
-        .join(' ')
-        .toLowerCase();
-
-      return searchableText.includes(searchText);
-    });
-  }
 
   private resolveDailyRate(vehicle: Vehicle): number {
     const directRate = Number(vehicle.dailyRate ?? 0);
@@ -387,45 +347,6 @@ export class VehicleListComponent implements OnInit {
       const nameEn = (category.nameEn ?? '').trim().toLowerCase();
       return nameAr === categoryName || nameEn === categoryName;
     });
-  }
-
-  private matchVehicleCategory(vehicle: Vehicle, selectedCategoryId: string): boolean {
-    const directCategoryId = String(vehicle.idCategoryVehicle ?? vehicle.categoryVehicleId ?? '').trim();
-    if (directCategoryId) {
-      return directCategoryId === selectedCategoryId;
-    }
-
-    const matchedCategory = this.getCategoryByVehicle(vehicle);
-    if (!matchedCategory) {
-      return false;
-    }
-
-    return String(matchedCategory.id) === selectedCategoryId;
-  }
-
-  private resolveSortValue(vehicle: Vehicle, orderBy: VehicleOrderBy): number | string {
-    if (orderBy === 'CreatedAt') {
-      return this.toTimestamp(vehicle.createdAt);
-    }
-
-    if (orderBy === 'Year') {
-      return Number(vehicle.year || vehicle.yearMake || 0);
-    }
-
-    if (orderBy === 'Plantnumber') {
-      return (vehicle.plateNumber ?? '').toLowerCase();
-    }
-    return 0;
-  }
-
-  private toTimestamp(value?: string): number {
-    if (!value) {
-      return 0;
-    }
-
-    const date = new Date(value);
-    const timestamp = date.getTime();
-    return Number.isNaN(timestamp) ? 0 : timestamp;
   }
 
   private shouldUseImmediateFallback(url: string): boolean {

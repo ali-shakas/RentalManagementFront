@@ -525,9 +525,9 @@ export class PaymentCountFormComponent implements OnInit {
     const fleetId = this.authState.fleetId() ?? undefined;
     this.loadingCustomers.set(true);
     this.customerService
-      .getPaginated({ fleetId, pageNumber: 1, pageSize: 100, search: '', isActive: true })
+      .getList({ fleetId, isActive: true })
       .subscribe({
-        next: response => this.customers.set(response.items ?? []),
+        next: customers => this.customers.set(customers ?? []),
         error: err => {
           this.toast.error(err?.message ?? this.translate.instant('Failed to load customers'));
           this.loadingCustomers.set(false);
@@ -541,9 +541,9 @@ export class PaymentCountFormComponent implements OnInit {
     const branchId = Number(this.authState.branchId() ?? 0) || undefined;
     this.loadingVehicles.set(true);
     this.vehicleService
-      .getPaginated({ fleetId, branchId, pageNumber: 1, pageSize: 100, search: '', status: '' })
+      .getList({ fleetId, branchId, status: '' })
       .subscribe({
-        next: response => this.vehicles.set(response.items ?? []),
+        next: vehicles => this.vehicles.set(vehicles ?? []),
         error: err => {
           this.toast.error(err?.message ?? this.translate.instant('Failed to load vehicles'));
           this.loadingVehicles.set(false);
@@ -556,10 +556,10 @@ export class PaymentCountFormComponent implements OnInit {
     const fleetId = this.authState.fleetId() ?? undefined;
     this.loadingBranches.set(true);
     this.branchService
-      .getPaginated({ fleetId, pageNumber: 1, pageSize: 200, search: '' })
+      .getList(fleetId)
       .subscribe({
-        next: response => {
-          const active = (response.items ?? []).filter(branch => branch.isActive !== false);
+        next: branches => {
+          const active = (branches ?? []).filter(branch => branch.isActive !== false);
           this.branches.set(active);
           const currentBranch = Number(this.authState.branchId() ?? 0);
           const fallback = active.find(item => item.id === currentBranch) ?? active.at(0);
@@ -580,9 +580,9 @@ export class PaymentCountFormComponent implements OnInit {
     const branchId = Number(this.authState.branchId() ?? 0) || undefined;
     this.loadingBookings.set(true);
     this.bookingService
-      .getPaginated({ fleetId, branchId, pageNumber: 1, pageSize: 100, search: '' })
+      .getList({ fleetId, branchId })
       .subscribe({
-        next: response => this.bookings.set(response.items ?? []),
+        next: bookings => this.bookings.set(bookings ?? []),
         error: err => {
           this.toast.error(err?.message ?? this.translate.instant('Failed to load bookings'));
           this.loadingBookings.set(false);

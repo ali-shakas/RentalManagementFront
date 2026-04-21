@@ -44,7 +44,7 @@
 
       @if (loading()) {
         <div class="text-center py-5"><div class="spinner-border text-primary"></div></div>
-      } @else if (!filteredCustomers().length) {
+      } @else if (!customers().length) {
         <app-empty-state [title]="'No customers found' | translate" [description]="'Create a customer profile to use it in bookings.' | translate" />
       } @else {
         <div class="table-responsive">
@@ -62,7 +62,7 @@
               </tr>
             </thead>
             <tbody>
-              @for (customer of pagedCustomers(); track customer.id) {
+              @for (customer of customers(); track customer.id) {
                 <tr>
                   <td>{{ getSubscriptionName(customer) }}</td>
                   <td>{{ getArabicName(customer) }}</td>
@@ -109,7 +109,7 @@
 
       @if (!loading() && totalCount() > 0) {
         <app-pagination-bar
-          [pageNumber]="currentPage()"
+          [pageNumber]="pageNumber()"
           [totalPages]="totalPages()"
           [totalCount]="totalCount()"
           [pageSize]="pageSize()"
