@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, ElementRef, OnInit, computed, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -31,6 +32,14 @@ import { focusFirstInvalidControl } from '../../../../../shared/utils/focus-firs
     SmoothSelectComponent,
   ],
   templateUrl: './bank-form.component.html',
+  styles: [
+    `
+      :host ::ng-deep .app-field-invalid .app-soft-select__trigger {
+        border-color: #dc3545 !important;
+        box-shadow: 0 0 0 0.14rem rgba(220, 53, 69, 0.15);
+      }
+    `,
+  ],
 })
 export class BankFormComponent implements OnInit {
   private readonly hostEl = inject(ElementRef<HTMLElement>);
@@ -44,6 +53,7 @@ export class BankFormComponent implements OnInit {
 
   loading = signal(false);
   loadingAccounts = signal(false);
+  submitAttempted = signal(false);
   countingEntries = signal<CountingEntry[]>([]);
 
   readonly countingOptions = computed<SmoothSelectOption[]>(() => [
@@ -57,8 +67,8 @@ export class BankFormComponent implements OnInit {
   form = this.fb.group({
     countingId: ['', [Validators.required]],
     name: ['', [Validators.required, Validators.maxLength(255)]],
-    description: ['', [Validators.maxLength(500)]],
-    code: ['', [Validators.maxLength(100)]],
+    description: ['', [Validators.required, Validators.maxLength(500)]],
+    code: ['', [Validators.required, Validators.maxLength(100)]],
     fleetId: ['', [Validators.required]],
   });
 
@@ -68,8 +78,10 @@ export class BankFormComponent implements OnInit {
   }
 
   onSubmit(): void {
+    this.submitAttempted.set(true);
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      this.toast.warning(this.translate.instant('Please complete the required fields'));
       focusFirstInvalidControl(this.hostEl.nativeElement);
       return;
     }
@@ -90,11 +102,39 @@ export class BankFormComponent implements OnInit {
         this.router.navigate(['/banks']);
       },
       error: err => {
-        this.toast.error(err?.message ?? this.translate.instant('Failed to save bank'));
+        this.applyServerValidationErrors(err);
+        this.toast.error(this.resolveCreateBankErrorMessage(err));
         this.loading.set(false);
       },
       complete: () => this.loading.set(false),
     });
+  }
+
+  hasError(controlName: keyof typeof this.form.controls): boolean {
+    const control = this.form.controls[controlName];
+    return !!control && control.invalid && (control.touched || control.dirty || this.submitAttempted());
+  }
+
+  getErrorMessage(controlName: keyof typeof this.form.controls): string {
+    const control = this.form.controls[controlName];
+    if (!control?.errors) {
+      return '';
+    }
+
+    if (control.errors['server']) {
+      return String(control.errors['server']);
+    }
+
+    if (control.errors['required']) {
+      return this.translate.instant('This field is required');
+    }
+
+    if (control.errors['maxlength']) {
+      const requiredLength = control.errors['maxlength']?.requiredLength;
+      return this.translate.instant('Maximum length is {{max}} characters', { max: requiredLength });
+    }
+
+    return this.translate.instant('Please check this field');
   }
 
   private loadCountingEntries(): void {
@@ -190,5 +230,119 @@ export class BankFormComponent implements OnInit {
     const name = (isArabic ? entry.nameAr : entry.nameEn) || entry.nameAr || entry.nameEn || '-';
     const number = entry.countingNumber ?? '-';
     return `${number} - ${name}`;
+  }
+
+  private resolveCreateBankErrorMessage(err: unknown): string {
+    if (!(err instanceof HttpErrorResponse)) {
+      return this.translate.instant('Failed to save bank');
+    }
+
+    const body = err.error as unknown;
+    const backendMessage = this.extractBackendMessage(body);
+    if (backendMessage) {
+      return backendMessage;
+    }
+
+    if (err.status === 400 && this.form.invalid) {
+      return this.translate.instant('Please complete the required fields');
+    }
+
+    return this.translate.instant('Failed to save bank');
+  }
+
+  private applyServerValidationErrors(err: unknown): void {
+    if (!(err instanceof HttpErrorResponse) || !err.error || typeof err.error !== 'object') {
+      return;
+    }
+
+    const payload = err.error as Record<string, unknown>;
+    const errorsNode =
+      (payload['errors'] as Record<string, unknown> | undefined) ??
+      ((payload['error'] as Record<string, unknown> | undefined)?.['propertyErrors'] as
+        | Record<string, unknown>
+        | undefined);
+
+    if (!errorsNode || typeof errorsNode !== 'object') {
+      return;
+    }
+
+    let foundAny = false;
+    Object.entries(errorsNode).forEach(([rawKey, rawValue]) => {
+      const control = this.matchControlByServerKey(rawKey);
+      if (!control) {
+        return;
+      }
+
+      const message = Array.isArray(rawValue)
+        ? rawValue.map(x => String(x)).find(Boolean)
+        : typeof rawValue === 'string'
+          ? rawValue
+          : '';
+
+      const currentErrors = control.errors ?? {};
+      control.setErrors({
+        ...currentErrors,
+        server: message || this.translate.instant('Please check this field'),
+      });
+      control.markAsTouched();
+      foundAny = true;
+    });
+
+    if (foundAny) {
+      this.form.markAllAsTouched();
+      focusFirstInvalidControl(this.hostEl.nativeElement);
+    }
+  }
+
+  private matchControlByServerKey(rawKey: string) {
+    const normalized = rawKey.replace(/[^a-zA-Z]/g, '').toLowerCase();
+    const candidates: Record<string, keyof typeof this.form.controls> = {
+      countingid: 'countingId',
+      idcounting: 'countingId',
+      name: 'name',
+      code: 'code',
+      description: 'description',
+      fleetid: 'fleetId',
+    };
+    const mapped = candidates[normalized];
+    return mapped ? this.form.controls[mapped] : null;
+  }
+
+  private extractBackendMessage(errorBody: unknown): string | null {
+    if (typeof errorBody === 'string') {
+      const trimmed = errorBody.trim();
+      return trimmed ? trimmed : null;
+    }
+    if (!errorBody || typeof errorBody !== 'object') {
+      return null;
+    }
+
+    const e = errorBody as Record<string, unknown>;
+    const message = e['message'];
+    if (typeof message === 'string' && message.trim()) {
+      return message.trim();
+    }
+
+    const title = e['title'];
+    const detail = e['detail'];
+    if (typeof title === 'string' && typeof detail === 'string' && detail.trim()) {
+      return `${title}: ${detail}`;
+    }
+    if (typeof detail === 'string' && detail.trim()) {
+      return detail.trim();
+    }
+
+    const errors = e['errors'];
+    if (errors && typeof errors === 'object') {
+      const first = Object.values(errors as Record<string, unknown>)
+        .flatMap(value => (Array.isArray(value) ? value : [value]))
+        .map(x => String(x))
+        .find(Boolean);
+      if (first) {
+        return first;
+      }
+    }
+
+    return null;
   }
 }

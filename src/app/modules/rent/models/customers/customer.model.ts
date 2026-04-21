@@ -36,6 +36,7 @@ export interface Customer {
 export interface CustomerFilters {
   fleetId?: string;
   search?: string;
+  searchField?: string;
   isActive?: boolean | '';
   pageNumber: number;
   pageSize: number;

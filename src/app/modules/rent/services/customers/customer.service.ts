@@ -20,12 +20,27 @@ export class CustomerService {
   private api = inject(BaseService);
   private readonly base = 'Customer';
 
+  getList(params: { fleetId?: string | null; isActive?: boolean | '' } = {}): Observable<Customer[]> {
+    return this.api
+      .getData<unknown[]>(
+        `${this.base}/List`,
+        {
+          ...buildFleetQueryParams(params.fleetId, 'both'),
+          isActive: params.isActive === '' ? undefined : params.isActive,
+        },
+        { suppressErrorToast: true },
+      )
+      .pipe(map(items => (items ?? []).map(normalizeCustomer)));
+  }
+
   getPaginated(params: CustomerFilters): Observable<PaginatedAggregatorResponse<Customer>> {
     return this.api
       .getData<unknown>(`${this.base}/Paginated`, {
         ...buildFleetQueryParams(params.fleetId, 'both'),
         Search: params.search,
         search: params.search,
+        SearchField: params.searchField,
+        searchField: params.searchField,
         isActive: params.isActive === '' ? undefined : params.isActive,
         PageNumber: params.pageNumber,
         PageSize: params.pageSize,

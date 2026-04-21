@@ -13,7 +13,7 @@
           <div class="app-search-control">
             <input
               class="form-control"
-              [placeholder]="'Search vehicles...' | translate"
+              [placeholder]="'Search by plate number, year, or serial number' | translate"
               [ngModel]="search()"
               (ngModelChange)="search.set($event)"
             />
@@ -30,7 +30,7 @@
             [placeholder]="'All statuses'"
             [options]="statusFilterOptions"
             [value]="status()"
-            (valueChange)="status.set($any($event))"
+            (valueChange)="onStatusFilterChange($any($event))"
           />
         </div>
 
@@ -41,7 +41,7 @@
             [placeholder]="'All branches'"
             [options]="branchFilterOptions()"
             [value]="branchId()"
-            (valueChange)="branchId.set($any($event))"
+            (valueChange)="onBranchFilterChange($any($event))"
           />
         </div>
 
@@ -52,7 +52,7 @@
             [placeholder]="'All categories'"
             [options]="categoryFilterOptions()"
             [value]="categoryId()"
-            (valueChange)="categoryId.set($any($event))"
+            (valueChange)="onCategoryFilterChange($any($event))"
           />
         </div>
 
@@ -62,7 +62,7 @@
             [ariaLabel]="'Sort by' | translate"
             [options]="orderByFilterOptions"
             [value]="orderBy()"
-            (valueChange)="orderBy.set($any($event))"
+            (valueChange)="onOrderByChange($any($event))"
           />
         </div>
 
@@ -72,18 +72,18 @@
             [ariaLabel]="'Order direction' | translate"
             [options]="orderDirectionFilterOptions"
             [value]="orderByDirection()"
-            (valueChange)="orderByDirection.set($any($event))"
+            (valueChange)="onOrderDirectionChange($any($event))"
           />
         </div>
       </div>
 
       @if (loading()) {
         <div class="text-center py-5"><div class="spinner-border text-primary"></div></div>
-      } @else if (!filteredVehicles().length) {
+      } @else if (!vehicles().length) {
         <app-empty-state [title]="'No vehicles found' | translate" [description]="'Add vehicles to start managing bookings and fleet availability.' | translate" />
       } @else {
         <div class="vehicle-cards-grid">
-          @for (vehicle of filteredVehicles(); track vehicle.id; let cardIndex = $index) {
+          @for (vehicle of vehicles(); track vehicle.id; let cardIndex = $index) {
             <article class="vehicle-card">
               <div class="vehicle-card__media">
                 <div class="vehicle-card__media-overlay"></div>

@@ -14,33 +14,54 @@
             <div class="row g-3">
               <div class="col-md-6">
                 <label class="form-label">{{ 'Counting ID' | translate }} <span class="text-danger">*</span></label>
-                <app-smooth-select
-                  formControlName="countingId"
-                  [options]="countingOptions()"
-                  [placeholder]="'Select account from chart' | translate"
-                  [disabled]="false"
-                  [ariaLabel]="'Counting ID' | translate"
-                />
+                <div [class.app-field-invalid]="hasError('countingId')">
+                  <app-smooth-select
+                    formControlName="countingId"
+                    [options]="countingOptions()"
+                    [placeholder]="'Select account from chart' | translate"
+                    [disabled]="false"
+                    [ariaLabel]="'Counting ID' | translate"
+                  />
+                </div>
+                @if (hasError('countingId')) {
+                  <div class="invalid-feedback d-block">{{ getErrorMessage('countingId') }}</div>
+                }
               </div>
 
               <div class="col-md-6">
                 <label class="form-label">{{ 'Name' | translate }} <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" formControlName="name" />
+                <input type="text" class="form-control" formControlName="name" [class.is-invalid]="hasError('name')" />
+                @if (hasError('name')) {
+                  <div class="invalid-feedback">{{ getErrorMessage('name') }}</div>
+                }
               </div>
 
               <div class="col-md-6">
-                <label class="form-label">{{ 'Code' | translate }}</label>
-                <input type="text" class="form-control" formControlName="code" />
+                <label class="form-label">{{ 'Code' | translate }} <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" formControlName="code" [class.is-invalid]="hasError('code')" />
+                @if (hasError('code')) {
+                  <div class="invalid-feedback">{{ getErrorMessage('code') }}</div>
+                }
               </div>
 
               <div class="col-12">
-                <label class="form-label">{{ 'Description' | translate }}</label>
-                <textarea class="form-control" rows="4" formControlName="description"></textarea>
+                <label class="form-label">{{ 'Description' | translate }} <span class="text-danger">*</span></label>
+                <textarea
+                  class="form-control"
+                  rows="4"
+                  formControlName="description"
+                  [class.is-invalid]="hasError('description')"
+                ></textarea>
+                @if (hasError('description')) {
+                  <div class="invalid-feedback">{{ getErrorMessage('description') }}</div>
+                }
               </div>
             </div>
 
-            @if (form.invalid && form.touched) {
-              <div class="text-danger small mt-3">{{ 'Required field' | translate }}</div>
+            @if (form.invalid && submitAttempted()) {
+              <div class="alert alert-warning py-2 px-3 mt-3 mb-0">
+                {{ 'Please complete the required fields' | translate }}
+              </div>
             }
 
             <div class="mt-4 d-flex gap-2">

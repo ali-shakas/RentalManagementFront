@@ -31,6 +31,8 @@ export class Header implements OnInit, OnDestroy {
 
   public gregorianDate = '';
   public hijriDate = '';
+  public gregorianNumericDate = '';
+  public hijriNumericDate = '';
   public time12 = '';
 
   public get isArabicLanguage(): boolean {
@@ -74,21 +76,36 @@ export class Header implements OnInit, OnDestroy {
     const now = new Date();
     const isArabic = this.getLanguageCode() === 'ar';
     const baseLocale = isArabic ? 'ar-SA' : 'en-US';
-    const hijriLocale = isArabic ? 'ar-SA-u-ca-islamic' : 'en-US-u-ca-islamic';
+    const hijriLocale = isArabic ? 'ar-SA-u-ca-islamic-umalqura' : 'en-US-u-ca-islamic-umalqura';
 
     this.gregorianDate = new Intl.DateTimeFormat(baseLocale, {
       year: 'numeric',
-      month: 'short',
+      month: 'long',
       day: '2-digit',
-      weekday: 'short',
+      weekday: 'long',
       calendar: 'gregory',
     }).format(now);
 
     this.hijriDate = new Intl.DateTimeFormat(hijriLocale, {
       year: 'numeric',
-      month: 'short',
+      month: 'long',
       day: '2-digit',
-      weekday: 'short',
+      weekday: 'long',
+      era: 'short',
+    }).format(now);
+
+    this.gregorianNumericDate = new Intl.DateTimeFormat(baseLocale, {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      calendar: 'gregory',
+    }).format(now);
+
+    this.hijriNumericDate = new Intl.DateTimeFormat(hijriLocale, {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      era: 'short',
     }).format(now);
 
     this.time12 = new Intl.DateTimeFormat(baseLocale, {
@@ -97,6 +114,7 @@ export class Header implements OnInit, OnDestroy {
       second: '2-digit',
       hour12: true,
     }).format(now);
+
   }
 
   private getLanguageCode(): 'ar' | 'en' {

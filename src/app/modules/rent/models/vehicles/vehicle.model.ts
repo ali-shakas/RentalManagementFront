@@ -46,6 +46,7 @@ export interface Vehicle {
 export interface VehicleFilters {
   fleetId?: string;
   branchId?: number | null;
+  categoryId?: string | number | null;
   status?: VehicleStatus | '';
   orderBy?: VehicleOrderBy;
   orderByDirection?: VehicleOrderDirection;

@@ -858,4 +858,40 @@ body.dark-only .page-wrapper.compact-wrapper .page-header .header-wrapper .toggl
       }
     }
   }
+
+  /* Hard mobile lock: keep sidebar as off-canvas drawer, never in document flow. */
+  .page-wrapper.compact-wrapper .page-body-wrapper > .sidebar-wrapper {
+    position: fixed !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    inset-inline-start: auto !important;
+    inset-inline-end: 0 !important;
+    width: 246px !important;
+    max-width: 82vw !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    margin: 0 !important;
+    transform: translateX(0);
+    z-index: 1300 !important;
+    display: block !important;
+  }
+
+  .page-wrapper.compact-wrapper .page-body-wrapper > .sidebar-wrapper.close_icon {
+    transform: translateX(100%) !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+
+  .page-wrapper.compact-wrapper .page-body-wrapper > .sidebar-wrapper:not(.close_icon) {
+    transform: translateX(0) !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+  }
+
+  html[dir='rtl'] .page-wrapper.compact-wrapper .page-body-wrapper > .sidebar-wrapper {
+    inset-inline-start: auto !important;
+    inset-inline-end: 0 !important;
+  }
 }

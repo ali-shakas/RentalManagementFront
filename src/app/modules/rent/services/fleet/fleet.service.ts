@@ -16,6 +16,15 @@ export class FleetService {
 
   private readonly base = 'Fleet';
 
+  getList(options?: BaseRequestOptions): Observable<Fleet[]> {
+    return this.api
+      .getData<unknown[]>(`${this.base}/List`, undefined, {
+        suppressErrorToast: true,
+        ...options,
+      })
+      .pipe(map(items => (items ?? []).map(normalizeFleet)));
+  }
+
   getPaginated(params: PaginatedRequest, options?: BaseRequestOptions): Observable<PaginatedAggregatorResponse<Fleet>> {
     return this.api.getData<unknown>(`${this.base}/Paginated`, {
       PageNumber: params.pageNumber,

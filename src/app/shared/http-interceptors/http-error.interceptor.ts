@@ -80,6 +80,60 @@ function formatHttpValidationMessage(errorBody: unknown): string | null {
   return null;
 }
 
+function buildFriendlyHttpMessage(
+  reqUrl: string,
+  err: HttpErrorResponse,
+  translate: TranslateService,
+): string {
+  const validation = formatHttpValidationMessage(err.error);
+  if (validation) {
+    return validation;
+  }
+
+  if (err.status === 0) {
+    return translate.instant('Unexpected error. Please try again later.');
+  }
+  if (err.status === 400) {
+    const lowerUrl = (reqUrl || '').toLowerCase();
+    if (lowerUrl.includes('/bank')) {
+      return translate.instant('Bank data is incomplete. Please fill in the required fields.');
+    }
+    if (lowerUrl.includes('/cash')) {
+      return translate.instant('Cash account data is incomplete. Please fill in the required fields.');
+    }
+    if (lowerUrl.includes('/booking')) {
+      return translate.instant('Booking data is incomplete. Please fill in the required fields.');
+    }
+    return translate.instant('Please complete the required fields');
+  }
+  if (err.status === 401) {
+    return translate.instant('Session expired. Please login again.');
+  }
+  if (err.status === 403) {
+    return translate.instant('Unexpected error. Please try again later.');
+  }
+  if (err.status === 404) {
+    return translate.instant('No records found');
+  }
+  if (err.status >= 500) {
+    return translate.instant('Unexpected error. Please try again later.');
+  }
+
+  const topMessage =
+    typeof err.error?.message === 'string' && err.error.message.trim()
+      ? err.error.message.trim()
+      : null;
+  if (topMessage) {
+    return topMessage;
+  }
+
+  if (typeof err.message === 'string' && err.message.trim() && !err.message.startsWith('Http failure response')) {
+    return err.message.trim();
+  }
+
+  return translate.instant('Unexpected error. Please try again later.');
+}
+
 export const httpErrorInterceptor: HttpInterceptorFn = (req, next) => {
   const tokenService = inject(TokenService);
   const router = inject(Router);
@@ -89,21 +143,18 @@ export const httpErrorInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(req).pipe(
     catchError((err: HttpErrorResponse) => {
+      const friendlyMessage = buildFriendlyHttpMessage(req.url, err, translate);
+      // Normalize the propagated error message so all screens get human-readable text.
+      (err as unknown as { message: string }).message = friendlyMessage;
+
       if (err.status === 401) {
         tokenService.removeToken();
         router.navigate(['/auth/login']);
-        toast.error(translate.instant('Session expired. Please login again.'));
+        toast.error(friendlyMessage);
       } else if (suppressErrorToast) {
         return throwError(() => err);
       } else {
-        const validation = formatHttpValidationMessage(err.error);
-        if (validation) {
-          toast.error(validation);
-        } else if (Array.isArray(err.error?.errors) && err.error.errors.length) {
-          toast.error(err.error.errors.join(' '));
-        } else if (err.message) {
-          toast.error(err.message);
-        }
+        toast.error(friendlyMessage);
       }
       return throwError(() => err);
     }),

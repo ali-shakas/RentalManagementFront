@@ -16,6 +16,18 @@ export class BranchService {
   private api = inject(BaseService);
   private readonly base = 'Branch';
 
+  getList(fleetId?: string | null): Observable<Branch[]> {
+    return this.api
+      .getData<unknown[]>(
+        `${this.base}/List`,
+        {
+          ...buildFleetQueryParams(fleetId, 'both'),
+        },
+        { suppressErrorToast: true },
+      )
+      .pipe(map(items => (items ?? []).map(normalizeBranch)));
+  }
+
   getPaginated(
     params: BranchPaginatedRequest,
     options?: BaseRequestOptions,

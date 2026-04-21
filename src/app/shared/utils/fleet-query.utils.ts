@@ -25,5 +25,6 @@ export function buildFleetQueryParams(
   return {
     FleetId: normalizedFleetId,
     IdFleet: normalizedFleetId,
+    Fleetid: normalizedFleetId,
   };
 }

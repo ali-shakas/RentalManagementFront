@@ -199,10 +199,10 @@ export class UserFormComponent implements OnInit {
   private loadBranches(fleetId: string): void {
     this.loadingBranches.set(true);
     this.branchService
-      .getPaginated({ fleetId, pageNumber: 1, pageSize: 200, search: '' })
+      .getList(fleetId)
       .subscribe({
-        next: response => {
-          const activeBranches = (response.items ?? []).filter(branch => branch.isActive !== false);
+        next: branches => {
+          const activeBranches = (branches ?? []).filter(branch => branch.isActive !== false);
           this.branches.set(activeBranches);
         },
         error: () => {

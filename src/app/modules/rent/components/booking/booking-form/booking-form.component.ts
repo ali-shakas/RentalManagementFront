@@ -19,7 +19,6 @@ import {
 } from 'rxjs';
 
 import { AuthStateService } from '../../../../../core/auth/auth-state.service';
-import { PaginatedAggregatorResponse } from '../../../../../core/interfaces';
 import { ToastService } from '../../../../../shared/services/toast.service';
 import { PageHeaderComponent } from '../../../../../shared/ui/page-header/page-header.component';
 import {
@@ -280,13 +279,6 @@ export class BookingFormComponent implements OnInit {
   ngOnInit(): void {
     const fleetId = this.authState.fleetId() || undefined;
     const branchId = Number(this.authState.branchId() || 0) || undefined;
-    const emptyCategories: PaginatedAggregatorResponse<CategoryVehicle> = {
-      items: [],
-      pageNumber: 1,
-      pageSize: 200,
-      totalCount: 0,
-      totalPages: 0,
-    };
     forkJoin({
       // customers: this.customerService.getPaginated({
       //   fleetId,
@@ -299,14 +291,7 @@ export class BookingFormComponent implements OnInit {
         branchId,
         status: 'Available',
       }),
-      categories: this.categoryVehicleService
-        .getPaginated({
-          fleetId,
-          pageNumber: 1,
-          pageSize: 200,
-          search: '',
-        })
-        .pipe(catchError(() => of(emptyCategories))),
+      categories: this.categoryVehicleService.getList(fleetId).pipe(catchError(() => of([]))),
       banks: this.bankService.getList(fleetId).pipe(catchError(() => of([]))),
       cashAccounts: this.cashAccountService.getList(fleetId).pipe(catchError(() => of([]))),
       countingEntries: this.countingEntryService.getList(fleetId).pipe(catchError(() => of([]))),
@@ -324,7 +309,7 @@ export class BookingFormComponent implements OnInit {
       next: ({ vehicles, categories, banks, cashAccounts, countingEntries, settings }) => {
         // this.customers.set(customers.items ?? []);
         this.vehicles.set(vehicles ?? []);
-        this.categories.set(categories.items ?? []);
+        this.categories.set(categories ?? []);
         this.banks.set(banks ?? []);
         this.cashAccounts.set(cashAccounts ?? []);
         this.countingEntries.set(countingEntries ?? []);
