@@ -31,6 +31,9 @@ export class PaymentCountService {
   getPaginated(params: {
     fleetId?: string | null;
     branchId?: number | null;
+    status?: number | null;
+    bondType?: number | null;
+    paymentType?: number | null;
     pageSize?: number;
     pageNumber?: number;
     search?: string;
@@ -45,6 +48,12 @@ export class PaymentCountService {
         IdFleet: fleetId || undefined,
         BRANCHID: params.branchId ?? undefined,
         BranchId: params.branchId ?? undefined,
+        Status: params.status ?? undefined,
+        status: params.status ?? undefined,
+        BondType: params.bondType ?? undefined,
+        bondType: params.bondType ?? undefined,
+        PaymentType: params.paymentType ?? undefined,
+        paymentType: params.paymentType ?? undefined,
         PageSize: params.pageSize,
         PageNumber: params.pageNumber,
         Search: params.search?.trim() || undefined,
@@ -54,6 +63,9 @@ export class PaymentCountService {
         pageNumber: params.pageNumber,
         fleetId: fleetId || undefined,
         branchId: params.branchId ?? undefined,
+        statusId: params.status ?? undefined,
+        bondTypeId: params.bondType ?? undefined,
+        paymentTypeId: params.paymentType ?? undefined,
         search: params.search?.trim() || undefined,
         orderByDirection: params.orderByDirection ? normalizedDirection.toLowerCase() : undefined,
         orderBy: params.orderBy,

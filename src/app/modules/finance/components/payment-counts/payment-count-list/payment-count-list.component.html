@@ -12,7 +12,7 @@
   [showPageSize]="true"
   [enableSearch]="true"
   [searchValue]="search()"
-  [searchPlaceholder]="'Search vouchers'"
+  [searchPlaceholder]="'Search by voucher number, customer, vehicle, or booking'"
   [enableSorting]="true"
   [orderByValue]="orderBy()"
   [orderByDirectionValue]="orderByDirection()"
@@ -24,4 +24,48 @@
   (pageSizeChange)="onPageSizeChange($event)"
   [createLink]="'/payment-counts/create'"
   [createLabel]="'Create Payment Count'"
-/>
+>
+  <div finance-extra-filters class="app-filter-field app-filter-field--narrow">
+    <label class="app-filter-label">{{ 'Status' | translate }}</label>
+    <app-smooth-select
+      [ariaLabel]="'Status' | translate"
+      [placeholder]="'All statuses' | translate"
+      [options]="statusFilterOptions"
+      [value]="statusFilter()"
+      (valueChange)="onStatusFilterChange($any($event))"
+    />
+  </div>
+
+  <div finance-extra-filters class="app-filter-field app-filter-field--narrow">
+    <label class="app-filter-label">{{ 'Bond Type' | translate }}</label>
+    <app-smooth-select
+      [ariaLabel]="'Bond Type' | translate"
+      [placeholder]="'All bond types' | translate"
+      [options]="bondTypeFilterOptions"
+      [value]="bondTypeFilter()"
+      (valueChange)="onBondTypeFilterChange($any($event))"
+    />
+  </div>
+
+  <div finance-extra-filters class="app-filter-field app-filter-field--narrow">
+    <label class="app-filter-label">{{ 'Payment Type' | translate }}</label>
+    <app-smooth-select
+      [ariaLabel]="'Payment Type' | translate"
+      [placeholder]="'All payment types' | translate"
+      [options]="paymentTypeFilterOptions"
+      [value]="paymentTypeFilter()"
+      (valueChange)="onPaymentTypeFilterChange($any($event))"
+    />
+  </div>
+
+  <div finance-extra-filters class="app-filter-field app-filter-field--narrow">
+    <label class="app-filter-label">{{ 'Branch' | translate }}</label>
+    <app-smooth-select
+      [ariaLabel]="'Branch' | translate"
+      [placeholder]="'All branches' | translate"
+      [options]="branchFilterOptions()"
+      [value]="branchFilter()"
+      (valueChange)="onBranchFilterChange($any($event))"
+    />
+  </div>
+</app-finance-list-shell>

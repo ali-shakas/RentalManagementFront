@@ -37,6 +37,8 @@ import { BranchService } from '../../../services/branches/branch.service';
   styleUrl: './booking-list.component.scss',
 })
 export class BookingListComponent implements OnInit {
+  private static readonly DEFAULT_PAGE_SIZE = 10;
+
   private bookingService = inject(BookingService);
   private branchService = inject(BranchService);
   private authState = inject(AuthStateService);
@@ -48,7 +50,7 @@ export class BookingListComponent implements OnInit {
   totalCount = signal(0);
   totalPages = signal(0);
   pageNumber = signal(1);
-  pageSize = signal(12);
+  pageSize = signal(BookingListComponent.DEFAULT_PAGE_SIZE);
   loading = signal(false);
   search = signal('');
   status = signal<BookingStatus | ''>('');
@@ -259,12 +261,26 @@ export class BookingListComponent implements OnInit {
 
   onStatusFilterChange(value: BookingStatus | ''): void {
     this.status.set(value);
-    this.onSearchSubmit();
+    if (!value) {
+      // Reset mode: All statuses.
+      this.pageNumber.set(1);
+      this.pageSize.set(BookingListComponent.DEFAULT_PAGE_SIZE);
+    } else {
+      this.pageNumber.set(1);
+    }
+    this.load();
   }
 
   onBranchFilterChange(value: number | ''): void {
     this.branchId.set(value);
-    this.onSearchSubmit();
+    if (!value) {
+      // Reset mode: All branches.
+      this.pageNumber.set(1);
+      this.pageSize.set(BookingListComponent.DEFAULT_PAGE_SIZE);
+    } else {
+      this.pageNumber.set(1);
+    }
+    this.load();
   }
 
   formatBookingTotal(value: number | null | undefined): string {
@@ -290,11 +306,10 @@ export class BookingListComponent implements OnInit {
       })
       .subscribe({
         next: page => {
-          this.bookings.set(page.items ?? []);
+          this.bookings.set(this.sortBookingsForStableDisplay(page.items ?? []));
           this.totalCount.set(page.totalCount ?? page.items?.length ?? 0);
           this.totalPages.set(page.totalPages ?? 0);
           this.pageNumber.set(page.pageNumber ?? this.pageNumber());
-          this.pageSize.set(page.pageSize ?? this.pageSize());
         },
         error: err => {
           this.toast.error(this.bookingListLoadErrorMessage(err));
@@ -378,5 +393,25 @@ export class BookingListComponent implements OnInit {
   private isArabicUi(): boolean {
     const lang = (this.translate.currentLang || this.translate.getDefaultLang() || 'en').toLowerCase();
     return lang.startsWith('ar');
+  }
+
+  private sortBookingsForStableDisplay(items: Booking[]): Booking[] {
+    return [...items].sort((a, b) => {
+      const aDate = new Date(a.createdAt ?? '').getTime();
+      const bDate = new Date(b.createdAt ?? '').getTime();
+      const safeADate = Number.isFinite(aDate) ? aDate : 0;
+      const safeBDate = Number.isFinite(bDate) ? bDate : 0;
+      if (safeADate !== safeBDate) {
+        return safeBDate - safeADate; // default UI order is DESC by created date
+      }
+
+      const idA = Number(a.id);
+      const idB = Number(b.id);
+      if (Number.isFinite(idA) && Number.isFinite(idB) && idA !== idB) {
+        return idB - idA;
+      }
+
+      return String(b.id).localeCompare(String(a.id));
+    });
   }
 }

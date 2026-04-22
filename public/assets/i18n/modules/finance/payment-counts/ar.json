@@ -73,4 +73,10 @@
   "This guidance links vouchers with the core rental accounting flow and can be adjusted by policy.": "هذا التوجيه يربط السندات بالتدفق المحاسبي الأساسي للتأجير ويمكن تعديله حسب سياسة المنشأة.",
   "Vehicle ID": "معرف المركبة",
   "Unknown": "غير معروف"
+  ,
+  "Search by voucher number, customer, vehicle, cash, bank, or booking": "ابحث برقم السند أو العميل أو المركبة أو النقدي أو البنك أو الحجز",
+  "Search by voucher number, customer, vehicle, or booking": "ابحث برقم السند أو العميل أو المركبة أو الحجز",
+  "All bond types": "كل أنواع السند",
+  "All payment types": "كل أنواع الدفع",
+  "All branches": "كل الفروع"
 }

@@ -72,5 +72,10 @@
   "Suggested accounting entry": "Suggested accounting entry",
   "This guidance links vouchers with the core rental accounting flow and can be adjusted by policy.": "This guidance links vouchers with the core rental accounting flow and can be adjusted by policy.",
   "Vehicle ID": "Vehicle ID",
-  "Unknown": "Unknown"
+  "Unknown": "Unknown",
+  "Search by voucher number, customer, vehicle, cash, bank, or booking": "Search by voucher number, customer, vehicle, cash, bank, or booking",
+  "Search by voucher number, customer, vehicle, or booking": "Search by voucher number, customer, vehicle, or booking",
+  "All bond types": "All bond types",
+  "All payment types": "All payment types",
+  "All branches": "All branches"
 }

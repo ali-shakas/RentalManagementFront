@@ -91,12 +91,18 @@ export class CategoryVehicleListComponent implements OnInit {
   }
 
   changePageSize(size: number): void {
+    if (size <= 0 || size === this.pageSize()) {
+      return;
+    }
     this.pageSize.set(size);
     this.pageNumber.set(1);
     this.load();
   }
 
   goToPage(page: number): void {
+    if (page < 1 || page > this.totalPages() || page === this.pageNumber()) {
+      return;
+    }
     this.pageNumber.set(page);
     this.load();
   }

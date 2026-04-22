@@ -96,7 +96,7 @@
                   (error)="onVehicleImageError($event)"
                 />
                 <div class="vehicle-card__status">
-                  <app-status-badge [label]="vehicle.status | translate" [tone]="getStatusTone(vehicle.status)" />
+                  <app-status-badge [label]="getStatusLabel(vehicle.status)" [tone]="getStatusTone(vehicle.status)" />
                 </div>
                 <div class="vehicle-card__quick-meta">
                   <span class="vehicle-chip">{{ vehicle.year || vehicle.yearMake || '-' }}</span>
@@ -177,7 +177,7 @@
           [totalPages]="totalPages()"
           [totalCount]="totalCount()"
           [pageSize]="pageSize()"
-          [pageSizeOptions]="[8, 12, 16, 24, 48]"
+          [pageSizeOptions]="[10, 20, 50, 100]"
           (pageChange)="goToPage($event)"
           (pageSizeChange)="changePageSize($event)"
         />

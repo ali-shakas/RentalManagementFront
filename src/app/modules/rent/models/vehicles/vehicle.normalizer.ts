@@ -50,7 +50,11 @@ function normalizeVehicleStatus(source: Record<string, unknown>): Vehicle['statu
     return 'Maintenance';
   }
 
-  if (['4', 'inactive', 'disabled', 'notactive', 'ismangament', 'issold', 'غيرنشطة'].includes(statusKey)) {
+  if (['0', 'issold', 'sold', 'mabie', 'مباعة'].includes(statusKey)) {
+    return 'Sold';
+  }
+
+  if (['4', 'inactive', 'disabled', 'notactive', 'ismangament', 'غيرنشطة'].includes(statusKey)) {
     return 'Inactive';
   }
 
