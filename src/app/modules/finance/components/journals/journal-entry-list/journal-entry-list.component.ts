@@ -164,7 +164,6 @@ export class JournalEntryListComponent implements OnInit {
       next: response => {
         this.items.set(response.items ?? []);
         this.pageNumber.set(response.pageNumber || 1);
-        this.pageSize.set(response.pageSize || requestedPageSize);
         this.totalPages.set(response.totalPages || 1);
         this.totalCount.set(response.totalCount || 0);
       },

@@ -1,4 +1,4 @@
-export type VehicleStatus = 'Available' | 'Booked' | 'Maintenance' | 'Inactive';
+export type VehicleStatus = 'Available' | 'Booked' | 'Maintenance' | 'Inactive' | 'Sold';
 export type VehicleOrderBy = 'CreatedAt' | 'Year' | 'Plantnumber';
 export type VehicleOrderDirection = 'ASC' | 'DESC';
 

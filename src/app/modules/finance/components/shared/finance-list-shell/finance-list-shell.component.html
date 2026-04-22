@@ -13,111 +13,111 @@
     </div>
   }
 
-  @if (!loading && rows.length === 0) {
-    <app-empty-state [title]="emptyTitle | translate" [description]="emptyDescription | translate" />
-  } @else {
-    <div class="card finance-list-shell__card">
-      <div class="card-body">
-        @if (enableSearch || enableSorting || enableDateRangeFilter) {
-          <div class="app-filters-toolbar">
-            @if (enableSearch) {
-              <div class="app-filter-field app-filter-field--search">
-                <label class="app-filter-label">{{ 'Search' | translate }}</label>
-                <div class="app-search-control">
-                  <input
-                    type="search"
-                    class="form-control"
-                    [placeholder]="searchPlaceholder | translate"
-                    [ngModel]="searchValue"
-                    (ngModelChange)="onSearchChange($event)"
-                  />
-                  <button
-                    class="btn app-search-btn finance-search-btn"
-                    type="button"
-                    (click)="onSearchChange(searchValue)"
-                  >
-                    <i class="fa-solid fa-magnifying-glass"></i>
-                    <span>{{ 'Search' | translate }}</span>
-                  </button>
-                </div>
-              </div>
-            }
-
-            @if (enableSorting) {
-              <div class="app-filter-field app-filter-field--narrow">
-                <label class="app-filter-label">{{ 'Sort by' | translate }}</label>
-                <app-smooth-select
-                  [options]="orderByOptions"
-                  [value]="orderByValue"
-                  [placeholder]="'Sort by' | translate"
-                  (valueChange)="onOrderByChange($event)"
+  <div class="card finance-list-shell__card">
+    <div class="card-body">
+      @if (enableSearch || enableSorting || enableDateRangeFilter) {
+        <div class="app-filters-toolbar">
+          @if (enableSearch) {
+            <div class="app-filter-field app-filter-field--search">
+              <label class="app-filter-label">{{ 'Search' | translate }}</label>
+              <div class="app-search-control">
+                <input
+                  type="search"
+                  class="form-control"
+                  [placeholder]="searchPlaceholder | translate"
+                  [ngModel]="searchValue"
+                  (ngModelChange)="onSearchChange($event)"
                 />
+                <button
+                  class="btn app-search-btn finance-search-btn"
+                  type="button"
+                  (click)="onSearchChange(searchValue)"
+                >
+                  <i class="fa-solid fa-magnifying-glass"></i>
+                  <span>{{ 'Search' | translate }}</span>
+                </button>
               </div>
-              <div class="app-filter-field app-filter-field--narrow">
-                <label class="app-filter-label">{{ 'Direction' | translate }}</label>
-                <app-smooth-select
-                  [options]="orderByDirectionOptions"
-                  [value]="orderByDirectionValue"
-                  [placeholder]="'Direction' | translate"
-                  (valueChange)="onOrderByDirectionChange($event)"
-                />
-              </div>
-            }
+            </div>
+          }
 
-            @if (enableDateRangeFilter) {
-              <div class="app-filter-field app-filter-field--wide finance-filter-range">
-                <app-date-range-filter
-                  [from]="dateFrom"
-                  [to]="dateTo"
-                  [fromLabel]="'From date'"
-                  [toLabel]="'To date'"
-                  [fromPlaceholder]="'From date'"
-                  [toPlaceholder]="'To date'"
-                  (rangeChange)="onDateRangeChange($event)"
-                />
-              </div>
-            }
-          </div>
-        }
+          @if (enableSorting) {
+            <div class="app-filter-field app-filter-field--narrow">
+              <label class="app-filter-label">{{ 'Sort by' | translate }}</label>
+              <app-smooth-select
+                [options]="orderByOptions"
+                [value]="orderByValue"
+                [placeholder]="'Sort by' | translate"
+                (valueChange)="onOrderByChange($event)"
+              />
+            </div>
+            <div class="app-filter-field app-filter-field--narrow">
+              <label class="app-filter-label">{{ 'Direction' | translate }}</label>
+              <app-smooth-select
+                [options]="orderByDirectionOptions"
+                [value]="orderByDirectionValue"
+                [placeholder]="'Direction' | translate"
+                (valueChange)="onOrderByDirectionChange($event)"
+              />
+            </div>
+          }
 
-        @if (loading) {
-          <div class="text-center py-5">
-            <div class="spinner-border text-primary"></div>
-          </div>
-        } @else {
-          <div class="table-responsive">
-            <table class="table table-striped mb-0">
-              <thead>
+          @if (enableDateRangeFilter) {
+            <div class="app-filter-field app-filter-field--wide finance-filter-range">
+              <app-date-range-filter
+                [from]="dateFrom"
+                [to]="dateTo"
+                [fromLabel]="'From date'"
+                [toLabel]="'To date'"
+                [fromPlaceholder]="'From date'"
+                [toPlaceholder]="'To date'"
+                (rangeChange)="onDateRangeChange($event)"
+              />
+            </div>
+          }
+
+          <ng-content select="[finance-extra-filters]" />
+        </div>
+      }
+
+      @if (loading) {
+        <div class="text-center py-5">
+          <div class="spinner-border text-primary"></div>
+        </div>
+      } @else if (rows.length === 0) {
+        <app-empty-state [title]="emptyTitle | translate" [description]="emptyDescription | translate" />
+      } @else {
+        <div class="table-responsive">
+          <table class="table table-striped mb-0">
+            <thead>
+              <tr>
+                @for (column of columns; track column.key) {
+                  <th [class.text-end]="column.align === 'end'">{{ column.label | translate }}</th>
+                }
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of rows; track trackByIndex($index)) {
                 <tr>
                   @for (column of columns; track column.key) {
-                    <th [class.text-end]="column.align === 'end'">{{ column.label | translate }}</th>
+                    <td [class.text-end]="column.align === 'end'">{{ row[column.key] ?? '-' }}</td>
                   }
                 </tr>
-              </thead>
-              <tbody>
-                @for (row of rows; track trackByIndex($index)) {
-                  <tr>
-                    @for (column of columns; track column.key) {
-                      <td [class.text-end]="column.align === 'end'">{{ row[column.key] ?? '-' }}</td>
-                    }
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
+              }
+            </tbody>
+          </table>
+        </div>
 
-          <app-pagination-bar
-            [pageNumber]="pageNumber"
-            [totalPages]="totalPages"
-            [totalCount]="count"
-            [pageSize]="pageSize"
-            [showPageSize]="showPageSize"
-            [pageSizeOptions]="pageSizeOptions"
-            (pageChange)="pageChange.emit($event)"
-            (pageSizeChange)="pageSizeChange.emit($event)"
-          />
-        }
-      </div>
+        <app-pagination-bar
+          [pageNumber]="pageNumber"
+          [totalPages]="totalPages"
+          [totalCount]="count"
+          [pageSize]="pageSize"
+          [showPageSize]="showPageSize"
+          [pageSizeOptions]="pageSizeOptions"
+          (pageChange)="pageChange.emit($event)"
+          (pageSizeChange)="pageSizeChange.emit($event)"
+        />
+      }
     </div>
-  }
+  </div>
 </div>

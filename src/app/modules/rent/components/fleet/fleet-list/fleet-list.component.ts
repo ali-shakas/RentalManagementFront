@@ -75,11 +75,17 @@ export class FleetListComponent implements OnInit {
   }
 
   goToPage(p: number): void {
+    if (p < 1 || p > this.totalPages() || p === this.pageNumber()) {
+      return;
+    }
     this.pageNumber.set(p);
     this.load();
   }
 
   changePageSize(size: number): void {
+    if (size <= 0 || size === this.pageSize()) {
+      return;
+    }
     this.pageSize.set(size);
     this.pageNumber.set(1);
     this.load();

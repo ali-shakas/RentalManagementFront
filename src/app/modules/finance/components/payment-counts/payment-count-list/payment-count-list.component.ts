@@ -1,6 +1,7 @@
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslateService } from '@ngx-translate/core';
+import { TranslateModule } from '@ngx-translate/core';
 import { Subject, catchError, debounceTime, distinctUntilChanged, forkJoin, of } from 'rxjs';
 
 import { AuthStateService } from '../../../../../core/auth/auth-state.service';
@@ -13,6 +14,7 @@ import { FinanceListColumn, FinanceListRow } from '../../../models/shared/financ
 import { PaymentCountService } from '../../../services/payment-counts/payment-count.service';
 import { FinanceListShellComponent } from '../../shared/finance-list-shell/finance-list-shell.component';
 import { formatFinanceNumber } from '../../shared/finance-list-formatters';
+import { SmoothSelectComponent } from '../../../../../shared/ui/smooth-select/smooth-select.component';
 import { BookingService } from '../../../../rent/services/booking/booking.service';
 import { BranchService } from '../../../../rent/services/branches/branch.service';
 import { CustomerService } from '../../../../rent/services/customers/customer.service';
@@ -21,7 +23,7 @@ import { VehicleService } from '../../../../rent/services/vehicles/vehicle.servi
 @Component({
   selector: 'app-payment-count-list',
   standalone: true,
-  imports: [FinanceListShellComponent],
+  imports: [FinanceListShellComponent, SmoothSelectComponent, TranslateModule],
   templateUrl: './payment-count-list.component.html',
   styleUrl: './payment-count-list.component.scss',
 })
@@ -52,6 +54,10 @@ export class PaymentCountListComponent implements OnInit {
   totalPages = signal(1);
   totalCount = signal(0);
   search = signal('');
+  statusFilter = signal<number | ''>('');
+  bondTypeFilter = signal<number | ''>('');
+  paymentTypeFilter = signal<number | ''>('');
+  branchFilter = signal<number | ''>('');
   orderBy = signal<'CreatedAt' | 'Paid' | 'UpdatedAt'>('CreatedAt');
   orderByDirection = signal<'ASC' | 'DESC'>('DESC');
   private searchInput$ = new Subject<string>();
@@ -77,6 +83,34 @@ export class PaymentCountListComponent implements OnInit {
     { label: 'Paid', value: 'Paid' },
     { label: 'Updated At', value: 'UpdatedAt' },
   ];
+  readonly statusFilterOptions: SmoothSelectOption[] = [
+    { label: 'All statuses', value: '' },
+    { label: 'Confirmed', value: 1 },
+    { label: 'Pending', value: 2 },
+  ];
+  readonly bondTypeFilterOptions: SmoothSelectOption[] = [
+    { label: 'All bond types', value: '' },
+    { label: 'Payment Voucher', value: 1 },
+    { label: 'Receipt Voucher', value: 2 },
+  ];
+  readonly paymentTypeFilterOptions: SmoothSelectOption[] = [
+    { label: 'All payment types', value: '' },
+    { label: 'Cash', value: 1 },
+    { label: 'Network/POS', value: 2 },
+    { label: 'Cheque', value: 3 },
+    { label: 'Bank Transfer', value: 4 },
+    { label: 'Bank/Cash', value: 5 },
+  ];
+  readonly branchFilterOptions = computed<SmoothSelectOption[]>(() => {
+    const options: SmoothSelectOption[] = [{ label: 'All branches', value: '' }];
+    for (const [id, label] of Object.entries(this.branchNames())) {
+      options.push({
+        label: label || '-',
+        value: Number(id),
+      });
+    }
+    return options;
+  });
 
   readonly rows = computed<FinanceListRow[]>(() => {
     this.languageTick();
@@ -228,6 +262,10 @@ export class PaymentCountListComponent implements OnInit {
     this.paymentCountService
       .getPaginated({
         fleetId,
+        branchId: Number(this.branchFilter() || 0) || undefined,
+        status: Number(this.statusFilter() || 0) || undefined,
+        bondType: Number(this.bondTypeFilter() || 0) || undefined,
+        paymentType: Number(this.paymentTypeFilter() || 0) || undefined,
         pageNumber: requestedPageNumber,
         pageSize: requestedPageSize,
         search: this.search(),
@@ -238,7 +276,6 @@ export class PaymentCountListComponent implements OnInit {
       next: response => {
         this.items.set(response.items ?? []);
         this.pageNumber.set(response.pageNumber || 1);
-        this.pageSize.set(response.pageSize || requestedPageSize);
         this.totalPages.set(response.totalPages || 1);
         this.totalCount.set(response.totalCount || 0);
       },
@@ -254,6 +291,30 @@ export class PaymentCountListComponent implements OnInit {
 
   onSearchChange(value: string): void {
     this.searchInput$.next(value ?? '');
+  }
+
+  onStatusFilterChange(value: number | ''): void {
+    this.statusFilter.set(value);
+    this.pageNumber.set(1);
+    this.load();
+  }
+
+  onBondTypeFilterChange(value: number | ''): void {
+    this.bondTypeFilter.set(value);
+    this.pageNumber.set(1);
+    this.load();
+  }
+
+  onPaymentTypeFilterChange(value: number | ''): void {
+    this.paymentTypeFilter.set(value);
+    this.pageNumber.set(1);
+    this.load();
+  }
+
+  onBranchFilterChange(value: number | ''): void {
+    this.branchFilter.set(value);
+    this.pageNumber.set(1);
+    this.load();
   }
 
   onOrderByChange(value: string): void {

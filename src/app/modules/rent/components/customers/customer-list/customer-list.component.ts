@@ -87,11 +87,10 @@ export class CustomerListComponent implements OnInit {
       })
       .subscribe({
         next: page => {
-          this.customers.set(page.items ?? []);
+          this.customers.set(this.sortCustomersForStableDisplay(page.items ?? []));
           this.totalCount.set(page.totalCount ?? page.items?.length ?? 0);
           this.totalPages.set(page.totalPages ?? 0);
           this.pageNumber.set(page.pageNumber ?? this.pageNumber());
-          this.pageSize.set(page.pageSize ?? this.pageSize());
         },
         error: err => this.toast.error(err?.message ?? this.translate.instant('Failed to load customers')),
         complete: () => this.loading.set(false),
@@ -227,6 +226,26 @@ export class CustomerListComponent implements OnInit {
     }
 
     return normalized;
+  }
+
+  private sortCustomersForStableDisplay(items: Customer[]): Customer[] {
+    return [...items].sort((a, b) => {
+      const aDate = new Date((a as unknown as Record<string, unknown>)['createdAt'] as string ?? '').getTime();
+      const bDate = new Date((b as unknown as Record<string, unknown>)['createdAt'] as string ?? '').getTime();
+      const safeADate = Number.isFinite(aDate) ? aDate : 0;
+      const safeBDate = Number.isFinite(bDate) ? bDate : 0;
+      if (safeADate !== safeBDate) {
+        return safeBDate - safeADate;
+      }
+
+      const idA = Number(a.id);
+      const idB = Number(b.id);
+      if (Number.isFinite(idA) && Number.isFinite(idB) && idA !== idB) {
+        return idB - idA;
+      }
+
+      return String(b.id).localeCompare(String(a.id));
+    });
   }
 }
 

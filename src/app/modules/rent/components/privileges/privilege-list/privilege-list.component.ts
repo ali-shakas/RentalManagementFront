@@ -85,6 +85,9 @@ export class PrivilegeListComponent implements OnInit {
   }
 
   goToPage(page: number): void {
+    if (page < 1 || page > this.totalPages() || page === this.pageNumber()) {
+      return;
+    }
     this.pageNumber.set(page);
     this.load();
   }

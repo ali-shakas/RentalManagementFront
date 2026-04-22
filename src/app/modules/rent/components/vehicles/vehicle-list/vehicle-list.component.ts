@@ -26,6 +26,8 @@ import { StatusBadgeComponent } from '../../../../../shared/ui/status-badge/stat
   styleUrl: './vehicle-list.component.scss',
 })
 export class VehicleListComponent implements OnInit {
+  private static readonly DEFAULT_PAGE_SIZE = 10;
+
   private vehicleService = inject(VehicleService);
   private branchService = inject(BranchService);
   private categoryVehicleService = inject(CategoryVehicleService);
@@ -41,7 +43,7 @@ export class VehicleListComponent implements OnInit {
   totalCount = signal(0);
   totalPages = signal(0);
   pageNumber = signal(1);
-  pageSize = signal(12);
+  pageSize = signal(VehicleListComponent.DEFAULT_PAGE_SIZE);
   search = signal('');
   status = signal<VehicleStatus | ''>('');
   branchId = signal<number | ''>('');
@@ -55,7 +57,8 @@ export class VehicleListComponent implements OnInit {
     { label: 'Available', value: 'Available' },
     { label: 'Booked', value: 'Booked' },
     { label: 'Maintenance', value: 'Maintenance' },
-    { label: 'Inactive', value: 'Inactive' },
+    { label: 'Management', value: 'Inactive' },
+    { label: 'Sold', value: 'Sold' },
   ];
   readonly orderByFilterOptions: SmoothSelectOption[] = [
     { label: 'Created Date', value: 'CreatedAt' },
@@ -164,6 +167,14 @@ export class VehicleListComponent implements OnInit {
     return 'secondary';
   }
 
+  getStatusLabel(status: VehicleStatus): string {
+    if (status === 'Inactive') {
+      return this.translate.instant('Management');
+    }
+
+    return this.translate.instant(status);
+  }
+
   getBranchOptionLabel(branch: Branch): string {
     return this.isArabicUi()
       ? branch.nameAr || branch.nameEn || '-'
@@ -183,19 +194,37 @@ export class VehicleListComponent implements OnInit {
 
   onStatusFilterChange(value: VehicleStatus | ''): void {
     this.status.set(value);
-    this.pageNumber.set(1);
+    if (!value) {
+      // Reset mode: All statuses.
+      this.pageNumber.set(1);
+      this.pageSize.set(VehicleListComponent.DEFAULT_PAGE_SIZE);
+    } else {
+      this.pageNumber.set(1);
+    }
     this.load();
   }
 
   onBranchFilterChange(value: number | ''): void {
     this.branchId.set(value);
-    this.pageNumber.set(1);
+    if (!value) {
+      // Reset mode: All branches.
+      this.pageNumber.set(1);
+      this.pageSize.set(VehicleListComponent.DEFAULT_PAGE_SIZE);
+    } else {
+      this.pageNumber.set(1);
+    }
     this.load();
   }
 
   onCategoryFilterChange(value: string): void {
     this.categoryId.set(value);
-    this.pageNumber.set(1);
+    if (!value) {
+      // Reset mode: All categories.
+      this.pageNumber.set(1);
+      this.pageSize.set(VehicleListComponent.DEFAULT_PAGE_SIZE);
+    } else {
+      this.pageNumber.set(1);
+    }
     this.load();
   }
 
@@ -227,11 +256,11 @@ export class VehicleListComponent implements OnInit {
       })
       .subscribe({
         next: page => {
-          this.vehicles.set(page.items ?? []);
+          const items = page.items ?? [];
+          this.vehicles.set(this.sortVehiclesForStableDisplay(items));
           this.totalCount.set(page.totalCount ?? page.items?.length ?? 0);
           this.totalPages.set(page.totalPages ?? 0);
           this.pageNumber.set(page.pageNumber ?? this.pageNumber());
-          this.pageSize.set(page.pageSize ?? this.pageSize());
         },
         error: err => this.toast.error(err?.message ?? this.translate.instant('Failed to load vehicles')),
         complete: () => this.loading.set(false),
@@ -293,16 +322,24 @@ export class VehicleListComponent implements OnInit {
     const fleetId = this.authState.fleetId() || undefined;
 
     this.branchService
-      .getList(fleetId)
+      .getPaginated({
+        fleetId,
+        pageNumber: 1,
+        pageSize: 1000,
+      })
       .subscribe({
-        next: branches => this.branches.set(branches ?? []),
+        next: response => this.branches.set(response.items ?? []),
         error: () => this.branches.set([]),
       });
 
     this.categoryVehicleService
-      .getList(fleetId)
+      .getPaginated({
+        fleetId,
+        pageNumber: 1,
+        pageSize: 1000,
+      })
       .subscribe({
-        next: categories => this.categories.set(categories ?? []),
+        next: response => this.categories.set(response.items ?? []),
         error: () => this.categories.set([]),
       });
   }
@@ -358,6 +395,41 @@ export class VehicleListComponent implements OnInit {
     // Seed/demo APIs often return non-routable media hosts (e.g. http://files/...),
     // which can block image rendering for several seconds before onerror fires.
     return /^https?:\/\/files(?:[:/]|$)/i.test(normalizedUrl);
+  }
+
+  private sortVehiclesForStableDisplay(items: Vehicle[]): Vehicle[] {
+    return [...items].sort((a, b) => {
+      if (this.orderBy() === 'Year') {
+        const yearDiff = (Number(a.yearMake ?? a.year ?? 0) - Number(b.yearMake ?? b.year ?? 0));
+        if (yearDiff !== 0) {
+          return this.orderByDirection() === 'ASC' ? yearDiff : -yearDiff;
+        }
+      } else if (this.orderBy() === 'Plantnumber') {
+        const plateA = String(a.plateNumber ?? '');
+        const plateB = String(b.plateNumber ?? '');
+        const plateDiff = plateA.localeCompare(plateB, undefined, { sensitivity: 'base', numeric: true });
+        if (plateDiff !== 0) {
+          return this.orderByDirection() === 'ASC' ? plateDiff : -plateDiff;
+        }
+      } else {
+        const aDate = new Date(a.createdAt ?? '').getTime();
+        const bDate = new Date(b.createdAt ?? '').getTime();
+        const safeADate = Number.isFinite(aDate) ? aDate : 0;
+        const safeBDate = Number.isFinite(bDate) ? bDate : 0;
+        const dateDiff = safeADate - safeBDate;
+        if (dateDiff !== 0) {
+          return this.orderByDirection() === 'ASC' ? dateDiff : -dateDiff;
+        }
+      }
+
+      const idA = Number(a.id);
+      const idB = Number(b.id);
+      if (Number.isFinite(idA) && Number.isFinite(idB) && idA !== idB) {
+        return this.orderByDirection() === 'ASC' ? idA - idB : idB - idA;
+      }
+
+      return String(a.id).localeCompare(String(b.id));
+    });
   }
 }
 

@@ -19,24 +19,27 @@ import { normalizeVehicle } from '../../models/vehicles/vehicle.normalizer';
 export class VehicleService {
   private api = inject(BaseService);
   private readonly base = 'Vehicle';
+  private static readonly DEBUG_PARAMS = true;
+
+  private typeSafeParams(params: Record<string, string | number | boolean | undefined>): Record<string, string | number | boolean | undefined> {
+    return params;
+  }
 
   getList(params: { fleetId?: string | null; branchId?: number | null; status?: Vehicle['status'] | '' } = {}): Observable<Vehicle[]> {
     const normalizedFleetId = normalizeFleetId(params.fleetId);
     const branchId = params.branchId ?? undefined;
     const status = params.status || undefined;
     const backendStatus = status ? this.toBackendVehicleStatusEnumName(status) : undefined;
+    const requestParams = this.typeSafeParams({
+      Fleetid: normalizedFleetId ?? undefined,
+      Branchid: branchId,
+      ...(backendStatus ? { Stutus: backendStatus } : {}),
+    });
 
     return this.api
       .getData<unknown[]>(
         `${this.base}/List`,
-        {
-          // Match repository parameter names literally: fleetid, branchId, Stutus.
-          fleetid: normalizedFleetId,
-          Fleetid: normalizedFleetId,
-          branchId,
-          BranchId: branchId,
-          Stutus: backendStatus,
-        },
+        requestParams,
         { suppressErrorToast: true },
       )
       .pipe(map(items => (items ?? []).map(normalizeVehicle)));
@@ -46,29 +49,16 @@ export class VehicleService {
     params: VehicleFilters,
     options?: BaseRequestOptions,
   ): Observable<PaginatedAggregatorResponse<Vehicle>> {
+    const requestParams = this.buildPaginatedParams(params);
+    // TEMP DEBUG: remove after backend/params verification.
+    if (VehicleService.DEBUG_PARAMS) {
+      // eslint-disable-next-line no-console
+      console.log('[Vehicle/Paginated] final params', requestParams);
+    }
     return this.api
       .getData<unknown>(
         `${this.base}/Paginated`,
-        {
-          // Match repository parameter names literally:
-          // fleetid, branchId, categoryVehiclesId, search, orderingEnum, Stutus, orderByDirection, PageNumber, PageSize
-          fleetid: normalizeFleetId(params.fleetId),
-          Fleetid: normalizeFleetId(params.fleetId),
-          branchId: params.branchId ?? undefined,
-          BranchId: params.branchId ?? undefined,
-          categoryVehiclesId: params.categoryId ?? undefined,
-          search: params.search,
-          Search: params.search,
-          orderingEnum: this.toBackendVehicleOrderingEnum(params.orderBy),
-          OrderingEnum: this.toBackendVehicleOrderingEnum(params.orderBy),
-          Stutus: params.status ? this.toBackendVehicleStatusEnumName(params.status) : undefined,
-          orderByDirection: this.toBackendOrderDirection(params.orderByDirection),
-          OrderByDirection: this.toBackendOrderDirection(params.orderByDirection),
-          pageNumber: params.pageNumber,
-          PageNumber: params.pageNumber,
-          pageSize: params.pageSize,
-          PageSize: params.pageSize,
-        },
+        requestParams,
         options,
       )
       .pipe(map(response => normalizePaginatedResponse(response, normalizeVehicle)));
@@ -127,7 +117,9 @@ export class VehicleService {
     const imagePayload = await buildImageUploadPayload(body.image);
     const isAvailable = body.status === 'Available';
     const statusCode =
-      body.status === 'Available'
+      body.status === 'Sold'
+        ? 0
+        : body.status === 'Available'
         ? 1
         : body.status === 'Booked'
           ? 2
@@ -207,6 +199,10 @@ export class VehicleService {
   }
 
   private toBackendVehicleStatusEnumCode(status: VehicleUpsertRequest['status']): number {
+    if (status === 'Sold') {
+      return 0; // IsSold
+    }
+
     if (status === 'Booked') {
       return 1; // IsBooking
     }
@@ -223,6 +219,10 @@ export class VehicleService {
   }
 
   private toBackendVehicleStatusEnumName(status: VehicleUpsertRequest['status']): string {
+    if (status === 'Sold') {
+      return 'IsSold';
+    }
+
     if (status === 'Booked') {
       return 'IsBooking';
     }
@@ -256,5 +256,25 @@ export class VehicleService {
 
   private toBackendOrderDirection(direction?: VehicleFilters['orderByDirection']): 'Ascending' | 'Descending' {
     return direction === 'ASC' ? 'Ascending' : 'Descending';
+  }
+
+  private buildPaginatedParams(
+    params: VehicleFilters,
+  ): Record<string, string | number | boolean | undefined> {
+    const fleetId = normalizeFleetId(params.fleetId) ?? undefined;
+    const orderingEnum = this.toBackendVehicleOrderingEnum(params.orderBy);
+    const backendStatus = params.status ? this.toBackendVehicleStatusEnumName(params.status) : undefined;
+
+    return this.typeSafeParams({
+      Fleetid: fleetId,
+      BranchId: params.branchId ?? undefined,
+      CategoryVehiclesId: params.categoryId ?? undefined,
+      Search: params.search ?? undefined,
+      OrderBy: orderingEnum,
+      OrderByDirection: this.toBackendOrderDirection(params.orderByDirection),
+      PageNumber: params.pageNumber,
+      PageSize: params.pageSize,
+      ...(backendStatus ? { Stutus: backendStatus } : {}),
+    });
   }
 }
