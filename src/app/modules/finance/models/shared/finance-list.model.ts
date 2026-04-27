@@ -10,3 +10,11 @@ export interface FinanceListRow {
   [key: string]: FinanceCellValue;
 }
 
+export interface FinanceListAction {
+  key: string;
+  label: string;
+  icon?: string;
+  variant?: 'primary' | 'secondary' | 'info' | 'warning' | 'danger' | 'light';
+  iconOnly?: boolean;
+}
+

@@ -24,6 +24,8 @@
   (pageSizeChange)="onPageSizeChange($event)"
   [createLink]="'/payment-counts/create'"
   [createLabel]="'Create Payment Count'"
+  [rowActions]="rowActions"
+  (rowAction)="onRowAction($event)"
 >
   <div finance-extra-filters class="app-filter-field app-filter-field--narrow">
     <label class="app-filter-label">{{ 'Bond Type' | translate }}</label>

@@ -32,7 +32,6 @@ export class CashAccountListComponent implements OnInit {
   readonly columns: FinanceListColumn[] = [
     { key: 'name', label: 'Name' },
     { key: 'description', label: 'Description' },
-    { key: 'countingId', label: 'Account Number' },
     { key: 'createdAt', label: 'Date', align: 'end' },
   ];
 
@@ -41,7 +40,6 @@ export class CashAccountListComponent implements OnInit {
     return this.items().map(item => ({
       name: item.name || '-',
       description: item.description || '-',
-      countingId: item.countingId || '-',
       createdAt: formatFinanceDate(item.createdAt, this.translate),
     }));
   });

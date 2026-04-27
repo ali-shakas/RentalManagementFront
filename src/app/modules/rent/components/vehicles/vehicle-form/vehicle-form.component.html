@@ -60,7 +60,7 @@
               </div>
               <div class="col-md-4">
                 <label class="form-label">{{ 'Plate Number' | translate }}</label>
-                <input class="form-control" formControlName="plateNumber" maxlength="20" [placeholder]="'Example Plate Number' | translate" [readonly]="isViewMode()" />
+                <input class="form-control" formControlName="plateNumber" maxlength="10" [placeholder]="'Example Plate Number' | translate" [readonly]="isViewMode()" />
                 <div class="form-text">{{ 'Hint Plate Number' | translate }}</div>
                 @if (!isViewMode() && form.controls.plateNumber.invalid && form.controls.plateNumber.touched) {
                   <div class="text-danger small mt-1">{{ 'Plate number is required and must be valid.' | translate }}</div>
@@ -104,7 +104,7 @@
               </div>
               <div class="col-md-4">
                 <label class="form-label">{{ 'Insurance Policy Number' | translate }}</label>
-                <input class="form-control" formControlName="insurancePolicyNumber" maxlength="100" [placeholder]="'Example Insurance Policy Number' | translate" [readonly]="isViewMode()" />
+                <input class="form-control" formControlName="insurancePolicyNumber" maxlength="20" [placeholder]="'Example Insurance Policy Number' | translate" [readonly]="isViewMode()" />
                 <div class="form-text">{{ 'Hint Insurance Policy Number' | translate }}</div>
                 @if (!isViewMode() && form.controls.insurancePolicyNumber.invalid && form.controls.insurancePolicyNumber.touched) {
                   <div class="text-danger small mt-1">{{ 'Insurance policy number is required and must be valid.' | translate }}</div>
@@ -136,17 +136,6 @@
                 <input class="form-control" type="number" min="0" formControlName="capacitOil" [placeholder]="'Example Vehicle Capacity' | translate" [readonly]="isViewMode()" />
                 <div class="form-text">{{ 'Hint Vehicle Capacity' | translate }}</div>
               </div>
-              @if (isEdit()) {
-                <div class="col-md-4">
-                  <label class="form-label">{{ 'Status' | translate }}</label>
-                  <app-smooth-select
-                    formControlName="status"
-                    [ariaLabel]="'Status' | translate"
-                    [options]="statusSelectOptions"
-                    [disabled]="isViewMode()"
-                  />
-                </div>
-              }
               <div class="col-md-4 d-flex align-items-end">
                 <div class="form-check form-switch">
                   <input class="form-check-input" type="checkbox" formControlName="isActive" [disabled]="isViewMode()" />
