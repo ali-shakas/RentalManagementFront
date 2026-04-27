@@ -93,6 +93,9 @@
                 @for (column of columns; track column.key) {
                   <th [class.text-end]="column.align === 'end'">{{ column.label | translate }}</th>
                 }
+                @if (rowActions.length > 0) {
+                  <th class="text-end">{{ 'Actions' | translate }}</th>
+                }
               </tr>
             </thead>
             <tbody>
@@ -100,6 +103,29 @@
                 <tr>
                   @for (column of columns; track column.key) {
                     <td [class.text-end]="column.align === 'end'">{{ row[column.key] ?? '-' }}</td>
+                  }
+                  @if (rowActions.length > 0) {
+                    <td class="text-end">
+                      <div class="d-inline-flex gap-2">
+                        @for (action of rowActions; track action.key) {
+                          <button
+                            type="button"
+                            class="btn btn-sm"
+                            [class]="'btn btn-sm btn-outline-' + (action.variant || 'secondary')"
+                            [title]="action.label | translate"
+                            [attr.aria-label]="action.label | translate"
+                            (click)="emitRowAction(action.key, $index)"
+                          >
+                            @if (action.icon) {
+                              <i [class]="action.icon"></i>
+                            }
+                            @if (!action.iconOnly) {
+                              <span>{{ action.label | translate }}</span>
+                            }
+                          </button>
+                        }
+                      </div>
+                    </td>
                   }
                 </tr>
               }

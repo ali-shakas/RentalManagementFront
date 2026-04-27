@@ -4,7 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { RouterLink } from '@angular/router';
 
-import { FinanceListColumn, FinanceListRow } from '../../../models/shared/finance-list.model';
+import {
+  FinanceListAction,
+  FinanceListColumn,
+  FinanceListRow,
+} from '../../../models/shared/finance-list.model';
 import { EmptyStateComponent } from '../../../../../shared/ui/empty-state/empty-state.component';
 import { PageHeaderComponent } from '../../../../../shared/ui/page-header/page-header.component';
 import { PaginationBarComponent } from '../../../../../shared/ui/pagination-bar/pagination-bar.component';
@@ -55,6 +59,7 @@ export class FinanceListShellComponent {
   @Input() pageSize = 10;
   @Input() showPageSize = true;
   @Input() pageSizeOptions: number[] = [10, 20, 50, 100];
+  @Input() rowActions: FinanceListAction[] = [];
 
   @Output() searchChange = new EventEmitter<string>();
   @Output() orderByChange = new EventEmitter<string>();
@@ -62,6 +67,7 @@ export class FinanceListShellComponent {
   @Output() dateRangeChange = new EventEmitter<DateRangeValue>();
   @Output() pageChange = new EventEmitter<number>();
   @Output() pageSizeChange = new EventEmitter<number>();
+  @Output() rowAction = new EventEmitter<{ actionKey: string; rowIndex: number }>();
 
   readonly orderByDirectionOptions: SmoothSelectOption[] = [
     { label: 'Newest', value: 'DESC' },
@@ -87,6 +93,10 @@ export class FinanceListShellComponent {
 
   trackByIndex(index: number): number {
     return index;
+  }
+
+  emitRowAction(actionKey: string, rowIndex: number): void {
+    this.rowAction.emit({ actionKey, rowIndex });
   }
 }
 

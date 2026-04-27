@@ -9,7 +9,11 @@ import { ToastService } from '../../../../../shared/services/toast.service';
 import { SmoothSelectOption } from '../../../../../shared/ui/smooth-select/smooth-select.component';
 import { BranchService } from '../../../../rent/services/branches/branch.service';
 import { JournalEntry } from '../../../models/journals/journal-entry.model';
-import { FinanceListColumn, FinanceListRow } from '../../../models/shared/finance-list.model';
+import {
+  FinanceListAction,
+  FinanceListColumn,
+  FinanceListRow,
+} from '../../../models/shared/finance-list.model';
 import { FinancialYearService } from '../../../services/financial-years/financial-year.service';
 import { JournalEntryService } from '../../../services/journals/journal-entry.service';
 import { FinanceListShellComponent } from '../../shared/finance-list-shell/finance-list-shell.component';
@@ -95,6 +99,10 @@ export class JournalEntryListComponent implements OnInit {
     { key: 'balance', label: 'Balance', align: 'end' },
     { key: 'branch', label: 'Branch' },
     { key: 'financialYear', label: 'Financial Year' },
+  ];
+  readonly rowActions: FinanceListAction[] = [
+    { key: 'view', label: 'View', icon: 'fa-solid fa-eye', variant: 'info', iconOnly: true },
+    { key: 'print', label: 'Print', icon: 'fa-solid fa-print', variant: 'secondary', iconOnly: true },
   ];
 
   readonly rows = computed<FinanceListRow[]>(() => {
@@ -292,6 +300,140 @@ export class JournalEntryListComponent implements OnInit {
     this.pageSize.set(normalized);
     this.pageNumber.set(1);
     this.load();
+  }
+
+  onRowAction(event: { actionKey: string; rowIndex: number }): void {
+    const item = this.items()[event.rowIndex];
+    if (!item) {
+      return;
+    }
+
+    const title = `${this.translate.instant('Journal Entry')} #${item.journalNumper ?? item.id}`;
+    const body = this.buildJournalPrintContent(item);
+    this.openPrintWindow(
+      title,
+      body,
+      event.actionKey === 'print',
+      String(item.journalNumper ?? item.id ?? '-'),
+      this.resolveBranchDisplay(item),
+    );
+  }
+
+  private openPrintWindow(
+    title: string,
+    content: string,
+    autoPrint: boolean,
+    documentNumber: string,
+    branchName: string,
+  ): void {
+    const win = window.open('', '_blank', 'width=900,height=700');
+    if (!win) {
+      this.toast.error(this.translate.instant('Unable to open print preview window'));
+      return;
+    }
+
+    const dir = this.translate.currentLang?.startsWith('ar') ? 'rtl' : 'ltr';
+    win.document.write(`
+      <html>
+        <head>
+          <title>${title}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; direction: ${dir}; color: #1f2937; }
+            .sheet { border: 1px solid #d1d5db; border-radius: 10px; padding: 20px; }
+            .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+            .brand-wrap { display: flex; align-items: center; gap: 10px; }
+            .logo { width: 44px; height: 44px; object-fit: contain; }
+            .brand { font-size: 18px; font-weight: 700; color: #111827; }
+            .meta { font-size: 12px; color: #6b7280; text-align: end; }
+            h2 { margin: 0 0 12px; font-size: 20px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+            td, th { border: 1px solid #e5e7eb; padding: 8px 10px; font-size: 13px; vertical-align: top; }
+            th { background: #f9fafb; text-align: start; font-weight: 600; }
+            .summary { margin-top: 12px; font-size: 14px; font-weight: 700; }
+            .signatures { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 28px; }
+            .sig-box { border-top: 1px solid #9ca3af; padding-top: 8px; text-align: center; font-size: 12px; color: #4b5563; }
+            @media print { body { margin: 0; } .sheet { border: 0; border-radius: 0; } }
+          </style>
+        </head>
+        <body>
+          <div class="sheet">
+            <div class="header">
+              <div>
+                <div class="brand-wrap">
+                  <img class="logo" src="${window.location.origin}/assets/images/logo/logo-icon.png" alt="logo" />
+                  <div>
+                    <div class="brand">${this.translate.instant('Car Rental Management')}</div>
+                    <div>${this.translate.instant('Official Journal')}</div>
+                  </div>
+                </div>
+              </div>
+              <div class="meta">
+                <div>${this.translate.instant('Print Date')}: ${new Date().toLocaleString()}</div>
+                <div>${this.translate.instant('Branch')}: ${branchName || '-'}</div>
+                <div>${this.translate.instant('Document No.')}: ${documentNumber || '-'}</div>
+              </div>
+            </div>
+            <h2>${title}</h2>
+            ${content}
+          </div>
+        </body>
+      </html>
+    `);
+    win.document.close();
+
+    if (autoPrint) {
+      win.focus();
+      win.print();
+    }
+  }
+
+  private buildJournalPrintContent(item: JournalEntry): string {
+    return `
+      <table>
+        <tr>
+          <th>${this.translate.instant('Journal Number')}</th>
+          <td>${item.journalNumper ?? '-'}</td>
+          <th>${this.translate.instant('Date')}</th>
+          <td>${formatFinanceDate(item.date, this.translate)}</td>
+        </tr>
+        <tr>
+          <th>${this.translate.instant('Status')}</th>
+          <td>${this.formatStatus(item.status)}</td>
+          <th>${this.translate.instant('Journal Type')}</th>
+          <td>${this.formatJournalType(item.journalType)}</td>
+        </tr>
+        <tr>
+          <th>${this.translate.instant('Operation Type')}</th>
+          <td>${this.formatOperationType(item.operationType)}</td>
+          <th>${this.translate.instant('Branch')}</th>
+          <td>${this.resolveBranchDisplay(item)}</td>
+        </tr>
+        <tr>
+          <th>${this.translate.instant('Financial Year')}</th>
+          <td colspan="3">${this.resolveFinancialYearDisplay(item)}</td>
+        </tr>
+      </table>
+      <table>
+        <tr>
+          <th>${this.translate.instant('Debit')}</th>
+          <th>${this.translate.instant('Credit')}</th>
+          <th>${this.translate.instant('Balance')}</th>
+        </tr>
+        <tr>
+          <td>${formatFinanceNumber(item.debtir, this.translate)}</td>
+          <td>${formatFinanceNumber(item.credit, this.translate)}</td>
+          <td>${formatFinanceNumber(item.balannce, this.translate)}</td>
+        </tr>
+      </table>
+
+      <div class="summary">${this.translate.instant('Journal Summary')} - ${this.translate.instant('Balanced Entry Record')}</div>
+
+      <div class="signatures">
+        <div class="sig-box">${this.translate.instant('Prepared By')}</div>
+        <div class="sig-box">${this.translate.instant('Reviewed By')}</div>
+        <div class="sig-box">${this.translate.instant('Approved By')}</div>
+      </div>
+    `;
   }
 
   private formatStatus(status?: number): string {

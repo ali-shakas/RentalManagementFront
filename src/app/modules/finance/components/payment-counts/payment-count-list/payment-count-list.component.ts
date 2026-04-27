@@ -10,7 +10,11 @@ import { SmoothSelectOption } from '../../../../../shared/ui/smooth-select/smoot
 import { BankService } from '../../../services/banks/bank.service';
 import { CashAccountService } from '../../../services/cash/cash-account.service';
 import { PaymentCount } from '../../../models/payment-counts/payment-count.model';
-import { FinanceListColumn, FinanceListRow } from '../../../models/shared/finance-list.model';
+import {
+  FinanceListAction,
+  FinanceListColumn,
+  FinanceListRow,
+} from '../../../models/shared/finance-list.model';
 import { PaymentCountService } from '../../../services/payment-counts/payment-count.service';
 import { FinanceListShellComponent } from '../../shared/finance-list-shell/finance-list-shell.component';
 import { formatFinanceNumber } from '../../shared/finance-list-formatters';
@@ -76,6 +80,10 @@ export class PaymentCountListComponent implements OnInit {
     { key: 'paidCash', label: 'Paid Cash', align: 'end' },
     { key: 'paidBank', label: 'Paid Bank', align: 'end' },
     { key: 'booking', label: 'Booking' },
+  ];
+  readonly rowActions: FinanceListAction[] = [
+    { key: 'view', label: 'View', icon: 'fa-solid fa-eye', variant: 'info', iconOnly: true },
+    { key: 'print', label: 'Print', icon: 'fa-solid fa-print', variant: 'secondary', iconOnly: true },
   ];
   readonly orderByOptions: SmoothSelectOption[] = [
     { label: 'Created At', value: 'CreatedAt' },
@@ -340,6 +348,137 @@ export class PaymentCountListComponent implements OnInit {
     this.pageSize.set(normalized);
     this.pageNumber.set(1);
     this.load();
+  }
+
+  onRowAction(event: { actionKey: string; rowIndex: number }): void {
+    const item = this.items()[event.rowIndex];
+    if (!item) {
+      return;
+    }
+
+    const title = `${this.translate.instant('Payment Voucher')} #${item.paymentNumber ?? item.id}`;
+    const body = this.buildVoucherPrintContent(item);
+    this.openPrintWindow(
+      title,
+      body,
+      event.actionKey === 'print',
+      String(item.paymentNumber ?? item.id ?? '-'),
+      this.resolveBranchName(item),
+    );
+  }
+
+  private openPrintWindow(
+    title: string,
+    content: string,
+    autoPrint: boolean,
+    documentNumber: string,
+    branchName: string,
+  ): void {
+    const win = window.open('', '_blank', 'width=900,height=700');
+    if (!win) {
+      this.toast.error(this.translate.instant('Unable to open print preview window'));
+      return;
+    }
+
+    const dir = this.translate.currentLang?.startsWith('ar') ? 'rtl' : 'ltr';
+    win.document.write(`
+      <html>
+        <head>
+          <title>${title}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; direction: ${dir}; color: #1f2937; }
+            .sheet { border: 1px solid #d1d5db; border-radius: 10px; padding: 20px; }
+            .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+            .brand-wrap { display: flex; align-items: center; gap: 10px; }
+            .logo { width: 44px; height: 44px; object-fit: contain; }
+            .brand { font-size: 18px; font-weight: 700; color: #111827; }
+            .meta { font-size: 12px; color: #6b7280; text-align: end; }
+            h2 { margin: 0 0 12px; font-size: 20px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+            td, th { border: 1px solid #e5e7eb; padding: 8px 10px; font-size: 13px; vertical-align: top; }
+            th { background: #f9fafb; text-align: start; font-weight: 600; }
+            .summary { margin-top: 12px; font-size: 14px; font-weight: 700; }
+            .signatures { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 28px; }
+            .sig-box { border-top: 1px solid #9ca3af; padding-top: 8px; text-align: center; font-size: 12px; color: #4b5563; }
+            @media print { body { margin: 0; } .sheet { border: 0; border-radius: 0; } }
+          </style>
+        </head>
+        <body>
+          <div class="sheet">
+            <div class="header">
+              <div>
+                <div class="brand-wrap">
+                  <img class="logo" src="${window.location.origin}/assets/images/logo/logo-icon.png" alt="logo" />
+                  <div>
+                    <div class="brand">${this.translate.instant('Car Rental Management')}</div>
+                    <div>${this.translate.instant('Official Voucher')}</div>
+                  </div>
+                </div>
+              </div>
+              <div class="meta">
+                <div>${this.translate.instant('Print Date')}: ${new Date().toLocaleString()}</div>
+                <div>${this.translate.instant('Branch')}: ${branchName || '-'}</div>
+                <div>${this.translate.instant('Document No.')}: ${documentNumber || '-'}</div>
+              </div>
+            </div>
+            <h2>${title}</h2>
+            ${content}
+          </div>
+        </body>
+      </html>
+    `);
+    win.document.close();
+
+    if (autoPrint) {
+      win.focus();
+      win.print();
+    }
+  }
+
+  private buildVoucherPrintContent(item: PaymentCount): string {
+    const statusLabel = item.status === 1
+      ? this.translate.instant('Confirmed')
+      : this.translate.instant('Pending');
+    const bondTypeLabel = item.bondType === 1
+      ? this.translate.instant('Payment Voucher')
+      : item.bondType === 2
+        ? this.translate.instant('Receipt Voucher')
+        : '-';
+
+    return `
+      <table>
+        <tr>
+          <th>${this.translate.instant('Payment Number')}</th>
+          <td>${item.paymentNumber ?? '-'}</td>
+          <th>${this.translate.instant('Status')}</th>
+          <td>${statusLabel}</td>
+        </tr>
+        <tr>
+          <th>${this.translate.instant('Bond Type')}</th>
+          <td>${bondTypeLabel}</td>
+          <th>${this.translate.instant('Branch')}</th>
+          <td>${this.resolveBranchName(item)}</td>
+        </tr>
+        <tr>
+          <th>${this.translate.instant('Customer')}</th>
+          <td>${this.resolveCustomerName(item)}</td>
+          <th>${this.translate.instant('Vehicle')}</th>
+          <td>${this.resolveVehicleName(item)}</td>
+        </tr>
+        <tr>
+          <th>${this.translate.instant('Booking')}</th>
+          <td colspan="3">${this.resolveBookingName(item)}</td>
+        </tr>
+      </table>
+
+      <div class="summary">${this.translate.instant('Total Amount')}: ${formatFinanceNumber(item.paid, this.translate)}</div>
+
+      <div class="signatures">
+        <div class="sig-box">${this.translate.instant('Prepared By')}</div>
+        <div class="sig-box">${this.translate.instant('Reviewed By')}</div>
+        <div class="sig-box">${this.translate.instant('Approved By')}</div>
+      </div>
+    `;
   }
 
   private resolveCustomerName(item: PaymentCount): string {

@@ -37,9 +37,9 @@ import { focusFirstInvalidControl } from '../../../../../shared/utils/focus-firs
 export class VehicleFormComponent implements OnInit {
   private readonly hostEl = inject(ElementRef<HTMLElement>);
   private static readonly SERIAL_NUMBER_REGEX = /^[A-Za-z0-9-]{1,50}$/;
-  private static readonly PLATE_NUMBER_REGEX = /^[A-Za-z0-9-\u0600-\u06FF\s]{1,20}$/;
+  private static readonly PLATE_NUMBER_REGEX = /^[A-Za-z0-9-\u0600-\u06FF\s]{1,10}$/;
   private static readonly VIN_REGEX = /^[A-HJ-NPR-Z0-9]{11,17}$/i;
-  private static readonly INSURANCE_POLICY_REGEX = /^[A-Za-z0-9-]{1,100}$/;
+  private static readonly INSURANCE_POLICY_REGEX = /^[A-Za-z0-9-]{1,20}$/;
   private static readonly INSURANCE_NUMBER_REGEX = /^[A-Za-z0-9-]{0,50}$/;
   private static readonly ENGINE_REGEX = /^[A-Za-z0-9.\s-]{0,60}$/;
 
@@ -91,14 +91,14 @@ export class VehicleFormComponent implements OnInit {
     serialNumber: ['', [Validators.required, Validators.maxLength(50), Validators.pattern(VehicleFormComponent.SERIAL_NUMBER_REGEX)]],
     engine: ['', [Validators.maxLength(60), Validators.pattern(VehicleFormComponent.ENGINE_REGEX)]],
     yearMake: [new Date().getFullYear(), [Validators.required, Validators.min(1900), Validators.max(new Date().getFullYear() + 1)]],
-    plateNumber: ['', [Validators.required, Validators.maxLength(20), Validators.pattern(VehicleFormComponent.PLATE_NUMBER_REGEX)]],
+    plateNumber: ['', [Validators.required, Validators.maxLength(10), Validators.pattern(VehicleFormComponent.PLATE_NUMBER_REGEX)]],
     vin: ['', [Validators.minLength(11), Validators.maxLength(17), Validators.pattern(VehicleFormComponent.VIN_REGEX)]],
     color: ['', [Validators.maxLength(30)]],
     insuranceNumber: ['', [Validators.maxLength(50), Validators.pattern(VehicleFormComponent.INSURANCE_NUMBER_REGEX)]],
     insuranceType: [null as number | null],
     insuranceExpires: ['', [Validators.required]],
     licenseExpirationDate: ['', [Validators.required]],
-    insurancePolicyNumber: ['', [Validators.required, Validators.maxLength(100), Validators.pattern(VehicleFormComponent.INSURANCE_POLICY_REGEX)]],
+    insurancePolicyNumber: ['', [Validators.required, Validators.maxLength(20), Validators.pattern(VehicleFormComponent.INSURANCE_POLICY_REGEX)]],
     operatinCard: ['', [Validators.required]],
     validityCarRegistration: ['', [Validators.required]],
     countKm: [0, [Validators.min(0)]],

@@ -28,6 +28,8 @@
   (pageSizeChange)="onPageSizeChange($event)"
   [createLink]="'/journals/create'"
   [createLabel]="'Create Journal Entry'"
+  [rowActions]="rowActions"
+  (rowAction)="onRowAction($event)"
 >
   <div finance-extra-filters class="app-filter-field app-filter-field--narrow journal-extra-filter">
     <label class="app-filter-label">{{ 'Status' | translate }}</label>
