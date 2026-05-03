@@ -101,11 +101,14 @@ export class PaymentCountListComponent implements OnInit {
     { label: 'Paid', value: 'Paid' },
     { label: 'Updated At', value: 'UpdatedAt' },
   ];
-  readonly bondTypeFilterOptions: SmoothSelectOption[] = [
-    { label: 'All bond types', value: '' },
-    { label: 'Payment Count', value: 1 },
-    { label: 'Receipt Count', value: 2 },
-  ];
+  readonly bondTypeFilterOptions = computed<SmoothSelectOption[]>(() => {
+    this.languageTick();
+    return [
+      { label: this.translate.instant('All bond types'), value: '' },
+      { label: this.translate.instant('Payment Voucher'), value: 1 },
+      { label: this.translate.instant('Receipt Voucher'), value: 2 },
+    ];
+  });
   readonly paymentTypeFilterOptions: SmoothSelectOption[] = [
     { label: 'All payment types', value: '' },
     { label: 'Cash', value: 1 },
@@ -138,9 +141,9 @@ export class PaymentCountListComponent implements OnInit {
             : formatFinanceNumber(item.status, this.translate),
       bondType:
         item.bondType === 1
-          ? this.translate.instant('Payment Count')
+          ? this.translate.instant('Payment Voucher')
           : item.bondType === 2
-            ? this.translate.instant('Receipt Count')
+            ? this.translate.instant('Receipt Voucher')
             : this.translate.instant('Unknown'),
       paymentType:
         item.paymentType === 1
@@ -419,13 +422,14 @@ export class PaymentCountListComponent implements OnInit {
     autoPrint: boolean,
     previewWindow?: Window | null,
   ): void {
-    const title = `${this.translate.instant('Payment Count')} #${item.paymentNumber ?? item.id}`;
+    const voucherNumber = item.paymentNumber != null ? String(item.paymentNumber) : '-';
+    const title = `${this.translate.instant('Document No.')}: ${voucherNumber}`;
     const body = this.buildVoucherPrintContent(item);
     this.openPrintWindow(
       title,
       body,
       autoPrint,
-      String(item.paymentNumber ?? item.id ?? '-'),
+      voucherNumber,
       this.resolveBranchName(item),
       item,
       previewWindow,
@@ -495,6 +499,11 @@ export class PaymentCountListComponent implements OnInit {
       ]),
       voucherDetails: this.resolveVoucherDetailsFromBackend(apiItem),
       status: apiItem.status ?? '',
+      branchStreet: this.readBackendText(apiItem, ['branchStreet', 'BranchStreet']),
+      branchNeighborHood: this.readBackendText(apiItem, ['branchNeighborHood', 'BranchNeighborHood']),
+      branchBuldingNumber: this.readBackendText(apiItem, ['branchBuldingNumber', 'BranchBuldingNumber']),
+      branchCity: this.readBackendText(apiItem, ['branchCity', 'BranchCity']),
+      branchAddress: this.resolveBranchAddressFromBackend(apiItem),
     };
     localStorage.setItem(payloadKey, JSON.stringify(payload));
     const page = autoPrint ? 'invoise-print.html' : 'invoise-view.html';
@@ -616,6 +625,8 @@ export class PaymentCountListComponent implements OnInit {
       ]),
       yearMake: this.readBackendText(item, ['yearMake', 'YearMake', 'vehicleYear', 'VehicleYear']),
       category: this.readBackendText(item, [
+        'categoryVehicleName',
+        'CategoryVehicleName',
         'vehicleCategory',
         'VehicleCategory',
         'categoryName',
@@ -658,6 +669,27 @@ export class PaymentCountListComponent implements OnInit {
         };
       })
       .filter(row => row.account !== '.---.' || row.amount !== '.---.' || row.note !== '.---.');
+  }
+
+  private resolveBranchAddressFromBackend(item: PaymentCount): string {
+    const city = this.readBackendText(item, ['branchCity', 'BranchCity']);
+    const neighborhood = this.readBackendText(item, ['branchNeighborHood', 'BranchNeighborHood']);
+    const street = this.readBackendText(item, ['branchStreet', 'BranchStreet']);
+    const building = this.readBackendText(item, ['branchBuldingNumber', 'BranchBuldingNumber']);
+
+    const parts = [city, neighborhood, street]
+      .map(part => String(part ?? '').trim())
+      .filter(Boolean);
+    const buildingSuffix = String(building ?? '').trim();
+    if (buildingSuffix) {
+      parts.push(`No. ${buildingSuffix}`);
+    }
+
+    const composed = parts.join(' - ');
+    if (composed) {
+      return composed;
+    }
+    return this.readBackendText(item, ['branchName', 'BranchName']);
   }
 
   private resolveBranchName(item: PaymentCount): string {

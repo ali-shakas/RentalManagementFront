@@ -1,6 +1,6 @@
 <div class="container-fluid">
   <app-page-header
-    [title]="'Create Journal Entry' | translate"
+    [title]="(isViewMode() ? 'View Journal Entry' : 'Create Journal Entry') | translate"
     [subtitle]="'Create balanced journal entries with header and line details linked to chart of accounts.' | translate"
   >
     <a class="btn btn-outline-secondary" routerLink="/journals">{{ 'Back to Journals' | translate }}</a>
@@ -13,29 +13,42 @@
         <div class="row g-3">
           <div class="col-lg-4">
             <label class="form-label">{{ 'Date' | translate }} <span class="text-danger">*</span></label>
-            <input type="datetime-local" class="form-control" formControlName="date" />
+            <input type="datetime-local" class="form-control" formControlName="date" [readonly]="isViewMode()" />
           </div>
 
           <div class="col-lg-4">
             <label class="form-label">{{ 'Branch' | translate }} <span class="text-danger">*</span></label>
-            <app-smooth-select
-              formControlName="idBranch"
-              [options]="branchOptions()"
-              [placeholder]="'Select branch' | translate"
-              [ariaLabel]="'Branch' | translate"
-              [disabled]="false"
-            />
+            @if (isViewMode()) {
+              <input
+                type="text"
+                class="form-control"
+                [value]="viewBranchName() || '-'"
+                readonly
+              />
+            } @else {
+              <app-smooth-select
+                formControlName="idBranch"
+                [options]="branchOptions()"
+                [placeholder]="'Select branch' | translate"
+                [ariaLabel]="'Branch' | translate"
+                [disabled]="false"
+              />
+            }
           </div>
 
           <div class="col-lg-4">
             <label class="form-label">{{ 'Financial Year' | translate }} <span class="text-danger">*</span></label>
-            <app-smooth-select
-              formControlName="idFinancialYear"
-              [options]="financialYearOptions()"
-              [placeholder]="'Select financial year' | translate"
-              [ariaLabel]="'Financial Year' | translate"
-              [disabled]="loadingFinancialYears()"
-            />
+            @if (isViewMode()) {
+              <input type="text" class="form-control" [value]="viewFinancialYearDisplay() || '-'" readonly />
+            } @else {
+              <app-smooth-select
+                formControlName="idFinancialYear"
+                [options]="financialYearOptions()"
+                [placeholder]="'Select financial year' | translate"
+                [ariaLabel]="'Financial Year' | translate"
+                [disabled]="loadingFinancialYears()"
+              />
+            }
           </div>
 
           <div class="col-lg-3">
@@ -45,6 +58,7 @@
               [options]="operationTypeOptions()"
               [placeholder]="'Select operation type' | translate"
               [ariaLabel]="'Operation Type' | translate"
+              [disabled]="isViewMode()"
             />
           </div>
 
@@ -55,12 +69,13 @@
               [options]="statusOptions()"
               [placeholder]="'Select status' | translate"
               [ariaLabel]="'Status' | translate"
+              [disabled]="isViewMode()"
             />
           </div>
 
           <div class="col-12">
             <label class="form-label">{{ 'Note' | translate }} <span class="text-danger">*</span></label>
-            <textarea class="form-control" rows="3" formControlName="node"></textarea>
+            <textarea class="form-control" rows="3" formControlName="node" [readonly]="isViewMode()"></textarea>
           </div>
 
           <div class="col-md-3 col-sm-6">
@@ -70,6 +85,7 @@
               [options]="journalTypeOptions()"
               [placeholder]="'Select journal type' | translate"
               [ariaLabel]="'Journal Type' | translate"
+              [disabled]="isViewMode()"
             />
           </div>
 
@@ -81,13 +97,7 @@
 
     <div class="card journal-card mt-3">
       <div class="card-body">
-        <div class="journal-lines-head">
-          <h6 class="journal-section-title mb-0">{{ 'Journal Lines' | translate }}</h6>
-          <button class="btn btn-primary btn-sm" type="button" (click)="addLine()">
-            <i class="fa fa-plus me-1"></i>
-            {{ 'Add Line' | translate }}
-          </button>
-        </div>
+        <h6 class="journal-section-title mb-0">{{ 'Journal Lines' | translate }}</h6>
 
         @if (loadingAccounts()) {
           <div class="journal-lines-state">
@@ -98,102 +108,121 @@
           <div class="alert alert-warning mb-0 mt-3">{{ 'No active accounts available' | translate }}</div>
         }
 
-        <div class="journal-lines-grid" formArrayName="details">
-          @for (line of detailsArray.controls; track trackByIndex($index)) {
-            <div class="journal-line-card" [formGroupName]="$index">
-              <div class="journal-line-card__head">
-                <span>#{{ $index + 1 }}</span>
-                <button
-                  class="btn btn-cancel btn-sm"
-                  type="button"
-                  (click)="removeLine($index)"
-                  [disabled]="detailsArray.length <= 2"
-                >
-                  {{ 'Delete' | translate }}
-                </button>
-              </div>
-
-              <div class="journal-line-card__grid">
-                <div class="journal-field">
-                  <label class="form-label">{{ 'Account' | translate }}</label>
-                  <app-smooth-select
-                    formControlName="countingId"
-                    [options]="accountOptions()"
-                    [placeholder]="'Select account' | translate"
-                    [ariaLabel]="'Account' | translate"
-                    [disabled]="false"
-                    [menuMaxHeight]="220"
-                    [searchable]="true"
-                  />
-                </div>
-
-                <div class="journal-field">
-                  <label class="form-label">{{ 'Vehicle' | translate }}</label>
-                  <app-smooth-select
-                    formControlName="idVehicle"
-                    [options]="vehicleOptions()"
-                    [placeholder]="'Select vehicle (optional)' | translate"
-                    [ariaLabel]="'Vehicle' | translate"
-                    [disabled]="false"
-                    [menuMaxHeight]="220"
-                    [searchable]="true"
-                    [searchPlaceholder]="'Search vehicle...'"
-                    (searchChange)="onVehicleSearch($event)"
-                  />
-                </div>
-
-                <div class="journal-field">
-                  <label class="form-label">{{ 'Customer' | translate }}</label>
-                  <app-smooth-select
-                    formControlName="idCustomer"
-                    [options]="customerOptions()"
-                    [placeholder]="'Select customer (optional)' | translate"
-                    [ariaLabel]="'Customer' | translate"
-                    [disabled]="false"
-                    [menuMaxHeight]="220"
-                    [searchable]="true"
-                    [searchPlaceholder]="'Search customer...'"
-                    (searchChange)="onCustomerSearch($event)"
-                  />
-                </div>
-
-                <div class="journal-field">
-                  <label class="form-label">{{ 'Debit' | translate }}</label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    class="form-control text-end"
-                    formControlName="debtir"
-                    (input)="onDebitInput($index)"
-                  />
-                </div>
-
-                <div class="journal-field">
-                  <label class="form-label">{{ 'Credit' | translate }}</label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    class="form-control text-end"
-                    formControlName="credit"
-                    (input)="onCreditInput($index)"
-                  />
-                </div>
-
-                <div class="journal-field journal-field--wide">
-                  <label class="form-label">{{ 'Line Note' | translate }}</label>
-                  <input type="text" class="form-control" formControlName="node" />
-                </div>
-              </div>
-
-              @if (line.touched && line.errors?.['debitCreditRequired']) {
-                <div class="journal-line-validation">
-                  {{ 'Each line must have debit or credit only' | translate }}
-                </div>
-              }
+        @if (!isViewMode()) {
+          <div class="journal-add-row" [formGroup]="detailDraft">
+            <div class="journal-add-row__field">
+              <label class="form-label">{{ 'Account' | translate }}</label>
+              <app-smooth-select
+                formControlName="countingId"
+                [options]="accountOptions()"
+                [placeholder]="'Select account' | translate"
+                [ariaLabel]="'Account' | translate"
+                [searchable]="true"
+              />
             </div>
-          }
+            <div class="journal-add-row__field">
+              <label class="form-label">{{ 'Vehicle' | translate }}</label>
+              <app-smooth-select
+                formControlName="idVehicle"
+                [options]="vehicleOptions()"
+                [placeholder]="'Select vehicle (optional)' | translate"
+                [ariaLabel]="'Vehicle' | translate"
+                [searchable]="true"
+              />
+            </div>
+            <div class="journal-add-row__field">
+              <label class="form-label">{{ 'Customer' | translate }}</label>
+              <app-smooth-select
+                formControlName="idCustomer"
+                [options]="customerOptions()"
+                [placeholder]="'Select customer (optional)' | translate"
+                [ariaLabel]="'Customer' | translate"
+                [searchable]="true"
+              />
+            </div>
+            <div class="journal-add-row__field">
+              <label class="form-label">{{ 'Debit' | translate }}</label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                class="form-control text-end"
+                formControlName="debtir"
+                (input)="onDraftDebitInput()"
+              />
+            </div>
+            <div class="journal-add-row__field">
+              <label class="form-label">{{ 'Credit' | translate }}</label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                class="form-control text-end"
+                formControlName="credit"
+                (input)="onDraftCreditInput()"
+              />
+            </div>
+            <div class="journal-add-row__field journal-add-row__field--wide">
+              <label class="form-label">{{ 'Line Note' | translate }}</label>
+              <input type="text" class="form-control" formControlName="node" />
+            </div>
+            <div class="journal-add-row__actions">
+              <button class="btn btn-success" type="button" (click)="addLine()">
+                {{ 'Add Line' | translate }}
+              </button>
+            </div>
+          </div>
+        }
+
+        <div class="table-responsive mt-3" formArrayName="details">
+          <table class="table align-middle journal-details-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>{{ 'Account' | translate }}</th>
+                <th>{{ 'Vehicle' | translate }}</th>
+                <th>{{ 'Customer' | translate }}</th>
+                <th class="text-end">{{ 'Debit' | translate }}</th>
+                <th class="text-end">{{ 'Credit' | translate }}</th>
+                <th>{{ 'Line Note' | translate }}</th>
+                @if (!isViewMode()) {
+                  <th>{{ 'Actions' | translate }}</th>
+                }
+              </tr>
+            </thead>
+            <tbody>
+              @for (line of detailsArray.controls; track trackByIndex($index)) {
+                <tr [formGroupName]="$index">
+                  <td>{{ $index + 1 }}</td>
+                  <td>{{ detailAccountLabel($index) }}</td>
+                  <td>{{ detailVehicleLabel($index) }}</td>
+                  <td>{{ detailCustomerLabel($index) }}</td>
+                  <td class="text-end">{{ formatAmount($any(detailLineValue($index, 'debtir')) || 0) }}</td>
+                  <td class="text-end">{{ formatAmount($any(detailLineValue($index, 'credit')) || 0) }}</td>
+                  <td>{{ detailLineValue($index, 'node') || '-' }}</td>
+                  @if (!isViewMode()) {
+                    <td>
+                      <button
+                        class="btn btn-cancel btn-sm"
+                        type="button"
+                        (click)="removeLine($index)"
+                        [disabled]="detailsArray.length <= 2"
+                      >
+                        {{ 'Delete' | translate }}
+                      </button>
+                    </td>
+                  }
+                </tr>
+              }
+              @if (!detailsArray.length) {
+                <tr>
+                  <td [attr.colspan]="isViewMode() ? 7 : 8" class="text-center text-muted py-3">
+                    {{ 'No records found' | translate }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
         </div>
 
         <div class="journal-summary">
@@ -228,13 +257,15 @@
     }
 
     <div class="journal-actions mt-4">
-      <button class="btn btn-primary" type="submit" [disabled]="!canSave()">
-        @if (loading()) {
-          <span class="spinner-border spinner-border-sm me-2"></span>
-        }
-        {{ 'Create' | translate }}
-      </button>
-      <a class="btn btn-cancel" routerLink="/journals">{{ 'Cancel' | translate }}</a>
+      @if (!isViewMode()) {
+        <button class="btn btn-primary" type="submit" [disabled]="!canSave()">
+          @if (loading()) {
+            <span class="spinner-border spinner-border-sm me-2"></span>
+          }
+          {{ 'Create' | translate }}
+        </button>
+      }
+      <a class="btn btn-cancel" routerLink="/journals">{{ 'Back' | translate }}</a>
     </div>
   </form>
 </div>

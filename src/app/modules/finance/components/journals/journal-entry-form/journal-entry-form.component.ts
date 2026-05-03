@@ -9,6 +9,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { forkJoin } from 'rxjs';
@@ -25,6 +26,7 @@ import { CountingEntry } from '../../../models/counting/counting-entry.model';
 import { FinancialYear } from '../../../models/financial-years/financial-year.model';
 import {
   CreateJournalEntryRequest,
+  JournalEntry,
 } from '../../../models/journals/journal-entry.model';
 import { CountingEntryService } from '../../../services/counting/counting-entry.service';
 import { FinancialYearService } from '../../../services/financial-years/financial-year.service';
@@ -64,8 +66,10 @@ export class JournalEntryFormComponent implements OnInit {
   private toast = inject(ToastService);
   private translate = inject(TranslateService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private languageTick = signal(0);
   private readonly minimumRequiredLines = 2;
+  isViewMode = signal(false);
 
   loading = signal(false);
   loadingAccounts = signal(false);
@@ -78,6 +82,9 @@ export class JournalEntryFormComponent implements OnInit {
   customers = signal<Customer[]>([]);
   vehicles = signal<Vehicle[]>([]);
   branches = signal<Branch[]>([]);
+  viewBranchName = signal('');
+  /** Read-only label: prefers `FinancialYearName` from API, then loaded years list, then id. */
+  viewFinancialYearDisplay = signal('');
 
   readonly accountOptions = computed<SmoothSelectOption[]>(() => {
     this.languageTick();
@@ -175,11 +182,12 @@ export class JournalEntryFormComponent implements OnInit {
     isSystemOperation: [false],
     idFinancialYear: ['', [Validators.required]],
     idBranch: [Number(this.authState.branchId() ?? 0), [Validators.required, Validators.min(1)]],
-    details: this.fb.array([this.createDetailLineForm(), this.createDetailLineForm()]),
+    details: this.fb.array([]),
   });
+  detailDraft = this.createDetailLineForm();
 
-  get detailsArray() {
-    return this.form.controls.details;
+  get detailsArray(): any {
+    return this.form.controls.details as any;
   }
 
   ngOnInit(): void {
@@ -194,10 +202,58 @@ export class JournalEntryFormComponent implements OnInit {
     this.loadActiveAccounts();
     this.loadCustomers();
     this.loadVehicles();
+
+    const journalId = String(this.route.snapshot.paramMap.get('id') ?? '').trim();
+    const isView = this.route.snapshot.url.some(part => part.path === 'view');
+    this.isViewMode.set(isView);
+    if (isView) {
+      // In view mode, never keep template default lines; only backend data is shown.
+      while (this.detailsArray.length) {
+        this.detailsArray.removeAt(0);
+      }
+    }
+
+    if (journalId && journalId !== 'undefined' && journalId !== 'null') {
+      this.loadJournalForView(journalId);
+    }
   }
 
   addLine(): void {
-    this.detailsArray.push(this.createDetailLineForm());
+    if (this.isViewMode()) {
+      return;
+    }
+    this.detailDraft.markAllAsTouched();
+    this.detailDraft.updateValueAndValidity();
+    if (this.detailDraft.invalid) {
+      this.toast.error(this.translate.instant('Each line must have debit or credit only'));
+      return;
+    }
+
+    const raw = this.detailDraft.getRawValue();
+    const newLine = this.createDetailLineForm();
+    newLine.patchValue({
+      countingId: String(raw.countingId ?? '').trim(),
+      countingName: String(raw.countingName ?? '').trim(),
+      idVehicle: String(raw.idVehicle ?? '').trim(),
+      vehicleName: String(raw.vehicleName ?? '').trim(),
+      idCustomer: String(raw.idCustomer ?? '').trim(),
+      customerName: String(raw.customerName ?? '').trim(),
+      debtir: this.toPositiveNumber(raw.debtir),
+      credit: this.toPositiveNumber(raw.credit),
+      node: String(raw.node ?? '').trim(),
+    });
+    this.detailsArray.push(newLine);
+    this.detailDraft.reset({
+      countingId: '',
+      countingName: '',
+      idVehicle: '',
+      vehicleName: '',
+      idCustomer: '',
+      customerName: '',
+      debtir: 0,
+      credit: 0,
+      node: '',
+    });
   }
 
   removeLine(index: number): void {
@@ -209,34 +265,32 @@ export class JournalEntryFormComponent implements OnInit {
     this.detailsArray.removeAt(index);
   }
 
-  onDebitInput(index: number): void {
-    const line = this.detailsArray.at(index);
-    const debit = this.toPositiveNumber(line.controls.debtir.value);
-    if (debit > 0 && this.toPositiveNumber(line.controls.credit.value) > 0) {
-      line.patchValue({ credit: 0 }, { emitEvent: false });
-      line.updateValueAndValidity();
+  onDraftDebitInput(): void {
+    const debit = this.toPositiveNumber(this.detailDraft.controls.debtir.value);
+    if (debit > 0 && this.toPositiveNumber(this.detailDraft.controls.credit.value) > 0) {
+      this.detailDraft.patchValue({ credit: 0 }, { emitEvent: false });
     }
+    this.detailDraft.updateValueAndValidity();
   }
 
-  onCreditInput(index: number): void {
-    const line = this.detailsArray.at(index);
-    const credit = this.toPositiveNumber(line.controls.credit.value);
-    if (credit > 0 && this.toPositiveNumber(line.controls.debtir.value) > 0) {
-      line.patchValue({ debtir: 0 }, { emitEvent: false });
-      line.updateValueAndValidity();
+  onDraftCreditInput(): void {
+    const credit = this.toPositiveNumber(this.detailDraft.controls.credit.value);
+    if (credit > 0 && this.toPositiveNumber(this.detailDraft.controls.debtir.value) > 0) {
+      this.detailDraft.patchValue({ debtir: 0 }, { emitEvent: false });
     }
+    this.detailDraft.updateValueAndValidity();
   }
 
   totalDebit(): number {
     return this.detailsArray.controls.reduce(
-      (total, line) => total + this.toPositiveNumber(line.controls.debtir.value),
+      (total: number, line: any) => total + this.toPositiveNumber(line.controls.debtir.value),
       0,
     );
   }
 
   totalCredit(): number {
     return this.detailsArray.controls.reduce(
-      (total, line) => total + this.toPositiveNumber(line.controls.credit.value),
+      (total: number, line: any) => total + this.toPositiveNumber(line.controls.credit.value),
       0,
     );
   }
@@ -254,6 +308,9 @@ export class JournalEntryFormComponent implements OnInit {
   }
 
   canSave(): boolean {
+    if (this.isViewMode()) {
+      return false;
+    }
     return (
       !this.loading() &&
       !this.loadingAccounts() &&
@@ -271,6 +328,9 @@ export class JournalEntryFormComponent implements OnInit {
   }
 
   onSubmit(): void {
+    if (this.isViewMode()) {
+      return;
+    }
     if (!this.hasMinimumLines()) {
       this.toast.error(this.translate.instant('At least two lines are required'));
       return;
@@ -278,7 +338,7 @@ export class JournalEntryFormComponent implements OnInit {
 
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      this.detailsArray.controls.forEach(line => line.markAllAsTouched());
+      this.detailsArray.controls.forEach((line: any) => line.markAllAsTouched());
       focusFirstInvalidControl(this.hostEl.nativeElement);
       return;
     }
@@ -288,7 +348,7 @@ export class JournalEntryFormComponent implements OnInit {
       return;
     }
 
-    const raw = this.form.getRawValue();
+    const raw = this.form.getRawValue() as any;
     if (this.toRequiredPositiveInteger(raw.idBranch) <= 0) {
       this.toast.error(this.translate.instant('Please select a valid branch'));
       return;
@@ -315,7 +375,7 @@ export class JournalEntryFormComponent implements OnInit {
       idFinancialYear: raw.idFinancialYear,
       idBranch: this.toRequiredPositiveInteger(raw.idBranch),
       fleetId,
-      details: raw.details.map(line => ({
+      details: (raw.details as any[]).map((line: any) => ({
         idCounting: String(line.countingId).trim(),
         debtir: this.toPositiveNumber(line.debtir),
         credit: this.toPositiveNumber(line.credit),
@@ -356,18 +416,209 @@ export class JournalEntryFormComponent implements OnInit {
     }).format(value);
   }
 
+  accountLabelById(id: unknown): string {
+    const key = String(id ?? '').trim();
+    if (!key) {
+      return '-';
+    }
+    const account = this.accounts().find(item => String(item.id) === key);
+    return account ? this.formatAccountLabel(account) : key;
+  }
+
+  customerLabelById(id: unknown): string {
+    const key = String(id ?? '').trim();
+    if (!key) {
+      return '-';
+    }
+    const customer = this.customers().find(item => String(item.id) === key);
+    return customer ? this.formatCustomerLabel(customer) : key;
+  }
+
+  vehicleLabelById(id: unknown): string {
+    const key = String(id ?? '').trim();
+    if (!key) {
+      return '-';
+    }
+    const vehicle = this.vehicles().find(item => String(item.id) === key);
+    return vehicle ? this.formatVehicleLabel(vehicle) : key;
+  }
+
+  detailAccountLabel(index: number): string {
+    const backendName = String(this.detailLineValue(index, 'countingName') ?? '').trim();
+    return backendName || '-';
+  }
+
+  detailCustomerLabel(index: number): string {
+    const backendName = String(this.detailLineValue(index, 'customerName') ?? '').trim();
+    return backendName || '-';
+  }
+
+  detailVehicleLabel(index: number): string {
+    const backendName = String(this.detailLineValue(index, 'vehicleName') ?? '').trim();
+    return backendName || '-';
+  }
+
+  detailLineValue(index: number, key: string): unknown {
+    const line = this.detailsArray.at(index);
+    const value = (line?.value ?? {}) as Record<string, unknown>;
+    return value[key];
+  }
+
   private createDetailLineForm() {
     return this.fb.group(
       {
         countingId: ['', [Validators.required]],
+        countingName: [''],
         idVehicle: [''],
+        vehicleName: [''],
         idCustomer: [''],
+        customerName: [''],
         debtir: [0, [Validators.min(0)]],
         credit: [0, [Validators.min(0)]],
         node: ['', [Validators.maxLength(250)]],
       },
       { validators: this.detailLineValidator },
     );
+  }
+
+  private loadJournalForView(journalId: string): void {
+    const fleetId = (this.authState.fleetId() ?? '').trim();
+    if (!fleetId) {
+      this.toast.error(this.translate.instant('Fleet context is missing'));
+      return;
+    }
+
+    this.loading.set(true);
+    this.journalService
+      .getByIdWithDetails(journalId, fleetId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: ({ entry, details }) => {
+          this.viewBranchName.set(String(entry.branchName ?? '').trim());
+          this.viewFinancialYearDisplay.set(this.resolveFinancialYearViewLabel(entry));
+          this.form.patchValue({
+            date: this.toDateTimeLocal(entry.date),
+            node: String(entry.node ?? ''),
+            journalType: this.toNumericJournalType(entry.journalType),
+            operationType: Number(entry.operationType ?? 1),
+            status: Number(entry.status ?? 1),
+            idFinancialYear: String(entry.idFinancialYear ?? ''),
+            idBranch: Number(entry.idBranch ?? this.form.controls.idBranch.value),
+            isManual: true,
+            isSystemOperation: Boolean(entry.isSystemOperation ?? false),
+          });
+
+          while (this.detailsArray.length) {
+            this.detailsArray.removeAt(0);
+          }
+
+          for (const detail of details.map(detail => this.mapDetailFromBackend(detail))) {
+            const line = this.createDetailLineForm();
+            line.patchValue(detail);
+            this.detailsArray.push(line);
+          }
+
+          this.form.disable({ emitEvent: false });
+        },
+        error: err => {
+          this.toast.error(err?.message ?? this.translate.instant('Failed to load journals'));
+          this.loading.set(false);
+        },
+        complete: () => this.loading.set(false),
+      });
+  }
+
+  private resolveFinancialYearViewLabel(entry: JournalEntry): string {
+    const fromApi = String(entry.financialYearName ?? '').trim();
+    if (fromApi) {
+      return fromApi;
+    }
+    const id = String(entry.idFinancialYear ?? '').trim();
+    if (!id) {
+      return '-';
+    }
+    const year = this.financialYears().find(y => String(y.id) === id);
+    if (year) {
+      return this.formatFinancialYearLabel(year);
+    }
+    return id;
+  }
+
+  private mapDetailFromBackend(detail: Record<string, unknown>): {
+    countingId: string;
+    countingName: string;
+    idVehicle: string;
+    vehicleName: string;
+    idCustomer: string;
+    customerName: string;
+    debtir: number;
+    credit: number;
+    node: string;
+  } {
+    return {
+      countingId: String(detail['idCounting'] ?? detail['IdCounting'] ?? '').trim(),
+      countingName: String(
+        detail['countingName'] ??
+          detail['CountingName'] ??
+          detail['accountName'] ??
+          detail['AccountName'] ??
+          '',
+      ).trim(),
+      idVehicle: String(detail['idVehicle'] ?? detail['IdVehicle'] ?? '').trim(),
+      vehicleName: String(
+        detail['plateNumber'] ??
+          detail['PlateNumber'] ??
+          detail['vehiclePlateNumber'] ??
+          detail['VehiclePlateNumber'] ??
+          detail['vehiclePlatnumber'] ??
+          detail['VehiclePlatnumber'] ??
+          detail['vehicleName'] ??
+          detail['VehicleName'] ??
+          '',
+      ).trim(),
+      idCustomer: String(
+        detail['idCustomer'] ??
+          detail['IdCustomer'] ??
+          detail['customerId'] ??
+          detail['CustomerId'] ??
+          '',
+      ).trim(),
+      customerName: String(
+        detail['customerName'] ??
+          detail['CustomerName'] ??
+          detail['nameCustomer'] ??
+          detail['NameCustomer'] ??
+          detail['customerFullName'] ??
+          detail['CustomerFullName'] ??
+          '',
+      ).trim(),
+      debtir: this.toPositiveNumber(detail['debtir'] ?? detail['Debtir']),
+      credit: this.toPositiveNumber(detail['credit'] ?? detail['Credit']),
+      node: String(detail['node'] ?? detail['Node'] ?? '').trim(),
+    };
+  }
+
+  private toDateTimeLocal(value?: string): string {
+    const raw = String(value ?? '').trim();
+    if (!raw) {
+      return '';
+    }
+    const date = new Date(raw);
+    if (Number.isNaN(date.getTime())) {
+      return raw;
+    }
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  }
+
+  private toNumericJournalType(value: JournalEntry['journalType']): number {
+    if (value === true) {
+      return 1;
+    }
+    if (value === false) {
+      return 0;
+    }
+    return Number(value ?? 1);
   }
 
   private readonly detailLineValidator = (control: AbstractControl): ValidationErrors | null => {
@@ -450,9 +701,20 @@ export class JournalEntryFormComponent implements OnInit {
     this.financialYearService.getList(fleetId).subscribe({
       next: years => {
         this.financialYears.set(years);
-        const currentYear = years.find(year => year.isCurrentYear) ?? years.at(0);
-        if (currentYear) {
-          this.form.controls.idFinancialYear.setValue(String(currentYear.id), { emitEvent: false });
+        if (!this.isViewMode()) {
+          const currentYear = years.find(year => year.isCurrentYear) ?? years.at(0);
+          if (currentYear) {
+            this.form.controls.idFinancialYear.setValue(String(currentYear.id), { emitEvent: false });
+          }
+        } else {
+          const fyId = String(this.form.controls.idFinancialYear.value ?? '').trim();
+          const shown = this.viewFinancialYearDisplay().trim();
+          if (fyId && shown === fyId) {
+            const match = years.find(y => String(y.id) === fyId);
+            if (match) {
+              this.viewFinancialYearDisplay.set(this.formatFinancialYearLabel(match));
+            }
+          }
         }
       },
       error: err => {

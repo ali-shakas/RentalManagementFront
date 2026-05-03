@@ -14,6 +14,10 @@ export interface PaymentCount {
   vehicleCategory?: string;
   idBranch?: number;
   branchName?: string;
+  branchStreet?: string;
+  branchNeighborHood?: string;
+  branchBuldingNumber?: string;
+  branchCity?: string;
   paid?: number;
   paymentType?: number;
   bondType?: number;

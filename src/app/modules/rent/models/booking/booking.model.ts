@@ -50,6 +50,8 @@ export interface Booking {
   createdBy?: string;
   createdAt?: string;
   updatedAt?: string;
+  deletedAt?: string;
+  deletedBy?: string;
   distancetraveledgps?: string;
   numberOfHoursExcess?: number;
   numberKmExcess?: number;
@@ -74,6 +76,8 @@ export interface Booking {
   transportationFees?: number;
   totaltax?: number | null;
   placeUSE?: string;
+  idCountingCustVehicle?: string;
+  updatedBy?: string;
 }
 
 export interface BookingFilters {

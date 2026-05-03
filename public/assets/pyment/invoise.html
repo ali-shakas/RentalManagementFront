@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title></title>
+  <link rel="icon" type="image/png" href="/assets/images/logo/logo-icon.png" />
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; direction: rtl; color: #1f2937; }
     h2, h3, p { margin: 0; }
@@ -277,7 +278,337 @@
       border-top: 1px dashed #9ca3af;
       height: 1px;
     }
-    @media print { body { margin: 12px; } }
+    .voucher-page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .voucher-main {
+      flex: 1 1 auto;
+    }
+    .voucher-tail {
+      margin-top: auto;
+    }
+    .journal-print-page {
+      min-height: calc(297mm - 14mm);
+      display: flex;
+      flex-direction: column;
+    }
+    .journal-print-tail {
+      margin-top: auto;
+      padding-top: 3mm;
+      break-inside: avoid;
+      page-break-inside: avoid;
+      break-before: avoid-page;
+      page-break-before: auto;
+    }
+    .journal-page-break {
+      page-break-after: always;
+      break-after: page;
+    }
+    .journal-page-break:last-child {
+      page-break-after: auto;
+      break-after: auto;
+    }
+    .journal-meta-grid {
+      margin-top: 8px;
+    }
+    .journal-meta-line {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px 18px;
+      align-items: stretch;
+      padding: 10px 12px;
+      border: 1px solid #d5def5;
+      border-radius: 8px;
+      background: #f8faff;
+      margin-bottom: 10px;
+      justify-content: space-between;
+    }
+    .journal-meta-item {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 14px;
+      line-height: 1.4;
+      color: #0f172a;
+      font-weight: 700;
+      min-width: 320px;
+      flex: 1 1 320px;
+      padding: 6px 10px;
+      background: #ffffff;
+      border: 1px solid #dbe4f6;
+      border-radius: 8px;
+    }
+    .journal-meta-item .label {
+      color: #334155;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .journal-meta-item .value {
+      color: #0b1324;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+    .journal-total-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 16px;
+      margin-top: 6px;
+      align-items: center;
+    }
+    .journal-total-grid .journal-meta-card {
+      padding: 5px 12px;
+      border-style: solid;
+      border-color: #cdd8f6;
+      background: #f8faff;
+    }
+    .journal-total-grid .journal-meta-title-ar {
+      font-size: 13px;
+    }
+    .journal-total-grid .journal-meta-title-en {
+      font-size: 12px;
+      color: #64748b;
+    }
+    .journal-total-grid .journal-meta-value {
+      font-size: 16px;
+      font-weight: 800;
+    }
+    .journal-total-equation {
+      margin-top: 8px;
+      padding: 10px 14px;
+      border: 1px solid #cdd8f6;
+      border-radius: 10px;
+      background: linear-gradient(180deg, #f8faff 0%, #ffffff 100%);
+      text-align: center;
+      font-size: 18px;
+      font-weight: 800;
+      color: #1e293b;
+      letter-spacing: 0.2px;
+    }
+    .journal-total-equation .k {
+      color: #334155;
+      font-size: 13px;
+      font-weight: 700;
+      margin: 0 4px;
+    }
+    .journal-total-equation .v {
+      color: #0b1324;
+      margin: 0 4px;
+    }
+    .journal-total-equation .op {
+      color: #475569;
+      margin: 0 6px;
+    }
+    .journal-details-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      table-layout: fixed;
+      margin-top: 6px;
+      border: 1px solid #d9e1f2;
+      border-radius: 10px;
+      overflow: hidden;
+      background: #fff;
+    }
+    .journal-details-table th,
+    .journal-details-table td {
+      padding: 8px 10px;
+      border-bottom: 1px solid #e8edf8;
+      font-size: 12px;
+      line-height: 1.45;
+      vertical-align: top;
+    }
+    .journal-details-table th {
+      background: #eef3ff;
+      color: #243b86;
+      font-weight: 800;
+      text-align: center;
+      font-size: 11px;
+    }
+    .journal-details-table tr:last-child td {
+      border-bottom: 0;
+    }
+    .journal-details-table thead {
+      display: table-header-group;
+    }
+    .journal-details-table tfoot {
+      display: table-footer-group;
+    }
+    .journal-details-table tr {
+      break-inside: avoid-page;
+      page-break-inside: avoid;
+    }
+    .journal-details-table td:nth-child(1),
+    .journal-details-table td:nth-child(3),
+    .journal-details-table td:nth-child(4) {
+      text-align: center;
+      font-weight: 700;
+      color: #1f2937;
+      white-space: nowrap;
+    }
+    .journal-details-table td:nth-child(2) {
+      text-align: right;
+      direction: rtl;
+      font-weight: 700;
+    }
+    .journal-details-table td:nth-child(5) {
+      text-align: right;
+      direction: rtl;
+      white-space: normal;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+      color: #334155;
+    }
+    .journal-paper {
+      border: 0.45mm solid #111827;
+      padding: 7mm 6mm 6mm;
+      background: #fff;
+      box-sizing: border-box;
+    }
+    .journal-paper-title {
+      text-align: center;
+      font-size: 30px;
+      font-weight: 800;
+      margin: 4px 0 8px;
+      color: #0b1324;
+      letter-spacing: 0.6px;
+    }
+    .journal-top-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2.5mm;
+      margin-bottom: 2.5mm;
+      align-items: stretch;
+    }
+    .journal-top-box {
+      border: 0.35mm solid #111827;
+      padding: 0;
+      background: #fff;
+      display: flex;
+    }
+    .journal-paper-head {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 0;
+      table-layout: fixed;
+    }
+    .journal-paper-head td {
+      border: 0.3mm solid #111827;
+      padding: 1.3mm 1.7mm;
+      font-size: 11.5px;
+      vertical-align: middle;
+      line-height: 1.25;
+    }
+    .journal-paper-head .k {
+      font-weight: 700;
+      background: #f2f5fb;
+      white-space: nowrap;
+      text-align: center;
+    }
+    .journal-paper-head .v {
+      font-weight: 700;
+      min-width: 96px;
+      text-align: center;
+      direction: ltr;
+      unicode-bidi: plaintext;
+      font-variant-numeric: tabular-nums;
+    }
+    .journal-paper-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      margin-top: 2mm;
+      border: 0.3mm solid #111827;
+    }
+    .journal-paper-table thead {
+      display: table-header-group;
+    }
+    .journal-paper-table tfoot {
+      display: table-footer-group;
+    }
+    .journal-paper-table tr {
+      break-inside: avoid-page;
+      page-break-inside: avoid;
+    }
+    .journal-paper-table th,
+    .journal-paper-table td {
+      border-left: 0.3mm solid #111827;
+      border-right: 0.3mm solid #111827;
+      border-top: 0;
+      border-bottom: 0;
+      padding: 1.2mm 1.5mm;
+      font-size: 11px;
+      vertical-align: top;
+    }
+    .journal-paper-table th {
+      text-align: center;
+      font-weight: 800;
+      background: #eef2f9;
+      height: 7.5mm;
+      border-bottom: 0.3mm solid #111827;
+    }
+    .journal-paper-table td {
+      height: 6.5mm;
+    }
+    .journal-paper-table td:nth-child(1),
+    .journal-paper-table td:nth-child(2),
+    .journal-paper-table td:nth-child(5),
+    .journal-paper-table td:nth-child(6) {
+      text-align: center;
+      white-space: nowrap;
+    }
+    .journal-paper-table td:nth-child(3),
+    .journal-paper-table td:nth-child(4) {
+      text-align: right;
+      direction: rtl;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+    }
+    .journal-paper-summary {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: -0.3mm;
+      border-top: 0.5mm solid #111827;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+    .journal-paper-summary td {
+      border: 0.3mm solid #111827;
+      padding: 1.4mm 1.8mm;
+      font-size: 12px;
+      font-weight: 700;
+      text-align: center;
+      background: #f8fafc;
+    }
+    .journal-paper-summary .k {
+      background: #eef2f9;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+    .journal-paper-summary .v {
+      font-weight: 800;
+      white-space: nowrap;
+    }
+    @media print {
+      @page { size: A4 portrait; margin: 7mm; }
+      body { margin: 0; }
+      .voucher-page { min-height: 265mm; }
+      .journal-print-page { min-height: calc(297mm - 14mm); }
+      .journal-print-tail { margin-top: auto; }
+      .section-box { break-inside: auto; page-break-inside: auto; }
+      .journal-details-table { break-inside: auto; page-break-inside: auto; }
+      .journal-paper { width: 100%; min-height: calc(297mm - 14mm); }
+      .journal-paper-table thead { display: table-header-group; }
+      .journal-print-tail { break-inside: avoid; page-break-inside: avoid; }
+      .journal-paper-summary { break-inside: avoid; page-break-inside: avoid; }
+      .journal-paper-summary,
+      .journal-print-tail table {
+        break-before: avoid-page;
+        page-break-before: auto;
+      }
+    }
   </style>
 </head>
 <body>
@@ -324,6 +655,8 @@
 
       const template = get('template', 'generic');
       if (template === 'voucher' && root) {
+        const voucherDocNo = show(get('documentNo', '-'));
+        document.title = `رقم القيد ${voucherDocNo}`;
         const paid = num(get('paid', ''));
         const bondType = Number(get('bondType', '0'));
         const paymentType = Number(get('paymentType', '0'));
@@ -342,7 +675,11 @@
           if (!text) return '';
           const parsed = new Date(text);
           if (!Number.isNaN(parsed.getTime())) {
-            return parsed.toLocaleDateString('ar-SA');
+            const pad = (n) => String(n).padStart(2, '0');
+            const day = pad(parsed.getDate());
+            const month = pad(parsed.getMonth() + 1);
+            const year = parsed.getFullYear();
+            return `${day}/${month}/${year}`;
           }
           return text.split(' ')[0] || text;
         };
@@ -360,6 +697,7 @@
         const bookingNumber = esc(show(get('bookingNumber', '')));
         const description = get('description', '');
         const branch = esc(show(get('branchName', '')));
+        const branchAddress = esc(show(get('branchAddress', '')));
         const taxRecord = esc(show(get('taxRecord', '')));
         const logoRaw = String(get('logoUrl', '/assets/images/logo/logo-icon.png') || '').trim();
         const logo = logoRaw || '/assets/images/logo/logo-icon.png';
@@ -372,12 +710,21 @@
         const voucherDetailsRaw = payload && Array.isArray(payload['voucherDetails'])
           ? payload['voucherDetails']
           : [];
-        const voucherDetailsRows = voucherDetailsRaw.map((row) => {
+        const voucherDetailsRows = voucherDetailsRaw.map((row, index) => {
           const source = row && typeof row === 'object' ? row : {};
           const account = esc(show(source['account']));
           const amount = esc(show(source['amount']));
           const noteRow = esc(show(source['note']));
+          const detailNo = index + 1;
           return `
+            <tr class="field-row">
+              <td colspan="3" style="padding:8px 10px;border-bottom:1px solid #d8deef;background:#f7f9ff;">
+                <div style="display:flex;justify-content:space-between;align-items:center;font-weight:700;color:#2d3a8c;">
+                  <span>تفصيل ${detailNo}</span>
+                  <span>Detail ${detailNo}</span>
+                </div>
+              </td>
+            </tr>
             <tr class="field-row">
               <td class="header header-column rtl"><span class="label-ar">الحساب</span></td>
               <td><span class="field-value">${account}</span></td>
@@ -392,6 +739,9 @@
               <td class="header header-column rtl"><span class="label-ar">البيان</span></td>
               <td><span class="field-value">${noteRow}</span></td>
               <td class="header ltr"><span class="label-en">Note</span></td>
+            </tr>
+            <tr>
+              <td colspan="3" style="height:8px;border:0;border-bottom:1px dashed #d8deef;"></td>
             </tr>
           `;
         }).join('');
@@ -416,6 +766,8 @@
         }
 
         root.innerHTML = `
+          <div class="journal-print-page">
+          <div class="voucher-main">
           <table style="width:100%;  padding:1px;" class="doc-header">
             <tr>
               <td>
@@ -512,10 +864,6 @@
               </tr>
             </table>
           </div>
-          <div class="voucher-note">
-            <span class="note-title">ملاحظة:</span>
-            <span>${esc(show(description))}</span>
-          </div>
           ${!isPrintMode && voucherDetailsRows ? `
           <div class="section-box">
             <div class="section-title">تفاصيل السند</div>
@@ -524,6 +872,12 @@
             </table>
           </div>
           ` : ''}
+          </div>
+          <div class="voucher-tail">
+          <div class="voucher-note">
+            <span class="note-title">ملاحظة:</span>
+            <span>${esc(show(description))}</span>
+          </div>
           <div class="signatures-wrap">
             <table class="my-table">
               <tr>
@@ -553,14 +907,13 @@
           </table>
           <table style="width:100%; margin-top: 6px; margin-bottom: 6px;">
             <tr>
-              <td style="text-align:center; color:#434ea9; font-weight:700;">${companyNameAr}</td>
-              <td style="text-align:center; color:#434ea9; font-weight:700;">${companyNameEn}</td>
-            </tr>
-            <tr>
-              <td style="text-align:center; color:#434ea9;">${companySubNameAr}</td>
-              <td style="text-align:center; color:#434ea9;">${companySubNameEn}</td>
+              <td colspan="2" style="text-align:center; color:#374151; font-size: 20px; font-weight: 700; width: 100%; display: block;">
+                العنوان: ${branchAddress}
+              </td>
             </tr>
           </table>
+          </div>
+          </div>
         `;
       } else if (template === 'journal' && root) {
         const normalizeDate = (raw) => {
@@ -568,11 +921,16 @@
           if (!text) return '-';
           const parsed = new Date(text);
           if (!Number.isNaN(parsed.getTime())) {
-            return parsed.toLocaleString('ar-SA');
+            const pad = (n) => String(n).padStart(2, '0');
+            const day = pad(parsed.getDate());
+            const month = pad(parsed.getMonth() + 1);
+            const year = parsed.getFullYear();
+            return `${day}/${month}/${year}`;
           }
           return text;
         };
         const branch = esc(get('branchName', '-'));
+        const branchAddress = esc(show(get('branchAddress', get('branchName', ''))));
         const taxRecord = esc(get('taxRecord', '-'));
         const logoRaw = String(get('logoUrl', '/assets/images/logo/logo-icon.png') || '').trim();
         const logo = logoRaw || '/assets/images/logo/logo-icon.png';
@@ -585,8 +943,55 @@
         const credit = esc(get('credit', '-'));
         const balance = esc(get('balance', '-'));
         const docNo = esc(get('documentNo', '-'));
+        document.title = `رقم القيد ${show(get('documentNo', '-'))}`;
+        const journalDetailsRaw = payload && Array.isArray(payload['journalDetails'])
+          ? payload['journalDetails']
+          : [];
+        const journalDetailsData = journalDetailsRaw.map((row, index) => {
+          const source = row && typeof row === 'object' ? row : {};
+          const accountCode = esc(show(source['accountCode']));
+          const account = esc(show(source['account']));
+          const debitValue = esc(show(source['debit']));
+          const creditValue = esc(show(source['credit']));
+          const note = esc(show(source['note']));
+          return `
+            <tr>
+              <td>${index + 1}</td>
+              <td>${accountCode}</td>
+              <td>${account}</td>
+              <td>${note}</td>
+              <td>${debitValue}</td>
+              <td>${creditValue}</td>
+            </tr>
+          `;
+        });
+        const rowsPerPage = 13;
+        const detailPages = [];
+        if (journalDetailsData.length === 0) {
+          detailPages.push([]);
+        } else {
+          for (let i = 0; i < journalDetailsData.length; i += rowsPerPage) {
+            detailPages.push(journalDetailsData.slice(i, i + rowsPerPage));
+          }
+        }
 
-        root.innerHTML = `
+        const renderJournalPage = (pageRows, pageIndex) => {
+          const pageStart = pageIndex * rowsPerPage;
+          const fillerRowsCount = Math.max(0, rowsPerPage - pageRows.length);
+          const fillerRows = Array.from({ length: fillerRowsCount }).map((_, i) => `
+              <tr>
+                <td>${pageStart + pageRows.length + i + 1}</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+              </tr>
+            `).join('');
+          const rowsHtml = pageRows.join('') + fillerRows;
+
+          return `
+          <div class="journal-print-page journal-paper journal-page-break">
           <table style="width:100%;  padding:1px;" class="doc-header">
             <tr>
               <td>
@@ -607,50 +1012,78 @@
               </td>
             </tr>
           </table>
-          <br />
-          <table style="width: 100%; margin:20px;" class="mtable">
+          <div class="journal-paper-title">قيود اليومية</div>
+          <div class="journal-top-grid">
+            <div class="journal-top-box">
+            <table class="journal-paper-head">
+                <tr>
+                  <td class="k" style="width:20%;">رقم الدفتر</td>
+                  <td class="v" style="width:30%;">${docNo}</td>
+                  <td class="k" style="width:20%;">التاريخ</td>
+                  <td class="v" style="width:30%;">${dateValue}</td>
+                </tr>
+              </table>
+            </div>
+            <div class="journal-top-box">
+            <table class="journal-paper-head">
+                <tr>
+                  <td class="k" style="width:20%;">نوع العملية</td>
+                  <td class="v" style="width:30%; direction: rtl;">${operationTypeLabel}</td>
+                  <td class="k" style="width:20%;">السنة المالية</td>
+                  <td class="v" style="width:30%; direction: rtl;">${financialYear}</td>
+                </tr>
+              </table>
+            </div>
+          </div>
+          <div class="journal-top-box" style="margin-bottom:2.5mm;">
+            <table class="journal-paper-head">
+              <tr>
+                <td class="k" style="width:16%;">الفرع</td>
+                <td class="v" style="direction: rtl;">${branch}</td>
+              </tr>
+            </table>
+          </div>
+          <table class="journal-paper-table">
+              <colgroup>
+                <col style="width:6%;">
+                <col style="width:18%;">
+                <col style="width:24%;">
+                <col style="width:26%;">
+                <col style="width:13%;">
+                <col style="width:13%;">
+              </colgroup>
+              <thead>
+                <tr>
+                  <th>م</th>
+                  <th>مسلسل رقم الحساب</th>
+                  <th>اسم الحساب</th>
+                  <th>تعريف</th>
+                  <th>مدين</th>
+                  <th>دائن</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${rowsHtml}
+              </tbody>
+            </table>
+          <div class="journal-print-tail">
+          <table class="journal-paper-summary">
+            <colgroup>
+              <col style="width:6%;">
+              <col style="width:18%;">
+              <col style="width:24%;">
+              <col style="width:26%;">
+              <col style="width:13%;">
+              <col style="width:13%;">
+            </colgroup>
             <tr>
-              <td class="header rtl">رقم القيد : <span>${docNo}</span></td>
-              <td class="header"><h2 style="margin-right:120px;">قيد يومي</h2></td>
-              <td class="header ltr">التاريخ:<span>${dateValue}</span></td>
+              <td class="k" colspan="2">إجمالي المدين</td>
+              <td class="v">${debit}</td>
+              <td class="k">إجمالي الدائن</td>
+              <td class="v">${credit}</td>
+              <td class="v">الرصيد: ${balance}</td>
             </tr>
           </table>
-          <table class="my-table">
-            <tr>
-              <td class="header header-column rtl">الحالة</td>
-              <td><span>${statusLabel}</span></td>
-              <td class="header ltr">Status</td>
-            </tr>
-            <tr>
-              <td class="header header-column rtl">نوع القيد</td>
-              <td><span>${journalTypeLabel}</span></td>
-              <td class="header ltr">Journal Type</td>
-            </tr>
-            <tr>
-              <td class="header header-column rtl">نوع العملية</td>
-              <td><span>${operationTypeLabel}</span></td>
-              <td class="header ltr">Operation Type</td>
-            </tr>
-            <tr>
-              <td class="header header-column rtl">السنة المالية</td>
-              <td><span>${financialYear}</span></td>
-              <td class="header ltr">Financial Year</td>
-            </tr>
-          </table>
-          <br>
-          <table class="my-table">
-            <tr>
-              <td class="header rtl">مدين Debit</td>
-              <td class="header" style="text-align: center;">دائن Credit</td>
-              <td class="header ltr">الرصيد Balance</td>
-            </tr>
-            <tr>
-              <td class="rtl">${debit}</td>
-              <td class="rtl" style="text-align: center;">${credit}</td>
-              <td class="ltr">${balance}</td>
-            </tr>
-          </table>
-          <br><br>
           <table class="my-table">
             <tr>
               <td class="header rtl">المعد Prepared by</td>
@@ -667,7 +1100,18 @@
           <table style="width:100%">
             <tr><td><div style="border-bottom:1px solid #1e1e1e;width:100%;margin-bottom:5px;"></div></td></tr>
           </table>
+          <table style="width:100%; margin-top: 6px; margin-bottom: 6px;">
+            <tr>
+              <td style="text-align:center; color:#374151; font-size: 20px; font-weight: 700;">
+                العنوان: ${branchAddress}
+              </td>
+            </tr>
+          </table>
+          </div>
+          </div>
         `;
+        };
+        root.innerHTML = detailPages.map((pageRows, pageIndex) => renderJournalPage(pageRows, pageIndex)).join('');
       } else if (root) {
         const rawContent = get('content', '');
         const decodedContent = payload ? rawContent : decodeURIComponent(rawContent);
