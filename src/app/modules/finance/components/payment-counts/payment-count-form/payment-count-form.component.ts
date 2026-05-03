@@ -207,8 +207,9 @@ export class PaymentCountFormComponent implements OnInit {
     expenseCategory: ['' as number | ''],
     idBooking: [''],
     stutusbooking: [1 as number | '', [Validators.required]],
-    details: this.fb.array([this.createDetailLineForm()]),
+    details: this.fb.array([]),
   });
+  detailDraft = this.createDetailLineForm();
 
   readonly selectedCollectionChannel = computed<VoucherCollectionChannel>(() =>
     Number(this.form.controls.paymentType.value) === 1 ? 'cash' : 'bank',
@@ -220,8 +221,8 @@ export class PaymentCountFormComponent implements OnInit {
     return resolveVoucherFlow(purpose, this.selectedCollectionChannel());
   });
 
-  get detailsArray() {
-    return this.form.controls.details;
+  get detailsArray(): any {
+    return this.form.controls.details as any;
   }
 
   ngOnInit(): void {
@@ -266,7 +267,25 @@ export class PaymentCountFormComponent implements OnInit {
   }
 
   addLine(): void {
-    this.detailsArray.push(this.createDetailLineForm());
+    this.detailDraft.markAllAsTouched();
+    this.detailDraft.updateValueAndValidity();
+    if (this.detailDraft.invalid) {
+      this.toast.error(this.translate.instant('Each detail line must include account and amount'));
+      return;
+    }
+    const raw = this.detailDraft.getRawValue();
+    const newLine = this.createDetailLineForm();
+    newLine.patchValue({
+      idCounting: String(raw.idCounting ?? '').trim(),
+      price: Number(raw.price ?? 0),
+      node: String(raw.node ?? '').trim(),
+    });
+    this.detailsArray.push(newLine);
+    this.detailDraft.reset({
+      idCounting: '',
+      price: 0,
+      node: '',
+    });
   }
 
   removeLine(index: number): void {
@@ -282,7 +301,7 @@ export class PaymentCountFormComponent implements OnInit {
   }
 
   totalDetails(): number {
-    return this.detailsArray.controls.reduce((total, line) => {
+    return this.detailsArray.controls.reduce((total: number, line: any) => {
       const price = Number(line.controls.price.value ?? 0);
       return total + (Number.isFinite(price) && price > 0 ? price : 0);
     }, 0);
@@ -295,6 +314,21 @@ export class PaymentCountFormComponent implements OnInit {
 
   isDetailsBalanced(): boolean {
     return Math.abs(this.detailsDifference()) < 0.00001;
+  }
+
+  accountLabelById(id: unknown): string {
+    const key = String(id ?? '').trim();
+    if (!key) {
+      return '-';
+    }
+    const account = this.accounts().find(item => String(item.id) === key);
+    return account ? this.formatAccountLabel(account) : key;
+  }
+
+  detailLineValue(index: number, key: string): unknown {
+    const line = this.detailsArray.at(index);
+    const value = (line?.value ?? {}) as Record<string, unknown>;
+    return value[key];
   }
 
   onSubmit(): void {
@@ -331,7 +365,7 @@ export class PaymentCountFormComponent implements OnInit {
       return;
     }
 
-    const hasInvalidDetail = this.detailsArray.controls.some(line => {
+    const hasInvalidDetail = this.detailsArray.controls.some((line: any) => {
       const account = String(line.controls.idCounting.value ?? '').trim();
       const price = Number(line.controls.price.value ?? 0);
       return !account || !Number.isFinite(price) || price <= 0;
@@ -369,7 +403,7 @@ export class PaymentCountFormComponent implements OnInit {
       return;
     }
 
-    const raw = this.form.getRawValue();
+    const raw = this.form.getRawValue() as any;
     const idCustomer = this.toOptionalPositiveInteger(raw.idCustomer);
     const idVehicle = this.toOptionalPositiveInteger(raw.idVehicle);
     const idBranch = this.toRequiredPositiveInteger(raw.idBranch);
@@ -409,7 +443,7 @@ export class PaymentCountFormComponent implements OnInit {
       stutusbooking: idBooking ? Number(raw.stutusbooking) : undefined,
       idFinancialYear: raw.idFinancialYear,
       fleetId,
-      details: raw.details.map(line => ({
+      details: (raw.details as any[]).map((line: any) => ({
         idCounting: String(line.idCounting).trim(),
         price: Number(line.price ?? 0),
         node: line.node?.trim() || undefined,

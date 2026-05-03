@@ -1,8 +1,9 @@
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Router } from '@angular/router';
 import { TranslateService } from '@ngx-translate/core';
 import { TranslateModule } from '@ngx-translate/core';
-import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
+import { Subject, catchError, debounceTime, distinctUntilChanged, of } from 'rxjs';
 
 import { AuthStateService } from '../../../../../core/auth/auth-state.service';
 import { ToastService } from '../../../../../shared/services/toast.service';
@@ -35,6 +36,7 @@ export class JournalEntryListComponent implements OnInit {
   private toast = inject(ToastService);
   private translate = inject(TranslateService);
   private destroyRef = inject(DestroyRef);
+  private router = inject(Router);
 
   items = signal<JournalEntry[]>([]);
   financialYearNames = signal<Record<string, string>>({});
@@ -308,16 +310,46 @@ export class JournalEntryListComponent implements OnInit {
       return;
     }
 
-    const title = `${this.translate.instant('Journal Entry')} #${item.journalNumper ?? item.id}`;
-    const body = this.buildJournalPrintContent(item);
-    this.openPrintWindow(
-      title,
-      body,
-      event.actionKey === 'print',
-      String(item.journalNumper ?? item.id ?? '-'),
-      this.resolveBranchDisplay(item),
-      item,
-    );
+    if (event.actionKey === 'view') {
+      const journalId = String(item.id ?? '').trim();
+      if (!journalId || journalId === 'undefined' || journalId === 'null') {
+        this.toast.error(this.translate.instant('Failed to load journals'));
+        return;
+      }
+      this.router.navigate(['/journals', item.id, 'view']);
+      return;
+    }
+
+    const fleetId = this.authState.fleetId();
+    const journalId = String(item.id ?? '').trim();
+    if (!fleetId || !journalId) {
+      this.toast.error(this.translate.instant('Unable to load journal details from backend'));
+      return;
+    }
+
+    this.journalService
+      .getByIdWithDetails(journalId, fleetId)
+      .pipe(
+        catchError(() => {
+          this.toast.error(this.translate.instant('Unable to load journal details from backend'));
+          return of(null);
+        }),
+      )
+      .subscribe(response => {
+        if (!response) {
+          return;
+        }
+        const title = `${this.translate.instant('Journal Number')}: ${response.entry.journalNumper ?? response.entry.id}`;
+        const body = this.buildJournalPrintContent(response.entry);
+        this.openPrintWindow(
+          title,
+          body,
+          event.actionKey === 'print',
+          String(response.entry.journalNumper ?? response.entry.id ?? '-'),
+          response.entry,
+          response.details,
+        );
+      });
   }
 
   private openPrintWindow(
@@ -325,8 +357,8 @@ export class JournalEntryListComponent implements OnInit {
     content: string,
     autoPrint: boolean,
     documentNumber: string,
-    branchName: string,
     item?: JournalEntry,
+    details: Array<Record<string, unknown>> = [],
   ): void {
     const isArabic = this.translate.currentLang?.startsWith('ar');
     const payloadKey = `finance-print-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
@@ -339,20 +371,27 @@ export class JournalEntryListComponent implements OnInit {
       printDateLabel: this.translate.instant('Print Date'),
       printDate: new Date().toLocaleString(),
       branchLabel: this.translate.instant('Branch'),
-      branchName: branchName || '-',
+      branchName: this.resolveBranchNameFromBackend(item),
       docNoLabel: this.translate.instant('Document No.'),
       documentNo: documentNumber || '-',
       content,
       autoPrint: autoPrint ? '1' : '0',
-      taxRecord: '-',
+      taxRecord: String(item?.taxNumber ?? '').trim() || '-',
       date: item?.date ?? '',
       statusLabel: item ? this.formatStatus(item.status) : '-',
       journalTypeLabel: item ? this.formatJournalType(item.journalType) : '-',
       operationTypeLabel: item ? this.formatOperationType(item.operationType) : '-',
-      financialYear: item ? this.resolveFinancialYearDisplay(item) : '-',
+      financialYear: this.resolveFinancialYearFromBackend(item),
       debit: formatFinanceNumber(item?.debtir, this.translate),
       credit: formatFinanceNumber(item?.credit, this.translate),
       balance: formatFinanceNumber(item?.balannce, this.translate),
+      journalDetails: this.resolveJournalDetailsForPrint(details),
+      logoUrl: String(item?.urllogo ?? '').trim(),
+      branchStreet: String(item?.branchStreet ?? '').trim(),
+      branchNeighborHood: String(item?.branchNeighborHood ?? '').trim(),
+      branchBuldingNumber: String(item?.branchBuldingNumber ?? '').trim(),
+      branchCity: String(item?.branchCity ?? '').trim(),
+      branchAddress: this.resolveBranchAddressFromBackend(item),
     };
     localStorage.setItem(payloadKey, JSON.stringify(payload));
     const page = autoPrint ? 'invoise-print.html' : 'invoise-view.html';
@@ -411,6 +450,86 @@ export class JournalEntryListComponent implements OnInit {
         <div class="sig-box">${this.translate.instant('Approved By')}</div>
       </div>
     `;
+  }
+
+  private resolveJournalDetailsForPrint(details: Array<Record<string, unknown>>): Array<{
+    accountCode: string;
+    account: string;
+    debit: string;
+    credit: string;
+    note: string;
+  }> {
+    return (details ?? [])
+      .map(row => {
+        const accountCode = String(
+          row['countingNumber'] ??
+            row['CountingNumber'] ??
+            row['idCounting'] ??
+            row['IdCounting'] ??
+            '',
+        ).trim();
+        const account = String(
+          row['countingName'] ??
+            row['CountingName'] ??
+            row['accountName'] ??
+            row['AccountName'] ??
+            '',
+        ).trim();
+        const debit = formatFinanceNumber(
+          Number(row['debtir'] ?? row['Debtir'] ?? 0),
+          this.translate,
+        );
+        const credit = formatFinanceNumber(
+          Number(row['credit'] ?? row['Credit'] ?? 0),
+          this.translate,
+        );
+        const note = String(row['node'] ?? row['Node'] ?? '').trim();
+        return {
+          accountCode: accountCode || '.---.',
+          account: account || '.---.',
+          debit: debit || '.---.',
+          credit: credit || '.---.',
+          note: note || '.---.',
+        };
+      })
+      .filter(
+        row =>
+          row.accountCode !== '.---.' ||
+          row.account !== '.---.' ||
+          row.debit !== '.---.' ||
+          row.credit !== '.---.' ||
+          row.note !== '.---.',
+      );
+  }
+
+  private resolveBranchNameFromBackend(item?: JournalEntry): string {
+    const branchName = String(item?.branchName ?? '').trim();
+    if (branchName) {
+      return branchName;
+    }
+    const idBranch = Number(item?.idBranch ?? 0);
+    return Number.isFinite(idBranch) && idBranch > 0 ? String(idBranch) : '-';
+  }
+
+  private resolveFinancialYearFromBackend(item?: JournalEntry): string {
+    const financialYearName = String(item?.financialYearName ?? '').trim();
+    if (financialYearName) {
+      return financialYearName;
+    }
+    const idFinancialYear = String(item?.idFinancialYear ?? '').trim();
+    return idFinancialYear || '-';
+  }
+
+  private resolveBranchAddressFromBackend(item?: JournalEntry): string {
+    const city = String(item?.branchCity ?? '').trim();
+    const neighborhood = String(item?.branchNeighborHood ?? '').trim();
+    const street = String(item?.branchStreet ?? '').trim();
+    const building = String(item?.branchBuldingNumber ?? '').trim();
+    const parts = [city, neighborhood, street].filter(Boolean);
+    if (building) {
+      parts.push(`No. ${building}`);
+    }
+    return parts.join(' - ');
   }
 
   private formatStatus(status?: number): string {

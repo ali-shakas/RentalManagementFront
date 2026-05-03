@@ -110,6 +110,18 @@ const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: `${FINANCE_ROUTE_PATHS.journals}/:id/view`,
+    loadComponent: () =>
+      import('./components/journals/journal-entry-form/journal-entry-form.component').then(
+        m => m.JournalEntryFormComponent,
+      ),
+    data: {
+      title: 'View Journal Entry',
+      breadcrumb: 'View Journal Entry',
+    },
+    canActivate: [authGuard],
+  },
+  {
     path: FINANCE_ROUTE_PATHS.journals,
     loadComponent: () =>
       import('./components/journals/journal-entry-list/journal-entry-list.component').then(

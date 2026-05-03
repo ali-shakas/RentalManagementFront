@@ -1,1 +1,93 @@
+.booking-form-grid {
+  --field-bg: #f8fafc;
+  --field-border: #d4dee8;
+}
+
+.booking-section-title {
+  margin-top: 0.15rem;
+  margin-bottom: 0.58rem;
+  padding: 0.62rem 0.95rem;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 12px;
+  background: linear-gradient(180deg, #ffffff, #f8fafc);
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.booking-form-grid .form-label {
+  margin-bottom: 0.3rem;
+  color: #334155;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.booking-form-grid .form-control {
+  min-height: 36px;
+  border-radius: 9px;
+  border-color: var(--field-border);
+  background: var(--field-bg);
+}
+
+.booking-form-grid .form-control[readonly] {
+  background: linear-gradient(180deg, #f2f6fa, #edf2f7);
+  color: #475569;
+  border-color: #d8e0ea;
+}
+
+.status-box {
+  min-height: 36px;
+  border-radius: 9px;
+  border: 1px solid #d8e0ea;
+  background: linear-gradient(180deg, #f2f6fa, #edf2f7);
+  padding: 0.45rem 0.6rem;
+  display: flex;
+  align-items: center;
+}
+
+:host-context([data-bs-theme='dark']) .card,
+:host-context(body.dark-only) .card {
+  border: 1px solid rgba(100, 116, 139, 0.45);
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.96));
+  box-shadow: 0 20px 38px -30px rgba(2, 6, 23, 0.9);
+}
+
+:host-context([data-bs-theme='dark']) .booking-form-grid,
+:host-context(body.dark-only) .booking-form-grid {
+  --field-bg: rgba(30, 41, 59, 0.75);
+  --field-border: rgba(100, 116, 139, 0.62);
+}
+
+:host-context([data-bs-theme='dark']) .booking-section-title,
+:host-context(body.dark-only) .booking-section-title {
+  border-color: rgba(100, 116, 139, 0.45);
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.92), rgba(15, 23, 42, 0.92));
+  color: #e2e8f0;
+}
+
+:host-context([data-bs-theme='dark']) .booking-form-grid .form-label,
+:host-context(body.dark-only) .booking-form-grid .form-label {
+  color: #cbd5e1;
+}
+
+:host-context([data-bs-theme='dark']) .booking-form-grid .form-control,
+:host-context(body.dark-only) .booking-form-grid .form-control {
+  border-color: rgba(100, 116, 139, 0.6);
+  color: #e2e8f0;
+  -webkit-text-fill-color: #e2e8f0;
+  background: rgba(30, 41, 59, 0.78);
+}
+
+:host-context([data-bs-theme='dark']) .booking-form-grid .form-control[readonly],
+:host-context(body.dark-only) .booking-form-grid .form-control[readonly] {
+  background: rgba(51, 65, 85, 0.76);
+  color: #cbd5e1;
+  -webkit-text-fill-color: #cbd5e1;
+  border-color: rgba(100, 116, 139, 0.65);
+}
+
+:host-context([data-bs-theme='dark']) .status-box,
+:host-context(body.dark-only) .status-box {
+  border-color: rgba(100, 116, 139, 0.65);
+  background: rgba(51, 65, 85, 0.76);
+}
 

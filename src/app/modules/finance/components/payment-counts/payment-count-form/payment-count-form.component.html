@@ -178,57 +178,71 @@
               </div>
 
               <div class="col-12">
-                <div class="voucher-lines-head">
-                  <h6 class="voucher-section-title mb-0">{{ 'Payment Details Distribution' | translate }}</h6>
-                  <button class="btn btn-primary btn-sm" type="button" (click)="addLine()">
-                    <i class="fa fa-plus me-1"></i>
-                    {{ 'Add Line' | translate }}
-                  </button>
+                <h6 class="voucher-section-title mb-0">{{ 'Payment Details Distribution' | translate }}</h6>
+
+                <div class="voucher-add-row" [formGroup]="detailDraft">
+                  <div class="voucher-add-row__field">
+                    <label class="form-label">{{ 'Account' | translate }}</label>
+                    <app-smooth-select
+                      formControlName="idCounting"
+                      [options]="accountOptions()"
+                      [placeholder]="'Select account' | translate"
+                      [ariaLabel]="'Account' | translate"
+                      [searchable]="true"
+                    />
+                  </div>
+                  <div class="voucher-add-row__field">
+                    <label class="form-label">{{ 'Amount' | translate }}</label>
+                    <input type="number" min="0" step="0.01" class="form-control text-end" formControlName="price" />
+                  </div>
+                  <div class="voucher-add-row__field voucher-add-row__field--wide">
+                    <label class="form-label">{{ 'Note' | translate }}</label>
+                    <input type="text" class="form-control" formControlName="node" />
+                  </div>
+                  <div class="voucher-add-row__actions">
+                    <button class="btn btn-success" type="button" (click)="addLine()">
+                      {{ 'Add Line' | translate }}
+                    </button>
+                  </div>
                 </div>
 
-                <div class="voucher-lines-grid" formArrayName="details">
-                  @for (line of detailsArray.controls; track trackByIndex($index)) {
-                    <div class="voucher-line-card" [formGroupName]="$index">
-                      <div class="voucher-line-card__head">
-                        <span>#{{ $index + 1 }}</span>
-                        <button
-                          class="btn btn-cancel btn-sm"
-                          type="button"
-                          (click)="removeLine($index)"
-                          [disabled]="detailsArray.length <= 1"
-                        >
-                          {{ 'Delete' | translate }}
-                        </button>
-                      </div>
-
-                      <div class="voucher-line-card__grid">
-                        <div class="voucher-field">
-                          <label class="form-label">{{ 'Account' | translate }}</label>
-                          <app-smooth-select
-                            formControlName="idCounting"
-                            [options]="accountOptions()"
-                            [placeholder]="'Select account' | translate"
-                            [ariaLabel]="'Account' | translate"
-                            [searchable]="true"
-                          />
-                        </div>
-                        <div class="voucher-field">
-                          <label class="form-label">{{ 'Amount' | translate }}</label>
-                          <input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            class="form-control text-end"
-                            formControlName="price"
-                          />
-                        </div>
-                        <div class="voucher-field voucher-field--wide">
-                          <label class="form-label">{{ 'Note' | translate }}</label>
-                          <input type="text" class="form-control" formControlName="node" />
-                        </div>
-                      </div>
-                    </div>
-                  }
+                <div class="table-responsive mt-3" formArrayName="details">
+                  <table class="table align-middle voucher-details-table">
+                    <thead>
+                      <tr>
+                        <th>#</th>
+                        <th>{{ 'Account' | translate }}</th>
+                        <th class="text-end">{{ 'Amount' | translate }}</th>
+                        <th>{{ 'Note' | translate }}</th>
+                        <th>{{ 'Actions' | translate }}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (line of detailsArray.controls; track trackByIndex($index)) {
+                        <tr [formGroupName]="$index">
+                          <td>{{ $index + 1 }}</td>
+                          <td>{{ accountLabelById(detailLineValue($index, 'idCounting')) }}</td>
+                          <td class="text-end">{{ detailLineValue($index, 'price') || 0 }}</td>
+                          <td>{{ detailLineValue($index, 'node') || '-' }}</td>
+                          <td>
+                            <button
+                              class="btn btn-cancel btn-sm"
+                              type="button"
+                              (click)="removeLine($index)"
+                              [disabled]="detailsArray.length <= 1"
+                            >
+                              {{ 'Delete' | translate }}
+                            </button>
+                          </td>
+                        </tr>
+                      }
+                      @if (!detailsArray.length) {
+                        <tr>
+                          <td colspan="5" class="text-center text-muted py-3">{{ 'No records found' | translate }}</td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
                 </div>
 
                 <div class="voucher-summary">

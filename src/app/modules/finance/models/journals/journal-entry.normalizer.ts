@@ -6,7 +6,7 @@ export function normalizeJournalEntry(raw: unknown): JournalEntry {
   const financialYear = (pick(source, 'financialYear', 'FinancialYear') ?? {}) as Record<string, unknown>;
   const branch = (pick(source, 'branch', 'Branch') ?? {}) as Record<string, unknown>;
   return {
-    id: String(pick(source, 'id', 'Id') ?? ''),
+    id: String(pick(source, 'id', 'Id', 'journalId', 'JournalId') ?? ''),
     journalNumper: pick<number>(source, 'journalNumper', 'JournalNumper'),
     date: pick<string>(source, 'date', 'Date'),
     node: pick<string>(source, 'node', 'Node'),
@@ -24,6 +24,12 @@ export function normalizeJournalEntry(raw: unknown): JournalEntry {
       pick<string>(financialYear, 'name', 'Name'),
     idBranch: pick<number>(source, 'idBranch', 'IdBranch'),
     branchName: pick<string>(source, 'branchName', 'BranchName') ?? pick<string>(branch, 'nameAr', 'NameAr', 'nameEn', 'NameEn'),
+    branchStreet: pick<string>(source, 'branchStreet', 'BranchStreet'),
+    branchNeighborHood: pick<string>(source, 'branchNeighborHood', 'BranchNeighborHood'),
+    branchBuldingNumber: pick<string>(source, 'branchBuldingNumber', 'BranchBuldingNumber'),
+    branchCity: pick<string>(source, 'branchCity', 'BranchCity'),
+    urllogo: pick<string>(source, 'urllogo', 'Urllogo', 'urlLogo', 'UrlLogo'),
+    taxNumber: pick<string>(source, 'taxNumber', 'TaxNumber'),
     fleetId: pick<string>(source, 'fleetId', 'FleetId'),
   };
 }

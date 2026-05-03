@@ -15,56 +15,47 @@
   font-weight: 700;
 }
 
-.voucher-lines-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.8rem;
-  flex-wrap: wrap;
-  margin-bottom: 0.7rem;
-}
-
-.voucher-lines-grid {
+.voucher-add-row {
   margin-top: 1rem;
   display: grid;
-  gap: 0.75rem;
-}
-
-.voucher-line-card {
-  border: 1px solid rgba(148, 163, 184, 0.28);
-  border-radius: 14px;
-  background: rgba(148, 163, 184, 0.06);
-  padding: 0.75rem;
-  overflow: visible;
-}
-
-.voucher-line-card__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.65rem;
-  font-weight: 700;
-}
-
-.voucher-line-card__grid {
-  display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
-  gap: 0.6rem;
+  gap: 0.65rem;
+  padding: 0.8rem;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 12px;
+  background: rgba(148, 163, 184, 0.06);
 }
 
-.voucher-field {
+.voucher-add-row__field {
   grid-column: span 4;
 }
 
-.voucher-field--wide {
-  grid-column: span 4;
+.voucher-add-row__field--wide {
+  grid-column: span 3;
 }
 
-:host ::ng-deep .voucher-lines-grid app-smooth-select .app-soft-select__trigger {
+.voucher-add-row__actions {
+  grid-column: span 1;
+  display: flex;
+  align-items: end;
+  justify-content: flex-end;
+}
+
+.voucher-details-table {
+  margin-bottom: 0;
+
+  th,
+  td {
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+}
+
+:host ::ng-deep .voucher-add-row app-smooth-select .app-soft-select__trigger {
   min-height: 46px;
 }
 
-:host ::ng-deep .voucher-lines-grid app-smooth-select .app-soft-select__menu {
+:host ::ng-deep .voucher-add-row app-smooth-select .app-soft-select__menu {
   z-index: 12000;
 }
 
@@ -114,11 +105,20 @@
     grid-template-columns: 1fr;
   }
 
-  .voucher-field {
+  .voucher-add-row__field {
     grid-column: span 12;
   }
 
-  .voucher-field--wide {
+  .voucher-add-row__field--wide {
     grid-column: span 12;
+  }
+
+  .voucher-add-row__actions {
+    grid-column: span 12;
+    justify-content: stretch;
+  }
+
+  .voucher-add-row__actions .btn {
+    width: 100%;
   }
 }

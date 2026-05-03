@@ -1,69 +1,220 @@
 <div class="container-fluid">
-  <app-page-header title="Booking Details" subtitle="Inspect reservation dates, customer, vehicle, and payment summary.">
-    <a class="btn btn-outline-secondary" routerLink="/booking">Back to Bookings</a>
-  </app-page-header>
+  <app-page-header
+    [title]="'Booking Details' | translate"
+    [subtitle]="'View booking data in read-only mode.' | translate"
+  />
 
   <div class="card">
     <div class="card-body">
       @if (loading()) {
         <div class="text-center py-5"><div class="spinner-border text-primary"></div></div>
       } @else if (booking(); as item) {
-        <div class="row g-3">
-          <div class="col-md-6"><strong>Booking #:</strong> {{ item.bookingNumber || item.id }}</div>
-          <div class="col-md-6">
-            <strong>Status:</strong>
-            <app-status-badge
-              [label]="statusBadgeLabelKey(item.status) | translate"
-              [tone]="statusBadgeTone(item.status)"
-            />
+        <div class="row g-3 booking-form-grid">
+          <div class="col-12">
+            <h6 class="mb-2 booking-section-title">{{ 'Customer Information' | translate }}</h6>
           </div>
-          <div class="col-md-6"><strong>Customer:</strong> {{ item.customerName || item.customerId }}</div>
-          <div class="col-md-6"><strong>Vehicle:</strong> {{ item.vehicleName || item.vehicleId }}</div>
-          <div class="col-md-6"><strong>Branch:</strong> {{ item.branchName || '-' }}</div>
-          <div class="col-md-6">
-            <strong>Dates:</strong>
-            @if (item.startDate) {
-              {{ item.startDate | date: 'mediumDate' }}
-            } @else {
-              —
-            }
-            <span class="text-muted"> — </span>
-            @if (item.endDate) {
-              {{ item.endDate | date: 'mediumDate' }}
-            } @else {
-              —
-            }
+          <div class="col-md-4">
+            <label class="form-label">{{ 'Identity Number' | translate }}</label>
+            <input class="form-control" [value]="valueOrDash(item.customerIqama)" readonly />
           </div>
-          <div class="col-md-6"><strong>Total (TOTAL):</strong> {{ item.totalAmount ?? '—' }}</div>
-          <div class="col-md-6"><strong>Paid total:</strong> {{ item.paidtotal ?? item.paidAmount ?? '—' }}</div>
-          @if (item.returnDate) {
-            <div class="col-md-6"><strong>{{ 'Vehicle Return Date' | translate }}:</strong> {{ item.returnDate | date: 'medium' }}</div>
-          }
-          @if (item.placeUSE) {
-            <div class="col-md-6"><strong>{{ 'Usage Place' | translate }}:</strong> {{ item.placeUSE }}</div>
-          }
-          @if (item.countOfDay != null) {
-            <div class="col-md-6"><strong>{{ 'Count Of Days' | translate }}:</strong> {{ item.countOfDay }}</div>
-          }
-          @if (item.priceInDay != null) {
-            <div class="col-md-6"><strong>{{ 'Daily Price' | translate }}:</strong> {{ item.priceInDay }}</div>
-          }
-          @if (item.priceInMonth != null) {
-            <div class="col-md-6"><strong>{{ 'Monthly Price' | translate }}:</strong> {{ item.priceInMonth }}</div>
-          }
-          @if (item.discount != null) {
-            <div class="col-md-6"><strong>{{ 'Discount' | translate }}:</strong> {{ item.discount }}</div>
-          }
-          @if (item.totaltax != null) {
-            <div class="col-md-6"><strong>{{ 'Total Tax' | translate }}:</strong> {{ item.totaltax }}</div>
-          }
-          @if (item.checkoutCounter != null) {
-            <div class="col-md-6"><strong>{{ 'Checkout Counter' | translate }}:</strong> {{ item.checkoutCounter }}</div>
-          }
-          @if (item.checkinCounter != null) {
-            <div class="col-md-6"><strong>{{ 'Checkin Counter' | translate }}:</strong> {{ item.checkinCounter }}</div>
-          }
-          <div class="col-md-12"><strong>Notes:</strong> {{ item.notes || '-' }}</div>
+          <div class="col-md-4">
+            <label class="form-label">{{ 'Arabic Name' | translate }}</label>
+            <input class="form-control" [value]="valueOrDash(item.customerName || item.customerId)" readonly />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">{{ 'Rental Contract Number' | translate }}</label>
+            <input class="form-control" [value]="valueOrDash(item.numberBookingINBasame)" readonly />
+          </div>
+
+          <div class="col-12 mt-2">
+            <h6 class="mb-2 booking-section-title">{{ 'Vehicle Information' | translate }}</h6>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">{{ 'Plate Number' | translate }}</label>
+            <input class="form-control" [value]="valueOrDash(item.vehiclePlateNumber)" readonly />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">{{ 'Vehicle' | translate }}</label>
+            <input class="form-control" [value]="valueOrDash(item.vehicleName || item.vehicleId)" readonly />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">{{ 'Branch' | translate }}</label>
+            <input class="form-control" [value]="valueOrDash(item.branchName)" readonly />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">{{ 'Status' | translate }}</label>
+            <div class="status-box">
+              <app-status-badge
+                [label]="statusBadgeLabelKey(item.status) | translate"
+                [tone]="statusBadgeTone(item.status)"
+              />
+            </div>
+          </div>
+
+          <div class="col-12 mt-2">
+            <h6 class="mb-2 booking-section-title">{{ 'Booking Information' | translate }}</h6>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">{{ 'Booking Number' | translate }}</label>
+            <input class="form-control" [value]="valueOrDash(item.bookingNumber || item.id)" readonly />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">{{ 'Start Date' | translate }}</label>
+            <input class="form-control" [value]="dateOrDash(item.startDate)" readonly />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">{{ 'End Date' | translate }}</label>
+            <input class="form-control" [value]="dateOrDash(item.endDate)" readonly />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">{{ 'Vehicle Return Date' | translate }}</label>
+            <input class="form-control" [value]="dateOrDash(item.returnDate)" readonly />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">{{ 'Count Of Days' | translate }}</label>
+            <input class="form-control" [value]="numberOrDash(item.countOfDay)" readonly />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">{{ 'Checkout Counter' | translate }}</label>
+            <input class="form-control" [value]="numberOrDash(item.checkoutCounter)" readonly />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">{{ 'Checkin Counter' | translate }}</label>
+            <input class="form-control" [value]="numberOrDash(item.checkinCounter)" readonly />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">{{ 'Usage Place' | translate }}</label>
+            <input class="form-control" [value]="valueOrDash(item.placeUSE)" readonly />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">{{ 'Travelled Distance GPS' | translate }}</label>
+            <input class="form-control" [value]="valueOrDash(item.distancetraveledgps)" readonly />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">{{ 'Number Of Hours Excess' | translate }}</label>
+            <input class="form-control" [value]="numberOrDash(item.numberOfHoursExcess)" readonly />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">{{ 'Number Km Excess' | translate }}</label>
+            <input class="form-control" [value]="numberOrDash(item.numberKmExcess)" readonly />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">{{ 'Day Excess' | translate }}</label>
+            <input class="form-control" [value]="numberOrDash(item.dayExcess)" readonly />
+          </div>
+
+          <div class="col-12 mt-2">
+            <h6 class="mb-2 booking-section-title">{{ 'Pricing And Discount' | translate }}</h6>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">{{ 'Daily Price' | translate }}</label>
+            <input class="form-control" [value]="numberOrDash(item.priceInDay)" readonly />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">{{ 'Monthly Price' | translate }}</label>
+            <input class="form-control" [value]="numberOrDash(item.priceInMonth)" readonly />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">{{ 'Discount' | translate }}</label>
+            <input class="form-control" [value]="numberOrDash(item.discount)" readonly />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">{{ 'Total Tax' | translate }}</label>
+            <input class="form-control" [value]="numberOrDash(item.totaltax)" readonly />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">{{ 'TOTAL' | translate }}</label>
+            <input class="form-control" [value]="numberOrDash(item.totalAmount)" readonly />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">{{ 'Paid total' | translate }}</label>
+            <input class="form-control" [value]="numberOrDash(item.paidtotal ?? item.paidAmount)" readonly />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">{{ 'Total Traffic' | translate }}</label>
+            <input class="form-control" [value]="numberOrDash(item.totalTrafic)" readonly />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">{{ 'Total Maintenance' | translate }}</label>
+            <input class="form-control" [value]="numberOrDash(item.totalMaintance)" readonly />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">{{ 'Total Received Vehicle' | translate }}</label>
+            <input class="form-control" [value]="numberOrDash(item.totalReceivedVehicle)" readonly />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">{{ 'Transportation Fees' | translate }}</label>
+            <input class="form-control" [value]="numberOrDash(item.transportationFees)" readonly />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">{{ 'Count KM Extra' | translate }}</label>
+            <input class="form-control" [value]="numberOrDash(item.countKMExtra)" readonly />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">{{ 'Allow To' | translate }}</label>
+            <input class="form-control" [value]="numberOrDash(item.allowTo)" readonly />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">{{ 'Hourly Extra Price' | translate }}</label>
+            <input class="form-control" [value]="numberOrDash(item.priceHoureExtra)" readonly />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">{{ 'KM Extra Price' | translate }}</label>
+            <input class="form-control" [value]="numberOrDash(item.priceKmExtra)" readonly />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">{{ 'Other Expenses' | translate }}</label>
+            <input class="form-control" [value]="numberOrDash(item.otherExpenses)" readonly />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">{{ 'Customer Vehicle Counting Account' | translate }}</label>
+            <input class="form-control" [value]="valueOrDash(item.idCountingCustVehicle)" readonly />
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">{{ 'Notes' | translate }}</label>
+            <textarea class="form-control" rows="2" [value]="valueOrDash(item.notes)" readonly></textarea>
+          </div>
+
+          <div class="col-12 mt-2">
+            <h6 class="mb-2 booking-section-title">{{ 'Audit Information' | translate }}</h6>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">{{ 'Created At' | translate }}</label>
+            <input class="form-control" [value]="dateOrDash(item.createdAt)" readonly />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">{{ 'Created By' | translate }}</label>
+            <input class="form-control" [value]="valueOrDash(item.createdBy)" readonly />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">{{ 'Updated At' | translate }}</label>
+            <input class="form-control" [value]="dateOrDash(item.updatedAt)" readonly />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">{{ 'Updated By' | translate }}</label>
+            <input class="form-control" [value]="valueOrDash(item.updatedBy)" readonly />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">{{ 'Deleted At' | translate }}</label>
+            <input class="form-control" [value]="dateOrDash(item.deletedAt)" readonly />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">{{ 'Deleted By' | translate }}</label>
+            <input class="form-control" [value]="valueOrDash(item.deletedBy)" readonly />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">{{ 'Is Preview' | translate }}</label>
+            <input class="form-control" [value]="item.isprview ? ('Yes' | translate) : ('No' | translate)" readonly />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">{{ 'Is Deleted' | translate }}</label>
+            <input class="form-control" [value]="item.isDeleted ? ('Yes' | translate) : ('No' | translate)" readonly />
+          </div>
+
+          <div class="col-12 mt-4">
+            <a class="btn btn-cancel" routerLink="/booking">{{ 'Back' | translate }}</a>
+          </div>
         </div>
       }
     </div>

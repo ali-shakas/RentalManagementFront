@@ -36,6 +36,28 @@ export class BookingDetailsComponent implements OnInit {
     return bookingStatusTranslationKey(status);
   }
 
+  valueOrDash(value: unknown): string {
+    const text = String(value ?? '').trim();
+    return text || '-';
+  }
+
+  numberOrDash(value: unknown): string {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? String(parsed) : '-';
+  }
+
+  dateOrDash(value: string | undefined, format: 'date' | 'datetime' = 'datetime'): string {
+    const text = String(value ?? '').trim();
+    if (!text) {
+      return '-';
+    }
+    const date = new Date(text);
+    if (Number.isNaN(date.getTime())) {
+      return text;
+    }
+    return format === 'date' ? date.toLocaleDateString() : date.toLocaleString();
+  }
+
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
     if (!id) return;

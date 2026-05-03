@@ -15,6 +15,12 @@ export interface JournalEntry {
   financialYearName?: string;
   idBranch?: number;
   branchName?: string;
+  branchStreet?: string;
+  branchNeighborHood?: string;
+  branchBuldingNumber?: string;
+  branchCity?: string;
+  urllogo?: string;
+  taxNumber?: string;
   fleetId?: string;
 }
 

@@ -229,8 +229,11 @@ export function normalizeBooking(raw: unknown): Booking {
     trimText(fleet ? pick(fleet, 'name', 'Name', 'nameAr', 'NameAr') : undefined);
 
   const createdBy = trimText(pick(source, 'createdBy', 'CreatedBy'));
+  const updatedBy = trimText(pick(source, 'updatedBy', 'UpdatedBy'));
+  const deletedBy = trimText(pick(source, 'deletedBy', 'DeletedBy'));
   const createdAt = toDateString(pickPresent(source, 'createdAt', 'CreatedAt'));
   const updatedAt = toDateString(pickPresent(source, 'updatedAt', 'UpdatedAt'));
+  const deletedAt = toDateString(pickPresent(source, 'deletedAt', 'DeletedAt'));
 
   const taxRaw = pickPresent(source, 'totaltax', 'Totaltax');
   let totaltax: number | null | undefined;
@@ -273,8 +276,11 @@ export function normalizeBooking(raw: unknown): Booking {
     statusDisplayName,
     notes,
     createdBy,
+    updatedBy,
+    deletedBy,
     createdAt: createdAt || undefined,
     updatedAt: updatedAt || undefined,
+    deletedAt: deletedAt || undefined,
     distancetraveledgps: trimText(pick(source, 'distancetraveledgps', 'Distancetraveledgps')),
     numberOfHoursExcess: toNumber(pick(source, 'numberOfHoursExcess', 'NumberOfHoursExcess')),
     numberKmExcess: toNumber(pick(source, 'numberKmExcess', 'NumberKmExcess')),
@@ -299,5 +305,8 @@ export function normalizeBooking(raw: unknown): Booking {
     transportationFees: toNumber(pick(source, 'transportationFees', 'TransportationFees')),
     totaltax,
     placeUSE: trimText(pick(source, 'placeUSE', 'PlaceUSE', 'placeUse', 'PlaceUse')),
+    idCountingCustVehicle: trimText(
+      pick(source, 'idCountingCustVehicle', 'IdCountingCustVehicle'),
+    ),
   };
 }

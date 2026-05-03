@@ -60,6 +60,133 @@ export class JournalEntryService {
       .pipe(map(response => normalizePaginatedResponse(response, normalizeJournalEntry)));
   }
 
+  getById(id: string, fleetId: string): Observable<JournalEntry> {
+    const encodedId = encodeURIComponent(String(id).trim());
+    const encodedFleetId = encodeURIComponent(String(fleetId).trim());
+    return this.api
+      .getData<unknown>(`${this.base}/${encodedId}/${encodedFleetId}`)
+      .pipe(
+        map(item => {
+          const source = this.unwrapPayload(this.coerceToRecord(item));
+          return normalizeJournalEntry(source);
+        }),
+      );
+  }
+
+  getByIdWithDetails(
+    id: string,
+    fleetId: string,
+  ): Observable<{ entry: JournalEntry; details: Array<Record<string, unknown>> }> {
+    const encodedId = encodeURIComponent(String(id).trim());
+    const encodedFleetId = encodeURIComponent(String(fleetId).trim());
+    return this.api.getData<unknown>(`${this.base}/${encodedId}/${encodedFleetId}`).pipe(
+      map(response => {
+        const source = this.unwrapPayload(this.coerceToRecord(response));
+        return {
+          entry: normalizeJournalEntry(source),
+          details: this.extractDetailsArray(source),
+        };
+      }),
+    );
+  }
+
+  getDetailsByJournalId(
+    journalId: string,
+    fleetId: string,
+  ): Observable<Array<Record<string, unknown>>> {
+    const encodedId = encodeURIComponent(String(journalId).trim());
+    const encodedFleetId = encodeURIComponent(String(fleetId).trim());
+    return this.api
+      .getData<unknown>(`${this.base}/${encodedId}/Details/${encodedFleetId}`)
+      .pipe(
+        map(response => {
+          if (typeof response === 'string') {
+            const parsed = this.tryParseJson(response);
+            if (Array.isArray(parsed)) {
+              return parsed as Array<Record<string, unknown>>;
+            }
+            if (parsed && typeof parsed === 'object') {
+              return this.extractDetailsArray(parsed as Record<string, unknown>);
+            }
+          }
+          if (Array.isArray(response)) {
+            return response as Array<Record<string, unknown>>;
+          }
+          const source = this.coerceToRecord(response);
+          return this.extractDetailsArray(source);
+        }),
+      );
+  }
+
+  private coerceToRecord(value: unknown): Record<string, unknown> {
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      return value as Record<string, unknown>;
+    }
+    if (typeof value === 'string') {
+      const parsed = this.tryParseJson(value);
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        return parsed as Record<string, unknown>;
+      }
+    }
+    return {};
+  }
+
+  private tryParseJson(value: string): unknown {
+    const text = String(value ?? '').trim();
+    if (!text) {
+      return null;
+    }
+    try {
+      return JSON.parse(text);
+    } catch {
+      return null;
+    }
+  }
+
+  private extractDetailsArray(source: Record<string, unknown>): Array<Record<string, unknown>> {
+    const candidates: unknown[] = [
+      source['details'],
+      source['Details'],
+      source['journalDetails'],
+      source['JournalDetails'],
+      source['detailLines'],
+      source['DetailLines'],
+      source['items'],
+      source['Items'],
+      source['data'],
+      source['Data'],
+    ];
+
+    for (const candidate of candidates) {
+      if (Array.isArray(candidate)) {
+        return candidate as Array<Record<string, unknown>>;
+      }
+      if (candidate && typeof candidate === 'object') {
+        const nested = candidate as Record<string, unknown>;
+        const nestedItems =
+          nested['items'] ??
+          nested['Items'] ??
+          nested['data'] ??
+          nested['Data'] ??
+          nested['details'] ??
+          nested['Details'];
+        if (Array.isArray(nestedItems)) {
+          return nestedItems as Array<Record<string, unknown>>;
+        }
+      }
+    }
+
+    return [];
+  }
+
+  private unwrapPayload(source: Record<string, unknown>): Record<string, unknown> {
+    const payload = source['data'] ?? source['Data'] ?? source['result'] ?? source['Result'];
+    if (payload && typeof payload === 'object' && !Array.isArray(payload)) {
+      return payload as Record<string, unknown>;
+    }
+    return source;
+  }
+
   create(payload: CreateJournalEntryRequest): Observable<unknown> {
     return this.api.postData<unknown>(this.base, {
       date: payload.date,
