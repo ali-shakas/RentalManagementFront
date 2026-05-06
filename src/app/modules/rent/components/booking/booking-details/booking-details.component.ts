@@ -458,11 +458,17 @@ export class BookingDetailsComponent implements OnInit {
     const receiptDateGreg = this.formatBookingDateTimeForPrint(lastPayment?.createdAt ?? new Date());
     const receiptCustomerName = this.valueOrDash(item.customerName);
     const paymentMethodAr = this.paymentMethodArabicForPrint(lastPayment?.paymentType);
+    const amountTextFromApi = String(lastPayment?.monyToText ?? '').trim();
     const receiptAmountArabicDigits = this.toArabicDigits(receiptAmount);
-    const receiptAmountText =
+    const amountTextSuffix = this.translate.instant('Receipt amount text suffix');
+    const fallbackAmountText =
       paymentMethodAr && paymentMethodAr !== '-'
         ? `${receiptAmountArabicDigits} ريال (${paymentMethodAr})`
         : `${receiptAmountArabicDigits} ريال`;
+    const baseAmountText = amountTextFromApi || fallbackAmountText;
+    const receiptAmountText = baseAmountText.endsWith(amountTextSuffix)
+      ? baseAmountText
+      : `${baseAmountText} ${amountTextSuffix}`;
     const paymentNo = this.valueOrDash(lastPayment?.paymentNumber);
     const receiptPurpose = `عقد تأجير (${this.contractNumber(item)}) ورقم المركبة (${this.valueOrDash(item.vehiclePlateNumber)})`;
 

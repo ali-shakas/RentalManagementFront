@@ -1,6 +1,5 @@
 import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { Router } from '@angular/router';
 import { TranslateService } from '@ngx-translate/core';
 import { catchError, throwError } from 'rxjs';
 
@@ -136,7 +135,6 @@ function buildFriendlyHttpMessage(
 
 export const httpErrorInterceptor: HttpInterceptorFn = (req, next) => {
   const tokenService = inject(TokenService);
-  const router = inject(Router);
   const toast = inject(ToastService);
   const translate = inject(TranslateService);
   const suppressErrorToast = req.context.get(SUPPRESS_ERROR_TOAST);
@@ -149,8 +147,8 @@ export const httpErrorInterceptor: HttpInterceptorFn = (req, next) => {
 
       if (err.status === 401) {
         tokenService.removeToken();
-        router.navigate(['/auth/login']);
         toast.error(friendlyMessage);
+        redirectToLoginWithReload();
       } else if (suppressErrorToast) {
         return throwError(() => err);
       } else {
@@ -160,3 +158,16 @@ export const httpErrorInterceptor: HttpInterceptorFn = (req, next) => {
     }),
   );
 };
+
+function redirectToLoginWithReload(): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
+  const loginPath = '/auth/login';
+  const currentPath = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+  if (currentPath.startsWith(loginPath)) {
+    window.location.reload();
+    return;
+  }
+  window.location.replace(loginPath);
+}

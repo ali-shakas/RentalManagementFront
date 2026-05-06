@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { map, Observable, of } from 'rxjs';
+import { catchError, map, Observable, of } from 'rxjs';
 import { PaginatedAggregatorResponse } from '../../../../core/interfaces';
 
 import { BaseService } from '../../../../shared/services/base/base.service';
@@ -145,6 +145,30 @@ export class PaymentCountService {
       .pipe(map(raw => (raw ? normalizePaymentCount(raw) : null)));
   }
 
+  /**
+   * Returns true when last booking voucher is already posted.
+   * Backend implementations may expose different route names, so this probes known variants.
+   */
+  getLastIsPostingForBooking(idBooking: number, fleetId?: string | null): Observable<boolean> {
+    const fleet = normalizeFleetId(fleetId);
+    if (!fleet || !Number.isFinite(idBooking) || idBooking <= 0) {
+      return of(false);
+    }
+    const idSeg = encodeURIComponent(String(idBooking));
+    const fleetSeg = encodeURIComponent(fleet);
+    const candidatePaths = [
+      `${this.base}/isposted/${idSeg}/${fleetSeg}`,
+      `${this.base}/lastbyidbookingisposting/${idSeg}/${fleetSeg}`,
+      `${this.base}/last-by-id-booking-is-posting/${idSeg}/${fleetSeg}`,
+      `${this.base}/lastByIdBookingIsPosting/${idSeg}/${fleetSeg}`,
+      `${this.base}/lastisposting/${idSeg}/${fleetSeg}`,
+      `${this.base}/last/isposting/${idSeg}/${fleetSeg}`,
+      `${this.base}/isposting/last/${idSeg}/${fleetSeg}`,
+      `${this.base}/isposting/${idSeg}/${fleetSeg}`,
+    ];
+    return this.requestIsPostingFromPaths(candidatePaths, 0).pipe(catchError(() => of(false)));
+  }
+
   create(payload: CreatePaymentCountRequest): Observable<unknown> {
     return this.api.postData<unknown>(this.base, this.toCreateApiPayload(payload));
   }
@@ -221,6 +245,37 @@ export class PaymentCountService {
       lineOrder: index + 1,
       LineOrder: index + 1,
     };
+  }
+
+  private requestIsPostingFromPaths(paths: string[], index: number): Observable<boolean> {
+    if (index >= paths.length) {
+      return of(false);
+    }
+    return this.api
+      .getData<unknown>(paths[index], undefined, { suppressErrorToast: true })
+      .pipe(
+        map(raw => this.parseIsPostingResponse(raw)),
+        catchError(() => this.requestIsPostingFromPaths(paths, index + 1)),
+      );
+  }
+
+  private parseIsPostingResponse(raw: unknown): boolean {
+    if (typeof raw === 'boolean') {
+      return raw;
+    }
+    const source = (raw ?? {}) as Record<string, unknown>;
+    const candidate = source['isPosting'] ?? source['IsPosting'] ?? source['data'] ?? source['Data'];
+    if (typeof candidate === 'boolean') {
+      return candidate;
+    }
+    const normalized = String(candidate ?? '').trim().toLowerCase();
+    if (normalized === 'true') {
+      return true;
+    }
+    if (normalized === 'false') {
+      return false;
+    }
+    return false;
   }
 }
 

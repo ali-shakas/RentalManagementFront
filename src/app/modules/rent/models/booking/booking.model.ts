@@ -201,20 +201,43 @@ export interface BookingCreateRequest {
  */
 export interface BookingUpdateRequest {
   id: number | string;
-  idCustomer: number;
+  idCustomer?: number;
+  idVehicle?: number;
+  idBranch?: number;
+  checkoutCounter?: number;
+  checkinCounter?: number;
+  countOfDay?: number;
+  total?: number;
+  discount?: number;
+  priceInDay?: number;
+  priceInMonth?: number;
+  allowTo?: number;
+  countKMExtra?: number;
+  priceHoureExtra?: number;
+  priceKmExtra?: number;
+  otherExpenses?: number;
+  totaltax?: number;
+  startDate?: string;
+  endDate?: string;
+  dateReturnVehical?: string;
+  note?: string;
+  placeUSE?: string;
+  numberBookingINBasame?: string;
+  distancetraveledgps?: string;
+  totalTrafic?: number;
+  totalMaintance?: number;
+  totalReceivedVehicle?: number;
+  transportationFees?: number;
+  idCountingCustVehicle?: string;
+  stutus?: string;
   /** Omit or `null` = do not change receipt amount; otherwise new paid-at-booking total. */
   paid?: number | null;
-  dscription?: string;
-  idVehicle: number;
-  paymentType: number;
-  bondType: number;
-  status: number;
+  paymentType?: number;
+  bondType?: number;
   idCash?: string;
   idBank?: string;
-  paidCash: number;
-  paidBank: number;
-  idBooking: number;
-  stutusbooking: number;
+  paidCash?: number;
+  paidBank?: number;
 }
 
 const BOOKING_MONEY_EPS = 1e-6;

@@ -761,6 +761,16 @@
       line-height: 1;
       padding: 0 4px 0;
     }
+    .booking-receipt-mid-line .fill--name {
+      font-size: 15px;
+      font-weight: 1500;
+      line-height: 1.1;
+    }
+    .booking-receipt-mid-line .fill--amount-text {
+      font-size: 15px;
+      font-weight: 1500;
+      line-height: 1.1;
+    }
     .booking-receipt-sigs {
       display: flex;
       flex-direction: row;
@@ -836,6 +846,12 @@
     .booking-print--onepage .booking-receipt-mid-line,
     .booking-print--onepage .booking-receipt-title {
       font-size: 6.5px;
+    }
+    .booking-print--onepage .booking-receipt-mid-line .fill--name {
+      font-size: 15px;
+    }
+    .booking-print--onepage .booking-receipt-mid-line .fill--amount-text {
+      font-size: 15px;
     }
     .booking-print--onepage .booking-receipt-footer-bar .ln-ar {
       font-size: 6.5px;
@@ -2328,12 +2344,12 @@
               <div class="booking-receipt-mid">
                 <div class="booking-receipt-mid-line" dir="ltr">
                   <span class="lbl-en">Customer Name:</span>
-                  <span class="fill" dir="auto">${esc(show(get('receiptCustomerName', get('customerNameAr', ''))))}</span>
+                  <span class="fill fill--name" dir="auto">${esc(show(get('receiptCustomerName', get('customerNameAr', ''))))}</span>
                   <span class="lbl-ar" dir="rtl">إسم العميل:</span>
                 </div>
                 <div class="booking-receipt-mid-line" dir="ltr">
                   <span class="lbl-en">Amount:</span>
-                  <span class="fill" dir="rtl">${esc(show(get('receiptAmountText', get('receiptAmount', ''))))}</span>
+                  <span class="fill fill--amount-text" dir="rtl">${esc(show(get('receiptAmountText', get('receiptAmount', ''))))}</span>
                   <span class="lbl-ar" dir="rtl">مبلغ و قدره:</span>
                 </div>
                 <div class="booking-receipt-mid-line" dir="ltr">
