@@ -240,6 +240,22 @@ export interface BookingUpdateRequest {
   paidBank?: number;
 }
 
+/** POST Booking/Extension — maps to ExtensionBookingCommand. */
+export interface BookingExtensionRequest {
+  idBranch: number;
+  idBooking: number;
+  fleetId: string;
+  countOfDay: number;
+  note: string;
+  datePayment: string;
+  paid: number;
+  idBank?: string;
+  idCash?: string;
+  paidCash?: number;
+  paidBank?: number;
+  paymentType: number;
+}
+
 const BOOKING_MONEY_EPS = 1e-6;
 
 /**

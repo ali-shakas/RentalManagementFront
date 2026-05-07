@@ -67,6 +67,14 @@
         </div>
 
       </div>
+      <div class="booking-legend" aria-label="Booking color guide">
+        @for (guide of colorGuide; track guide.key) {
+          <div class="booking-legend-item">
+            <span class="booking-legend-dot" [style.background]="guide.color"></span>
+            <span class="booking-legend-label">{{ guide.label }}</span>
+          </div>
+        }
+      </div>
 
       @if (loading()) {
         <div class="text-center py-5"><div class="spinner-border text-primary"></div></div>

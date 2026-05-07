@@ -17,6 +17,13 @@
   background: var(--field-bg);
 }
 
+.contract-details-card .form-select {
+  min-height: 36px;
+  border-radius: 9px;
+  border-color: var(--field-border);
+  background: var(--field-bg);
+}
+
 .contract-details-card .form-control[readonly] {
   background: linear-gradient(180deg, #f2f6fa, #edf2f7);
   color: #475569;
@@ -115,6 +122,93 @@
 
 .contract-panel--basics {
   padding: 0.85rem 0.9rem 0.95rem;
+}
+
+.contract-panel--extend {
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
+  padding: 1rem 1.05rem 1.15rem;
+  border-color: rgba(148, 163, 184, 0.3);
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.16), rgba(15, 23, 42, 0.08));
+}
+
+.extend-form-grid {
+  border-top: 1px solid rgba(148, 163, 184, 0.25);
+  padding-top: 0.85rem;
+}
+
+.extend-readonly-field .form-control[disabled] {
+  opacity: 1;
+  background: linear-gradient(180deg, rgba(51, 65, 85, 0.45), rgba(30, 41, 59, 0.52));
+  color: #e2e8f0;
+  -webkit-text-fill-color: #e2e8f0;
+  border-color: rgba(148, 163, 184, 0.42);
+}
+
+.extend-payment-card {
+  margin-top: 0.15rem;
+  border-radius: 14px;
+  border: 1px solid rgba(59, 130, 246, 0.42);
+  background: linear-gradient(140deg, #041338, #071e51 55%, #0c2d70);
+  padding: 0.9rem;
+}
+
+.extend-payment-card__title {
+  color: #dbeafe;
+  font-size: 0.82rem;
+  font-weight: 700;
+  margin-bottom: 0.55rem;
+}
+
+.extend-payment-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.extend-payment-field .form-label {
+  color: #cbd5e1;
+}
+
+.extend-payment-select {
+  min-height: 38px;
+  border-radius: 10px;
+  border-color: rgba(148, 163, 184, 0.38);
+  background: rgba(15, 23, 42, 0.66);
+  color: #f1f5f9;
+}
+
+.extend-payment-amount {
+  min-height: 38px;
+  border-radius: 10px;
+  border-color: rgba(148, 163, 184, 0.38);
+  background: rgba(15, 23, 42, 0.66);
+  color: #f1f5f9;
+}
+
+.extend-payment-select:focus {
+  border-color: rgba(96, 165, 250, 0.75);
+  box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.2);
+}
+
+.extend-payment-field--span-2 {
+  grid-column: span 2;
+}
+
+.contract-panel--extend textarea.form-control {
+  border-radius: 10px;
+  min-height: 92px;
+  background: rgba(15, 23, 42, 0.5);
+  color: #e2e8f0;
+  border-color: rgba(148, 163, 184, 0.42);
+}
+
+.contract-panel--extend input[type='datetime-local'].form-control,
+.contract-panel--extend input[type='number'].form-control {
+  background: rgba(15, 23, 42, 0.42);
+  color: #e2e8f0;
+  border-color: rgba(148, 163, 184, 0.42);
 }
 
 .contract-basics-grid {
@@ -216,6 +310,14 @@
 }
 
 @media (max-width: 767.98px) {
+  .extend-payment-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .extend-payment-field--span-2 {
+    grid-column: auto;
+  }
+
   .contract-photo-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -415,6 +517,11 @@
 :host-context(body.dark-only) .contract-panel {
   border-color: rgba(100, 116, 139, 0.4);
   background: rgba(30, 41, 59, 0.55);
+}
+
+:host-context([data-bs-theme='dark']) .contract-panel--extend,
+:host-context(body.dark-only) .contract-panel--extend {
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 0.78));
 }
 
 :host-context([data-bs-theme='dark']) .contract-panel__title,

@@ -17,6 +17,144 @@
 
     <div class="card contract-details-card">
       <div class="card-body">
+        @if (isExtendMode()) {
+          <section class="contract-panel contract-panel--extend">
+            <h2 class="contract-panel__title">تمديد العقد</h2>
+            <div class="row g-3 extend-form-grid">
+              <div class="col-md-6 extend-readonly-field">
+                <label class="form-label">اسم العميل</label>
+                <input class="form-control" readonly disabled [value]="valueOrDash(item.customerName)" />
+              </div>
+              <div class="col-md-6 extend-readonly-field">
+                <label class="form-label">رقم اللوحة</label>
+                <input class="form-control" readonly disabled [value]="valueOrDash(item.vehiclePlateNumber)" />
+              </div>
+              <div class="col-md-6 extend-readonly-field">
+                <label class="form-label">رقم العقد</label>
+                <input class="form-control" readonly disabled [value]="contractNumber(item)" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">تاريخ الدفعة</label>
+                <input
+                  class="form-control"
+                  type="datetime-local"
+                  [value]="extendPaymentDate()"
+                  (input)="onExtendPaymentDateChange($any($event.target).value)"
+                />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">دفعة الآن</label>
+                <input
+                  class="form-control"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  [value]="extendCurrentPaymentAmount()"
+                  (input)="onExtendPaidAmountChange($any($event.target).value)"
+                />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">إجمالي المبلغ المطلوب</label>
+                <input class="form-control" readonly [value]="moneyOrDash(extendRequiredAmount())" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">مجموع المدفوع</label>
+                <input class="form-control" readonly [value]="moneyOrDash(extendPaidTotal(item))" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">المبلغ المتبقي</label>
+                <input class="form-control" readonly [value]="moneyOrDash(extendRemainingAmount(item))" />
+              </div>
+              <div class="col-12">
+                <div class="extend-payment-card">
+                  <div class="extend-payment-card__title">ترتيب الدفع</div>
+                  <div class="extend-payment-grid">
+                    <div class="extend-payment-field">
+                      <label class="form-label">نوع الدفع</label>
+                      <app-smooth-select
+                        [value]="extendPaymentMethod()"
+                        [ariaLabel]="'Payment Type' | translate"
+                        [placeholder]="'Payment Type' | translate"
+                        [options]="extendPaymentTypeOptions()"
+                        (valueChange)="onExtendPaymentMethodChange('' + $any($event))"
+                      />
+                    </div>
+                    <div class="extend-payment-field">
+                      <label class="form-label">الصندوق</label>
+                      <app-smooth-select
+                        [value]="extendBankCashAccount()"
+                        [ariaLabel]="'Cash Account' | translate"
+                        [placeholder]="'Select cash account'"
+                        [options]="extendCashAccountOptions()"
+                        [disabled]="extendPaymentTypeIsBankOnly()"
+                        (valueChange)="onExtendCashAccountChange('' + $any($event))"
+                      />
+                      @if (extendPaymentTypeIsBankOnly()) {
+                        <div class="form-text text-warning">مقفل لأن نوع الدفع بنكي فقط.</div>
+                      }
+                    </div>
+                    <div class="extend-payment-field">
+                      <label class="form-label">المبلغ النقدي</label>
+                      <input
+                        class="form-control extend-payment-amount"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        [value]="extendPaidCash()"
+                        [disabled]="extendPaymentTypeIsBankOnly()"
+                        [readonly]="!extendPaymentTypeIsMixed()"
+                        (input)="onExtendPaidCashChange($any($event.target).value)"
+                      />
+                      @if (extendPaymentTypeIsBankOnly()) {
+                        <div class="form-text text-warning">مقفل لأن الدفع يتم عبر البنك.</div>
+                      }
+                    </div>
+                    <div class="extend-payment-field extend-payment-field--span-2">
+                      <label class="form-label">الحساب البنكي</label>
+                      <app-smooth-select
+                        [value]="extendBankAccount()"
+                        [ariaLabel]="'Bank Account' | translate"
+                        [placeholder]="'Select bank'"
+                        [options]="extendBankAccountOptions()"
+                        [disabled]="extendPaymentTypeIsCash()"
+                        (valueChange)="onExtendBankAccountChange('' + $any($event))"
+                      />
+                      @if (extendPaymentTypeIsCash()) {
+                        <div class="form-text text-warning">مقفل لأن نوع الدفع نقدي.</div>
+                      }
+                    </div>
+                    <div class="extend-payment-field">
+                      <label class="form-label">المبلغ البنكي</label>
+                      <input
+                        class="form-control extend-payment-amount"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        [value]="extendPaidBank()"
+                        [disabled]="extendPaymentTypeIsCash()"
+                        [readonly]="!extendPaymentTypeIsMixed()"
+                        (input)="onExtendPaidBankChange($any($event.target).value)"
+                      />
+                      @if (extendPaymentTypeIsCash()) {
+                        <div class="form-text text-warning">مقفل لأن نوع الدفع نقدي.</div>
+                      }
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-12">
+                <label class="form-label">ملاحظات</label>
+                <textarea
+                  class="form-control"
+                  rows="4"
+                  placeholder="اكتب ملاحظات التمديد هنا"
+                  [value]="extendNotes()"
+                  (input)="onExtendNotesChange($any($event.target).value)"
+                ></textarea>
+              </div>
+            </div>
+          </section>
+        } @else {
         <div class="contract-details__summary">
           <div class="contract-details__summary-row">
             @if (logoOnlyUrl(item); as logo) {
@@ -398,14 +536,19 @@
             </div>
           </div>
         </details>
+        }
 
         <div class="contract-details__footer">
-          <button type="button" class="btn btn-primary" (click)="openBookingPrint(true)">
-            {{ 'Print contract' | translate }}
-          </button>
-          <button type="button" class="btn btn-outline-secondary" (click)="openBookingPrint(false)">
-            {{ 'Preview contract print' | translate }}
-          </button>
+          @if (isExtendMode()) {
+            <button type="button" class="btn btn-primary" (click)="submitExtend()">تمديد</button>
+          } @else {
+            <button type="button" class="btn btn-primary" (click)="openBookingPrint(true)">
+              {{ 'Print contract' | translate }}
+            </button>
+            <button type="button" class="btn btn-outline-secondary" (click)="openBookingPrint(false)">
+              {{ 'Preview contract print' | translate }}
+            </button>
+          }
           <a class="btn btn-cancel" routerLink="/booking">{{ 'Back' | translate }}</a>
         </div>
       </div>

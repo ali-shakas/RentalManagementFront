@@ -6,7 +6,13 @@ import { PaginatedAggregatorResponse } from '../../../../core/interfaces';
 import { BaseService } from '../../../../shared/services/base/base.service';
 import { buildFleetQueryParams, normalizeFleetId } from '../../../../shared/utils/fleet-query.utils';
 import { normalizePaginatedResponse } from '../../../../shared/utils/paginated-response.normalizer';
-import { Booking, BookingCreateRequest, BookingFilters, BookingUpdateRequest } from '../../models';
+import {
+  Booking,
+  BookingCreateRequest,
+  BookingExtensionRequest,
+  BookingFilters,
+  BookingUpdateRequest,
+} from '../../models';
 import { normalizeBooking } from '../../models/booking/booking.normalizer';
 
 @Injectable({
@@ -152,6 +158,18 @@ export class BookingService {
     return this.api.putData(`${this.base}/${body.id}`, this.toUpdateBookingPayload(body));
   }
 
+  extend(body: BookingExtensionRequest): Observable<unknown> {
+    const payload = this.toExtensionBookingPayload(body);
+    // Backend may expose Extension as PUT (405 on POST). Try PUT first on canonical route.
+    return this.api.putData(`${this.base}/extension`, payload, { suppressErrorToast: true }).pipe(
+      catchError(() => this.api.postData(`${this.base}/extension`, payload, { suppressErrorToast: true })),
+      catchError(() => this.api.putData(`${this.base}/Extension`, payload, { suppressErrorToast: true })),
+      catchError(() => this.api.postData(`${this.base}/Extension`, payload, { suppressErrorToast: true })),
+      catchError(() => this.api.putData(`${this.base}/Extend`, payload, { suppressErrorToast: true })),
+      catchError(() => this.api.postData(`${this.base}/Extend`, payload)),
+    );
+  }
+
   /**
    * Mirrors `toCreateBookingPayload`: duplicate PascalCase for ASP.NET binders.
    * When `paid` is `undefined`, `Paid` is omitted (JSON.stringify drops undefined) so the server
@@ -240,6 +258,35 @@ export class BookingService {
     }
 
     return out;
+  }
+
+  private toExtensionBookingPayload(body: BookingExtensionRequest): Record<string, unknown> {
+    return {
+      idBranch: body.idBranch,
+      IdBranch: body.idBranch,
+      idBooking: body.idBooking,
+      IdBooking: body.idBooking,
+      fleetId: body.fleetId,
+      FleetId: body.fleetId,
+      countOfDay: body.countOfDay,
+      CountOfDay: body.countOfDay,
+      note: body.note,
+      Note: body.note,
+      datePayment: body.datePayment,
+      DatePayment: body.datePayment,
+      paid: body.paid,
+      Paid: body.paid,
+      idBank: body.idBank,
+      IdBank: body.idBank,
+      idCash: body.idCash,
+      IdCash: body.idCash,
+      paidCash: body.paidCash,
+      PaidCash: body.paidCash,
+      paidBank: body.paidBank,
+      PaidBank: body.paidBank,
+      paymentType: body.paymentType,
+      PaymentType: body.paymentType,
+    };
   }
 
   /**
