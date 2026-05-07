@@ -269,6 +269,11 @@
   "Booking decision hint partial": "Partially paid — remaining balance needs follow-up or collection.",
   "Booking decision hint overpaid": "Paid total exceeds contract total — verify amounts with accounting.",
   "Voucher paid sum mismatch hint": "Note: voucher row totals differ from the booking paid total; confirm with finance.",
+  "Receipt amount text suffix": "only no more",
+  "Edit Booking": "Edit Booking",
+  "Update Booking": "Update Booking",
+  "Booking updated": "Booking updated",
+  "Last voucher amount": "Last voucher amount",
   "Print contract": "Print contract",
   "Preview contract print": "Preview print"
 }

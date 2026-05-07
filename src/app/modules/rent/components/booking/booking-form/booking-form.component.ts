@@ -3,7 +3,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, ElementRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import {
@@ -29,10 +29,20 @@ import { focusFirstInvalidControl } from '../../../../../shared/utils/focus-firs
 import { Bank } from '../../../../finance/models/banks/bank.model';
 import { CashAccount } from '../../../../finance/models/cash/cash-account.model';
 import { CountingEntry } from '../../../../finance/models/counting/counting-entry.model';
+import { PaymentCount } from '../../../../finance/models/payment-counts/payment-count.model';
 import { BankService } from '../../../../finance/services/banks/bank.service';
 import { CashAccountService } from '../../../../finance/services/cash/cash-account.service';
 import { CountingEntryService } from '../../../../finance/services/counting/counting-entry.service';
-import { BookingCreateRequest, CategoryVehicle, Customer, Vehicle } from '../../../models';
+import { PaymentCountService } from '../../../../finance/services/payment-counts/payment-count.service';
+import {
+  Booking,
+  BookingCreateRequest,
+  BookingUpdateRequest,
+  CategoryVehicle,
+  Customer,
+  Vehicle,
+  paidForBookingUpdateRequest,
+} from '../../../models';
 import { Setting } from '../../../models/settings/setting.model';
 import { normalizeSetting } from '../../../models/settings/setting.normalizer';
 import { BookingService } from '../../../services/booking/booking.service';
@@ -73,6 +83,7 @@ export class BookingFormComponent implements OnInit {
   private fb = inject(NonNullableFormBuilder);
   private authState = inject(AuthStateService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private bookingService = inject(BookingService);
   private customerService = inject(CustomerService);
   private vehicleService = inject(VehicleService);
@@ -80,6 +91,7 @@ export class BookingFormComponent implements OnInit {
   private bankService = inject(BankService);
   private cashAccountService = inject(CashAccountService);
   private countingEntryService = inject(CountingEntryService);
+  private paymentCountService = inject(PaymentCountService);
   private settingsApi = inject(SettingService);
   private destroyRef = inject(DestroyRef);
   private toast = inject(ToastService);
@@ -109,6 +121,16 @@ export class BookingFormComponent implements OnInit {
   categoryHintUnavailable = signal(false);
   private readonly vehicleCategoryHintsTrigger$ = new Subject<void>();
   loading = signal(false);
+  paymentRows = signal<PaymentCount[]>([]);
+  paymentCountSum = signal<number | null>(null);
+  lastPayment = signal<PaymentCount | null>(null);
+  lastPaymentIsPosting = signal(false);
+  editVehicleId = signal('');
+  editVehiclePlate = signal('');
+  vehiclePlateLookup = signal('');
+  editBookingId = signal<number | null>(null);
+  originalPaidSnapshot = signal<number | null | undefined>(undefined);
+  editMode = computed(() => this.editBookingId() !== null);
   customerSelectOptions = computed<SmoothSelectOption[]>(() => [
     { label: 'Select customer', value: '' },
     ...this.customers().map(customer => ({
@@ -116,13 +138,31 @@ export class BookingFormComponent implements OnInit {
       value: String(customer.id),
     })),
   ]);
-  vehicleSelectOptions = computed<SmoothSelectOption[]>(() => [
-    { label: 'Select vehicle', value: '' },
-    ...this.vehicles().map(vehicle => ({
-      label: vehicle.plateNumber || vehicle.serialNumber || vehicle.make || '-',
-      value: String(vehicle.id),
-    })),
-  ]);
+  vehicleSelectOptions = computed<SmoothSelectOption[]>(() => {
+    const baseOptions: SmoothSelectOption[] = [
+      { label: 'Select vehicle', value: '' },
+      ...this.vehicles().map(vehicle => ({
+        label: vehicle.plateNumber || vehicle.serialNumber || vehicle.make || '-',
+        value: String(vehicle.id),
+      })),
+    ];
+    const currentId = this.editVehicleId().trim();
+    const currentPlate = this.editVehiclePlate().trim();
+    if (!currentId) {
+      return baseOptions;
+    }
+    const exists = baseOptions.some(option => String(option.value) === currentId);
+    if (exists) {
+      return baseOptions;
+    }
+    return [
+      ...baseOptions,
+      {
+        label: currentPlate || currentId,
+        value: currentId,
+      },
+    ];
+  });
   bankSelectOptions = computed<SmoothSelectOption[]>(() => [
     { label: 'Select bank', value: '' },
     ...this.banks().map(bank => ({
@@ -283,6 +323,9 @@ export class BookingFormComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    const routeId = Number(this.route.snapshot.paramMap.get('id'));
+    this.editBookingId.set(Number.isFinite(routeId) && routeId > 0 ? routeId : null);
+
     this.translate.onLangChange.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       this.refreshNationalitySuggestionList();
     });
@@ -334,6 +377,9 @@ export class BookingFormComponent implements OnInit {
         this.refreshContractBandPriceHints();
         this.applyDefaultCustomerVehicleCounting();
         this.vehicleCategoryHintsTrigger$.next();
+        if (this.editMode()) {
+          this.loadBookingForEdit();
+        }
       },
       error: () => this.toast.error(this.translate.instant('Failed to load booking references')),
     });
@@ -757,6 +803,18 @@ export class BookingFormComponent implements OnInit {
       paid: raw.paid,
     };
 
+    if (this.editMode() && this.editBookingId()) {
+      this.updateBooking(raw, {
+        idCustomer,
+        idVehicle,
+        idBranch,
+        idBank,
+        idCash,
+        idCountingCustVehicle,
+      });
+      return;
+    }
+
     this.loading.set(true);
     this.bookingService.create(body).subscribe({
       next: () => {
@@ -777,6 +835,356 @@ export class BookingFormComponent implements OnInit {
       },
       complete: () => this.loading.set(false),
     });
+  }
+
+  private updateBooking(
+    raw: ReturnType<typeof this.form.getRawValue>,
+    ids: {
+      idCustomer: number;
+      idVehicle: number;
+      idBranch: number;
+      idBank?: string;
+      idCash?: string;
+      idCountingCustVehicle?: string;
+    },
+  ): void {
+    const bookingId = this.editBookingId();
+    if (!bookingId) {
+      return;
+    }
+    const payload: BookingUpdateRequest = {
+      id: bookingId,
+      idCustomer: ids.idCustomer > 0 ? ids.idCustomer : undefined,
+      idVehicle: ids.idVehicle,
+      idBranch: ids.idBranch,
+      checkoutCounter: raw.checkoutCounter,
+      checkinCounter: raw.checkinCounter,
+      countOfDay: raw.countOfDay,
+      total: raw.total,
+      discount: raw.discount,
+      priceInDay: raw.priceInDay,
+      priceInMonth: raw.priceInMonth,
+      allowTo: raw.allowTo,
+      countKMExtra: raw.countKMExtra,
+      priceHoureExtra: raw.priceHoureExtra,
+      priceKmExtra: raw.priceKmExtra,
+      otherExpenses: raw.otherExpenses,
+      totaltax: raw.totaltax,
+      startDate: this.bookingCalendarDateToApi(raw.startDate),
+      endDate: this.bookingCalendarDateToApi(raw.endDate),
+      dateReturnVehical: this.bookingCalendarDateToApi(raw.dateReturnVehical),
+      note: raw.note.trim() || undefined,
+      placeUSE: raw.placeUSE.trim() || undefined,
+      numberBookingINBasame: raw.numberBookingINBasame.trim() || undefined,
+      distancetraveledgps: raw.distancetraveledgps.trim() || undefined,
+      totalTrafic: raw.totalTrafic,
+      totalMaintance: raw.totalMaintance,
+      totalReceivedVehicle: raw.totalReceivedVehicle,
+      transportationFees: raw.transportationFees,
+      idCountingCustVehicle: ids.idCountingCustVehicle,
+      paid: paidForBookingUpdateRequest(raw.paid, this.originalPaidSnapshot()),
+      paymentType: raw.paymentType,
+      bondType: 1,
+      idCash: ids.idCash,
+      idBank: ids.idBank,
+      paidCash: raw.paidCash,
+      paidBank: raw.paidBank,
+    };
+
+    this.loading.set(true);
+    this.bookingService.update(payload).subscribe({
+      next: () => {
+        this.toast.success(this.translate.instant('Booking updated'));
+        this.router.navigate(['/booking']);
+      },
+      error: err => {
+        this.loading.set(false);
+        this.toast.error(this.bookingCreateErrorMessage(err));
+      },
+      complete: () => this.loading.set(false),
+    });
+  }
+
+  private loadBookingForEdit(): void {
+    const bookingId = this.editBookingId();
+    const fleetId = this.authState.fleetId() || '';
+    if (!bookingId || !fleetId) {
+      return;
+    }
+    this.loading.set(true);
+    this.bookingService.getById(String(bookingId), fleetId).subscribe({
+      next: booking => this.patchFormFromBooking(booking),
+      error: () => this.toast.error(this.translate.instant('Failed to load booking')),
+      complete: () => this.loading.set(false),
+    });
+  }
+
+  private patchFormFromBooking(booking: Booking): void {
+    this.originalPaidSnapshot.set(booking.paidtotal ?? booking.paidAmount ?? 0);
+    this.editVehicleId.set(this.valueOf(booking.vehicleId));
+    this.editVehiclePlate.set(this.valueOf(booking.vehiclePlateNumber));
+    this.vehiclePlateLookup.set(this.valueOf(booking.vehiclePlateNumber));
+    const customerIqama = this.normalizeNationalId(this.valueOf(booking.customerIqama));
+    const patch: Partial<ReturnType<typeof this.form.getRawValue>> = {
+      branchId: Number(booking.branchId || this.form.controls.branchId.value),
+      customerId: this.valueOf(booking.customerId),
+      customerIqama,
+      customerNameAr: this.valueOf(booking.customerName),
+      customerFirstMobileNumber: this.valueOf(booking.customerMobile),
+      customerAddress: this.valueOf(booking.customerAddress),
+      customerNationality: this.valueOf(booking.customerNationality),
+      customerDrivingLicenseNumber: this.valueOf(booking.customerDrivingLicenseNumber),
+      customerDateDrivinglicense: this.toDateInputValue(booking.customerDrivingLicenseExpiry),
+      customerBirthDay: this.toDateInputValue(booking.customerBirthDay),
+      vehicleId: this.valueOf(booking.vehicleId),
+      startDate: this.toDateTimeLocalFromApi(booking.startDate),
+      endDate: this.toDateTimeLocalFromApi(booking.endDate),
+      dateReturnVehical: this.toDateTimeLocalFromApi(booking.returnDate),
+      distancetraveledgps: this.valueOf(booking.distancetraveledgps),
+      numberOfHoursExcess: Number(booking.numberOfHoursExcess ?? 0),
+      numberKmExcess: Number(booking.numberKmExcess ?? 0),
+      dayExcess: Number(booking.dayExcess ?? 0),
+      discount: Number(booking.discount ?? 0),
+      checkoutCounter: Number(booking.checkoutCounter ?? 0),
+      checkinCounter: Number(booking.checkinCounter ?? 0),
+      countOfDay: Number(booking.countOfDay ?? 0),
+      priceInDay: Number(booking.priceInDay ?? 0),
+      priceInMonth: Number(booking.priceInMonth ?? 0),
+      allowTo: Number(booking.allowTo ?? 0),
+      countKMExtra: Number(booking.countKMExtra ?? 0),
+      priceHoureExtra: Number(booking.priceHoureExtra ?? 0),
+      priceKmExtra: Number(booking.priceKmExtra ?? 0),
+      otherExpenses: Number(booking.otherExpenses ?? 0),
+      total: Number(booking.totalAmount ?? 0),
+      note: this.valueOf(booking.notes),
+      placeUSE: this.valueOf(booking.placeUSE),
+      totalTrafic: Number(booking.totalTrafic ?? 0),
+      totalMaintance: Number(booking.totalMaintance ?? 0),
+      totalReceivedVehicle: Number(booking.totalReceivedVehicle ?? 0),
+      transportationFees: Number(booking.transportationFees ?? 0),
+      totaltax: Number(booking.totaltax ?? 0),
+      paid: Number(booking.paidtotal ?? booking.paidAmount ?? 0),
+      numberBookingINBasame: this.valueOf(booking.numberBookingINBasame),
+      idCountingCustVehicle: this.valueOf(booking.idCountingCustVehicle),
+    };
+    this.form.patchValue(patch, { emitEvent: false });
+    this.ensureVehicleLoadedForEdit(this.valueOf(booking.vehicleId));
+    if (customerIqama) {
+      this.customerLookupByIqama(customerIqama);
+    }
+    this.vehicleCategoryHintsTrigger$.next();
+    this.applyPaymentTypeRules(this.form.controls.paymentType.value);
+    this.applyAutoTaxFromSettings();
+    this.syncBookingTotals();
+    this.refreshContractLimitWarnings();
+    this.refreshContractBandPriceHints();
+    this.loadPaymentSummaryForBooking(Number(booking.id));
+  }
+
+  onVehiclePlateLookupChange(value: string): void {
+    this.vehiclePlateLookup.set(value ?? '');
+  }
+
+  applyVehicleByPlateLookup(): void {
+    const plate = this.valueOf(this.vehiclePlateLookup()).toLowerCase();
+    if (!plate) {
+      return;
+    }
+    const local = this.vehicles().find(v => this.valueOf(v.plateNumber).toLowerCase() === plate);
+    if (local?.id) {
+      this.form.patchValue({ vehicleId: String(local.id) }, { emitEvent: true });
+      return;
+    }
+    const fleetId = this.authState.fleetId() || undefined;
+    this.vehicleService
+      .getPaginated({
+        fleetId,
+        pageNumber: 1,
+        pageSize: 20,
+        search: plate,
+        status: 'Available',
+      })
+      .pipe(catchError(() => of({ items: [] })))
+      .subscribe(page => {
+        const items = page.items ?? [];
+        const found =
+          items.find(v => this.valueOf(v.plateNumber).toLowerCase() === plate) ??
+          items.find(v => this.valueOf(v.plateNumber).toLowerCase().includes(plate));
+        if (!found?.id) {
+          return;
+        }
+        const exists = this.vehicles().some(v => String(v.id) === String(found.id));
+        if (!exists) {
+          this.vehicles.set([...this.vehicles(), found]);
+        }
+        this.form.patchValue({ vehicleId: String(found.id) }, { emitEvent: true });
+      });
+  }
+
+  private ensureVehicleLoadedForEdit(vehicleId: string): void {
+    const id = this.valueOf(vehicleId);
+    const fleetId = this.authState.fleetId() || '';
+    if (!id || !fleetId) {
+      return;
+    }
+    this.vehicleService.getById(id, fleetId).pipe(catchError(() => of(null))).subscribe(vehicle => {
+      if (!vehicle) {
+        return;
+      }
+      const current = this.vehicles();
+      const index = current.findIndex(v => String(v.id) === String(vehicle.id));
+      if (index >= 0) {
+        const cloned = [...current];
+        cloned[index] = vehicle;
+        this.vehicles.set(cloned);
+      } else {
+        this.vehicles.set([...current, vehicle]);
+      }
+      this.vehicleCategoryHintsTrigger$.next();
+    });
+  }
+
+  private loadPaymentSummaryForBooking(idBooking: number): void {
+    const fleetId = this.authState.fleetId() ?? '';
+    if (!Number.isFinite(idBooking) || idBooking <= 0 || !fleetId) {
+      this.paymentRows.set([]);
+      this.paymentCountSum.set(null);
+      this.lastPayment.set(null);
+      this.lastPaymentIsPosting.set(false);
+      return;
+    }
+    this.paymentCountService
+      .getLastForBooking(idBooking, fleetId)
+      .pipe(
+        switchMap(last => {
+          this.lastPayment.set(last);
+          const fromLast = last?.isPosting === true;
+          if (fromLast) {
+            this.lastPaymentIsPosting.set(true);
+            return of(last);
+          }
+          return this.paymentCountService.getLastIsPostingForBooking(idBooking, fleetId).pipe(
+            map(isPosting => {
+              this.lastPaymentIsPosting.set(isPosting);
+              return isPosting ? null : last;
+            }),
+            catchError(() => of(last)),
+          );
+        }),
+        catchError(() => of(null)),
+      )
+      .subscribe(last => {
+        this.lastPayment.set(last);
+        const rows = last ? [last] : [];
+        this.paymentRows.set(rows);
+        const paid = Number(last?.paid);
+        this.paymentCountSum.set(Number.isFinite(paid) ? paid : null);
+        if (Number.isFinite(paid)) {
+          this.form.patchValue({ paid }, { emitEvent: false });
+        }
+      });
+  }
+
+  vouchersTablePaidSum(): number {
+    return this.paymentRows().reduce((acc, row) => acc + (Number(row.paid) || 0), 0);
+  }
+
+  displayedPaidTotalForEdit(): number {
+    if (this.editMode() && this.lastPayment()) {
+      return Math.max(0, Number(this.form.controls.paid.value) || 0);
+    }
+    const fromPaymentCount = this.paymentCountSum();
+    if (fromPaymentCount !== null && Number.isFinite(fromPaymentCount)) {
+      return fromPaymentCount;
+    }
+    return Math.max(0, Number(this.form.controls.paid.value) || 0);
+  }
+
+  liveLastPaymentRow(): PaymentCount | null {
+    const base = this.lastPayment();
+    if (!base) {
+      return null;
+    }
+    const paymentType = Number(this.form.controls.paymentType.value);
+    const paid = Number(this.form.controls.paid.value);
+    const paidCash = Number(this.form.controls.paidCash.value);
+    const paidBank = Number(this.form.controls.paidBank.value);
+    return {
+      ...base,
+      paymentType: Number.isFinite(paymentType) ? paymentType : base.paymentType,
+      paid: Number.isFinite(paid) ? paid : base.paid,
+      paidCash: Number.isFinite(paidCash) ? paidCash : base.paidCash,
+      paidBank: Number.isFinite(paidBank) ? paidBank : base.paidBank,
+    };
+  }
+
+  bondTypeLabel(value: number | null | undefined): string {
+    switch (Number(value)) {
+      case 1:
+        return this.translate.instant('Payment Voucher');
+      case 2:
+        return this.translate.instant('Receipt Voucher');
+      default:
+        return '-';
+    }
+  }
+
+  paymentTypeLabel(value: number | null | undefined): string {
+    switch (Number(value)) {
+      case 1:
+        return this.translate.instant('Cash');
+      case 2:
+        return this.translate.instant('Network/POS');
+      case 3:
+        return this.translate.instant('Cheque');
+      case 4:
+        return this.translate.instant('Bank Transfer');
+      case 5:
+        return this.translate.instant('Bank/Cash');
+      default:
+        return '-';
+    }
+  }
+
+  paymentStatusLabel(value: number | null | undefined): string {
+    switch (Number(value)) {
+      case 1:
+        return this.translate.instant('Draft');
+      case 2:
+        return this.translate.instant('Confirmed');
+      case 3:
+        return this.translate.instant('Cancelled');
+      default:
+        return '-';
+    }
+  }
+
+  canEditLastVoucherPaid(): boolean {
+    return Number(this.lastPayment()?.status) === 1;
+  }
+
+  moneyOrDash(value: unknown): string {
+    if (value === null || value === undefined || value === '') {
+      return '-';
+    }
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) {
+      return '-';
+    }
+    const lang = this.translate.currentLang || this.translate.getDefaultLang() || 'ar';
+    return new Intl.NumberFormat(lang, { maximumFractionDigits: 2 }).format(parsed);
+  }
+
+  dateOrDash(value: string | undefined): string {
+    const text = String(value ?? '').trim();
+    if (!text) {
+      return '-';
+    }
+    const date = new Date(text);
+    if (Number.isNaN(date.getTime())) {
+      return text;
+    }
+    return date.toLocaleString();
   }
 
   /** `postData` throws `Error` when API returns `succeeded: false` with HTTP 200 (interceptor does not run). */
@@ -2142,6 +2550,30 @@ export class BookingFormComponent implements OnInit {
     const hh = String(date.getHours()).padStart(2, '0');
     const min = String(date.getMinutes()).padStart(2, '0');
     return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
+  }
+
+  private toDateTimeLocalFromApi(value: string | undefined): string {
+    const text = this.valueOf(value);
+    if (!text) {
+      return '';
+    }
+    const date = new Date(text);
+    return Number.isNaN(date.getTime()) ? '' : this.toDateTimeLocalValue(date);
+  }
+
+  private toDateInputValue(value: string | undefined): string {
+    const text = this.valueOf(value);
+    if (!text) {
+      return '';
+    }
+    const date = new Date(text);
+    if (Number.isNaN(date.getTime())) {
+      return '';
+    }
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
   }
 
   private refreshNationalitySuggestionList(): void {

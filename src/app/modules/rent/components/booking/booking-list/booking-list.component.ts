@@ -21,6 +21,8 @@ import {
 import { BookingService } from '../../../services/booking/booking.service';
 import { BranchService } from '../../../services/branches/branch.service';
 
+type BookingCardAction = 'edit' | 'suspend' | 'cancel' | 'extend' | 'pay' | 'print' | 'finish';
+
 @Component({
   selector: 'app-booking-list',
   standalone: true,
@@ -179,13 +181,17 @@ export class BookingListComponent implements OnInit {
   }
 
   onCardAction(
-    action: 'edit' | 'suspend' | 'cancel' | 'extend' | 'pay' | 'print' | 'finish',
+    action: BookingCardAction,
     booking: Booking,
   ): void {
+    if (action === 'edit') {
+      this.router.navigate(['/booking', booking.id, 'edit']);
+      return;
+    }
     if (action === 'finish' && !this.canFinishBooking(booking)) {
       return;
     }
-    const actionLabels: Record<typeof action, string> = {
+    const actionLabels: Record<BookingCardAction, string> = {
       edit: 'تعديل',
       suspend: 'تعليق',
       cancel: 'إلغاء',

@@ -2,6 +2,8 @@ export interface PaymentCount {
   id: string;
   /** Voucher / document number — string in `GetPaymentcountByIdBookingQueryResponse.PaymentNumber`, may be numeric in other DTOs. */
   paymentNumber?: string | number;
+  /** مبلغ وقدره كنص قادم من الباك إند (MonyToText). */
+  monyToText?: string;
   name?: string;
   description?: string;
   idCustomer?: number;
@@ -31,6 +33,8 @@ export interface PaymentCount {
   idBooking?: number;
   /** Booking workflow flag from payment-count DTO when present. */
   stutusbooking?: number;
+  /** True when booking voucher was posted and must be edited from voucher page. */
+  isPosting?: boolean;
   idFinancialYear?: string | number;
   createdAt?: string;
   details?: Array<Record<string, unknown>>;

@@ -90,6 +90,7 @@ export function normalizePaymentCount(raw: unknown): PaymentCount {
       ) ?? '',
     ),
     paymentNumber,
+    monyToText: pick<string>(source, 'monyToText', 'MonyToText', 'moneyToText', 'MoneyToText'),
     name: pick<string>(source, 'name', 'Name', 'title', 'Title'),
     description: pick<string>(source, 'description', 'Description', 'dscription', 'Dscription', 'note', 'Note'),
     idCustomer: pick<number>(source, 'idCustomer', 'IdCustomer'),
@@ -147,6 +148,7 @@ export function normalizePaymentCount(raw: unknown): PaymentCount {
     expenseCategory: pick<number>(source, 'expenseCategory', 'ExpenseCategory'),
     idBooking: pick<number>(source, 'idBooking', 'IdBooking'),
     stutusbooking: pick<number>(source, 'stutusbooking', 'Stutusbooking', 'statusBooking', 'StatusBooking'),
+    isPosting: pick<boolean>(source, 'isPosting', 'IsPosting'),
     idFinancialYear: pick<string | number>(source, 'idFinancialYear', 'IdFinancialYear'),
     details: normalizedDetails,
     createdAt: pick<string>(

@@ -269,6 +269,11 @@
   "Booking decision hint partial": "دفع جزئي — يتطلب المتابعة أو التحصيل للمتبقي.",
   "Booking decision hint overpaid": "مجموع المدفوع يتجاوز إجمالي العقد — راجع الأرقام مع المحاسبة.",
   "Voucher paid sum mismatch hint": "تنبيه: مجموع السندات يختلف عن «إجمالي المدفوع» للحجز — تأكد مع المالية.",
+  "Receipt amount text suffix": "فقط لا غير",
+  "Edit Booking": "تعديل الحجز",
+  "Update Booking": "تحديث الحجز",
+  "Booking updated": "تم تحديث الحجز",
+  "Last voucher amount": "مبلغ آخر سند",
   "Print contract": "طباعة العقد",
   "Preview contract print": "معاينة الطباعة"
 }

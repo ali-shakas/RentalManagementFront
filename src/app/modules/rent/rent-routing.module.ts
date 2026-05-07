@@ -234,6 +234,10 @@ const routes: Routes = [
         loadComponent: () => import('./components/booking/booking-form/booking-form.component').then(m => m.BookingFormComponent),
       },
       {
+        path: ':id/edit',
+        loadComponent: () => import('./components/booking/booking-form/booking-form.component').then(m => m.BookingFormComponent),
+      },
+      {
         path: ':id/details',
         loadComponent: () => import('./components/booking/booking-details/booking-details.component').then(m => m.BookingDetailsComponent),
       },
