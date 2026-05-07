@@ -95,6 +95,12 @@ export class BookingListComponent implements OnInit {
     { label: this.translate.instant('Descending'), value: 'DESC' },
     { label: this.translate.instant('Ascending'), value: 'ASC' },
   ]);
+  colorGuide = [
+    { key: 'extension', label: 'تمديد', color: '#F59E0B' },
+    { key: 'finsh', label: 'إنهاء', color: '#16A34A' },
+    { key: 'close', label: 'إغلاق', color: '#6B7280' },
+    { key: 'suspend', label: 'تعليق', color: '#111827' },
+  ] as const;
 
   getBookingStatusIconClass(status: BookingStatus): string {
     return getBookingStatusTheme(status).iconClass;

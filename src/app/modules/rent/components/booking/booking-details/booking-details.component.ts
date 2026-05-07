@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -9,25 +9,44 @@ import { AuthStateService } from '../../../../../core/auth/auth-state.service';
 import { resolveMediaUrl } from '../../../../../shared/utils/media-url.utils';
 import { PaymentCount } from '../../../../finance/models/payment-counts/payment-count.model';
 import { PaymentCountService } from '../../../../finance/services/payment-counts/payment-count.service';
+import { Bank } from '../../../../finance/models/banks/bank.model';
+import { BankService } from '../../../../finance/services/banks/bank.service';
+import { CashAccount } from '../../../../finance/models/cash/cash-account.model';
+import { CashAccountService } from '../../../../finance/services/cash/cash-account.service';
 import { Booking, BookingStatus } from '../../../models';
 import { bookingStatusTone, bookingStatusTranslationKey } from '../../../models/booking/booking-status.utils';
 import { BookingService } from '../../../services/booking/booking.service';
 import { ToastService } from '../../../../../shared/services/toast.service';
 import { PageHeaderComponent } from '../../../../../shared/ui/page-header/page-header.component';
 import { StatusBadgeComponent } from '../../../../../shared/ui/status-badge/status-badge.component';
+import {
+  SmoothSelectComponent,
+  SmoothSelectOption,
+} from '../../../../../shared/ui/smooth-select/smooth-select.component';
 
 @Component({
   selector: 'app-booking-details',
   standalone: true,
-  imports: [CommonModule, RouterLink, TranslateModule, PageHeaderComponent, StatusBadgeComponent],
+  imports: [
+    CommonModule,
+    RouterLink,
+    TranslateModule,
+    PageHeaderComponent,
+    StatusBadgeComponent,
+    SmoothSelectComponent,
+  ],
   templateUrl: './booking-details.component.html',
   styleUrl: './booking-details.component.scss',
 })
 export class BookingDetailsComponent implements OnInit {
+  private static readonly EXTEND_BOND_TYPE_RECEIPT = 2;
+  private static readonly EXTEND_STATUS_EDIT = 2;
   private route = inject(ActivatedRoute);
   private authState = inject(AuthStateService);
   private bookingService = inject(BookingService);
   private paymentCountService = inject(PaymentCountService);
+  private bankService = inject(BankService);
+  private cashAccountService = inject(CashAccountService);
   private toast = inject(ToastService);
   private translate = inject(TranslateService);
 
@@ -35,6 +54,40 @@ export class BookingDetailsComponent implements OnInit {
   loading = signal(false);
   paymentCountSum = signal<number | null>(null);
   paymentRows = signal<PaymentCount[]>([]);
+  isExtendMode = signal(false);
+  extendPaymentDate = signal('2025-12-31T13:01');
+  extendRequiredAmountValue = signal<number>(0);
+  extendCurrentPaymentAmount = signal<number>(0);
+  /** Mirrors backend PaymentTypePaymentcountEnum: 1..5 */
+  extendPaymentMethod = signal<number>(1);
+  extendBanks = signal<Bank[]>([]);
+  extendCashAccounts = signal<CashAccount[]>([]);
+  extendBankAccount = signal('');
+  extendBankCashAccount = signal('');
+  extendPaidCash = signal<number>(0);
+  extendPaidBank = signal<number>(0);
+  extendNotes = signal('');
+  extendPaymentTypeOptions = computed<SmoothSelectOption[]>(() => [
+    { label: this.translate.instant('Cash'), value: 1 },
+    { label: this.translate.instant('Network/POS'), value: 2 },
+    { label: this.translate.instant('Cheque'), value: 3 },
+    { label: this.translate.instant('Bank Transfer'), value: 4 },
+    { label: this.translate.instant('Bank/Cash'), value: 5 },
+  ]);
+  extendCashAccountOptions = computed<SmoothSelectOption[]>(() => [
+    { label: this.translate.instant('Select cash account'), value: '' },
+    ...this.extendCashAccounts().map(cash => ({
+      label: cash.name || '-',
+      value: String(cash.id),
+    })),
+  ]);
+  extendBankAccountOptions = computed<SmoothSelectOption[]>(() => [
+    { label: this.translate.instant('Select bank'), value: '' },
+    ...this.extendBanks().map(bank => ({
+      label: bank.name || '-',
+      value: String(bank.id),
+    })),
+  ]);
 
   statusBadgeTone(status: BookingStatus): 'success' | 'warning' | 'danger' | 'secondary' | 'info' {
     return bookingStatusTone(status);
@@ -318,6 +371,298 @@ export class BookingDetailsComponent implements OnInit {
     }
   }
 
+  onExtendPaymentDateChange(value: string): void {
+    this.extendPaymentDate.set(String(value ?? ''));
+    if (this.isExtendMode() && this.booking()) {
+      this.setExtendRequiredAmountFromBooking(this.booking()!);
+    }
+  }
+
+  onExtendPaidAmountChange(value: string): void {
+    const parsed = Number(value);
+    const paid = Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
+    this.extendCurrentPaymentAmount.set(paid);
+    this.syncExtendAmountsFromType();
+  }
+
+  onExtendPaymentMethodChange(value: string): void {
+    const parsed = Number(value);
+    const nextType = Number.isFinite(parsed) && parsed >= 1 && parsed <= 5 ? parsed : 1;
+    this.extendPaymentMethod.set(nextType);
+    this.applyExtendPaymentTypeRules(nextType);
+    this.syncExtendAmountsFromType();
+  }
+
+  onExtendNotesChange(value: string): void {
+    this.extendNotes.set(String(value ?? ''));
+  }
+
+  onExtendPaidCashChange(value: string): void {
+    const parsed = Number(value);
+    const cash = Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
+    this.extendPaidCash.set(cash);
+    if (!this.extendPaymentTypeIsMixed()) {
+      return;
+    }
+    const total = Math.max(0, Number(this.extendCurrentPaymentAmount()) || 0);
+    const bank = Math.max(0, Math.round((total - cash) * 100) / 100);
+    this.extendPaidBank.set(bank);
+  }
+
+  onExtendPaidBankChange(value: string): void {
+    const parsed = Number(value);
+    const bank = Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
+    this.extendPaidBank.set(bank);
+    if (!this.extendPaymentTypeIsMixed()) {
+      return;
+    }
+    const total = Math.max(0, Number(this.extendCurrentPaymentAmount()) || 0);
+    const cash = Math.max(0, Math.round((total - bank) * 100) / 100);
+    this.extendPaidCash.set(cash);
+  }
+
+  extendRequiredAmount(): number {
+    return Math.max(0, Number(this.extendRequiredAmountValue()) || 0);
+  }
+
+  extendRemainingAmount(item: Booking): number {
+    const required = this.extendRequiredAmount();
+    const paid = this.extendPaidTotal(item);
+    return Math.max(0, Math.round((required - paid) * 100) / 100);
+  }
+
+  extendPaidTotal(item: Booking): number {
+    const fromVouchers = this.paymentCountSum();
+    if (fromVouchers !== null && Number.isFinite(fromVouchers)) {
+      return Math.max(0, Number(fromVouchers) || 0);
+    }
+    const fallback = this.vouchersTablePaidSum();
+    if (Number.isFinite(fallback) && fallback > 0) {
+      return Math.max(0, fallback);
+    }
+    const paid = this.displayedPaidTotal(item);
+    return Math.max(0, Number(paid ?? 0) || 0);
+  }
+
+  submitExtend(): void {
+    const ok = window.confirm('هل أنت متأكد من تنفيذ تمديد العقد؟');
+    if (!ok) {
+      return;
+    }
+    const item = this.booking();
+    if (!item) {
+      this.toast.error('تعذر تنفيذ التمديد: بيانات العقد غير متوفرة');
+      return;
+    }
+    const fleetId = this.authState.fleetId() ?? '';
+    const idBooking = this.toBookingNumericId(item.id);
+    const idBranch = Number(item.branchId ?? this.authState.branchId() ?? 0);
+    const paid = Math.max(0, Number(this.extendCurrentPaymentAmount()) || 0);
+    if (!fleetId || !idBooking || !Number.isFinite(idBranch) || idBranch <= 0) {
+      this.toast.error('تعذر تنفيذ التمديد: بيانات العقد غير مكتملة');
+      return;
+    }
+    if (paid <= 0) {
+      this.toast.error('الرجاء إدخال مبلغ دفعة أكبر من صفر');
+      return;
+    }
+
+    const paymentType = Number(this.extendPaymentMethod()) || 1;
+    const bankId = this.normalizeGuidOrUndefined(this.extendBankAccount());
+    const cashId = this.normalizeGuidOrUndefined(this.extendBankCashAccount());
+    if ([2, 3, 4].includes(paymentType) && !bankId) {
+      this.toast.error('الرجاء اختيار الحساب البنكي');
+      return;
+    }
+    if (paymentType === 1 && !cashId) {
+      this.toast.error('الرجاء اختيار البنك النقدي');
+      return;
+    }
+    if (paymentType === 5 && (!bankId || !cashId)) {
+      this.toast.error('في الدفع بنكي / نقدي يجب اختيار الحساب البنكي والبنك النقدي');
+      return;
+    }
+
+    const paidCash = Math.max(0, Number(this.extendPaidCash()) || 0);
+    const paidBank = Math.max(0, Number(this.extendPaidBank()) || 0);
+    const splitTotal = Math.round((paidCash + paidBank) * 100) / 100;
+    const paidTotal = Math.round(paid * 100) / 100;
+    if (splitTotal !== paidTotal) {
+      this.toast.error('مجموع المبلغ النقدي والبنكي يجب أن يساوي قيمة الدفعة');
+      return;
+    }
+
+    const payload = {
+      idBooking,
+      idBranch,
+      fleetId,
+      countOfDay: Math.max(0, Number(item.countOfDay ?? 0) || 0),
+      paid,
+      note: String(this.extendNotes() ?? '').trim() || '-',
+      datePayment: this.toExtensionDatePayment(this.extendPaymentDate()),
+      paymentType,
+      idBank: bankId,
+      idCash: cashId,
+      paidCash,
+      paidBank,
+    };
+
+    this.loading.set(true);
+    this.bookingService.extend(payload).subscribe({
+      next: () => {
+        this.toast.success('تم تنفيذ التمديد بنجاح');
+        this.bookingService
+          .getById(String(idBooking), fleetId)
+          .pipe(catchError(() => of(item)))
+          .subscribe(refreshed => {
+            this.booking.set(refreshed);
+            this.loadPaymentSummaryForBooking(refreshed);
+            this.setExtendRequiredAmountFromBooking(refreshed);
+          });
+      },
+      error: () => this.toast.error('فشل تنفيذ التمديد'),
+      complete: () => this.loading.set(false),
+    });
+  }
+
+  onExtendBankAccountChange(value: string): void {
+    this.extendBankAccount.set(String(value ?? '').trim());
+  }
+
+  onExtendCashAccountChange(value: string): void {
+    this.extendBankCashAccount.set(String(value ?? '').trim());
+  }
+
+  private loadExtendLookupData(): void {
+    const fleetId = this.authState.fleetId() || undefined;
+    forkJoin({
+      banks: this.bankService.getList(fleetId).pipe(catchError(() => of([]))),
+      cashAccounts: this.cashAccountService.getList(fleetId).pipe(catchError(() => of([]))),
+    }).subscribe(({ banks, cashAccounts }) => {
+      this.extendBanks.set(banks ?? []);
+      this.extendCashAccounts.set(cashAccounts ?? []);
+      this.applyExtendPaymentTypeRules(this.extendPaymentMethod());
+    });
+  }
+
+  extendPaymentTypeIsCash(): boolean {
+    return Number(this.extendPaymentMethod()) === 1;
+  }
+
+  extendPaymentTypeIsBankOnly(): boolean {
+    const type = Number(this.extendPaymentMethod());
+    return [2, 3, 4].includes(type);
+  }
+
+  extendPaymentTypeIsMixed(): boolean {
+    return Number(this.extendPaymentMethod()) === 5;
+  }
+
+  private applyExtendPaymentTypeRules(type: number): void {
+    const banks = this.extendBanks();
+    const cashAccounts = this.extendCashAccounts();
+    const firstBankId = banks.length > 0 ? String(banks[0].id ?? '').trim() : '';
+    const firstCashId = cashAccounts.length > 0 ? String(cashAccounts[0].id ?? '').trim() : '';
+
+    if (type === 1) {
+      this.extendBankAccount.set('');
+      if (!this.extendBankCashAccount() && firstCashId) {
+        this.extendBankCashAccount.set(firstCashId);
+      }
+      this.extendPaidBank.set(0);
+      return;
+    }
+
+    if ([2, 3, 4].includes(type)) {
+      this.extendBankCashAccount.set('');
+      if (!this.extendBankAccount() && firstBankId) {
+        this.extendBankAccount.set(firstBankId);
+      }
+      this.extendPaidCash.set(0);
+      return;
+    }
+
+    if (!this.extendBankAccount() && firstBankId) {
+      this.extendBankAccount.set(firstBankId);
+    }
+    if (!this.extendBankCashAccount() && firstCashId) {
+      this.extendBankCashAccount.set(firstCashId);
+    }
+  }
+
+  private syncExtendAmountsFromType(): void {
+    const paid = Math.max(0, Number(this.extendCurrentPaymentAmount()) || 0);
+    const type = Number(this.extendPaymentMethod()) || 1;
+    if (type === 1) {
+      this.extendPaidCash.set(paid);
+      this.extendPaidBank.set(0);
+      return;
+    }
+    if ([2, 3, 4].includes(type)) {
+      this.extendPaidCash.set(0);
+      this.extendPaidBank.set(paid);
+      return;
+    }
+    const half = Math.round((paid / 2) * 100) / 100;
+    this.extendPaidCash.set(half);
+    this.extendPaidBank.set(Math.round((paid - half) * 100) / 100);
+  }
+
+  private setExtendRequiredAmountFromBooking(item: Booking): void {
+    const required = this.computeExtendRequiredAmount(item);
+    this.extendRequiredAmountValue.set(required);
+    // "Pay now" must always be user-entered only; never auto-filled.
+    this.syncExtendAmountsFromType();
+  }
+
+  /**
+   * Required amount in extension screen:
+   * - If return date not reached: current contract net (total with tax - discount).
+   * - If return date passed: accrued amount from start date to now (days * daily) + tax - discount.
+   */
+  private computeExtendRequiredAmount(item: Booking): number {
+    const contractNet = Math.max(0, Number(this.totalAfterDiscount(item) ?? 0) || 0);
+    const returnText = String(item.returnDate ?? item.endDate ?? '').trim();
+    const startText = String(item.startDate ?? '').trim();
+    const now = new Date();
+    const returnDate = returnText ? new Date(returnText) : null;
+    if (!returnDate || Number.isNaN(returnDate.getTime()) || now.getTime() <= returnDate.getTime()) {
+      return Math.round(contractNet * 100) / 100;
+    }
+
+    const startDate = startText ? new Date(startText) : null;
+    if (!startDate || Number.isNaN(startDate.getTime())) {
+      return Math.round(contractNet * 100) / 100;
+    }
+    const dayMs = 24 * 60 * 60 * 1000;
+    const elapsedMs = Math.max(0, now.getTime() - startDate.getTime());
+    const elapsedDays = Math.max(1, Math.ceil(elapsedMs / dayMs));
+    const daily = Math.max(0, Number(item.priceInDay ?? 0) || 0);
+    const tax = Math.max(0, Number(item.totaltax ?? 0) || 0);
+    const discount = Math.max(0, Number(item.discount ?? 0) || 0);
+    const accrued = Math.max(0, elapsedDays * daily + tax - discount);
+    return Math.round(accrued * 100) / 100;
+  }
+
+  private buildExtendMockBooking(): Booking {
+    return {
+      id: '1673',
+      numberBookingINBasame: '1673',
+      fleetId: this.authState.fleetId() ?? '',
+      customerId: '0',
+      customerName: 'سامر عايض مطلق الشلاحي المطيري',
+      vehicleId: '0',
+      vehiclePlateNumber: 'س ل ج 1953',
+      startDate: '2025-12-01T08:00:00',
+      endDate: '2025-12-31T13:01:00',
+      returnDate: '2025-12-31T13:01:00',
+      status: 'extension',
+      totalAmount: 0,
+      paidtotal: 0,
+      countingCustVehicleName: 'الصندوق الرئيسي',
+    };
+  }
+
   private paymentMethodArabicForPrint(value: number | null | undefined): string {
     switch (Number(value)) {
       case 1:
@@ -345,6 +690,31 @@ export class BookingDetailsComponent implements OnInit {
     return Number.isFinite(n) && n > 0 ? n : null;
   }
 
+  private normalizeGuidOrUndefined(value: string): string | undefined {
+    const normalized = String(value ?? '').trim().replace(/^\{|\}$/g, '');
+    if (!normalized) {
+      return undefined;
+    }
+    return /^[0-9a-fA-F]{8}(-?[0-9a-fA-F]{4}){3}-?[0-9a-fA-F]{12}$/.test(normalized)
+      ? normalized
+      : undefined;
+  }
+
+  private toExtensionDatePayment(value: string): string {
+    const text = String(value ?? '').trim();
+    if (!text) {
+      return new Date().toISOString();
+    }
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(text)) {
+      return `${text}:00`;
+    }
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/.test(text)) {
+      return text;
+    }
+    const parsed = new Date(text);
+    return Number.isNaN(parsed.getTime()) ? new Date().toISOString() : parsed.toISOString();
+  }
+
   private loadPaymentSummaryForBooking(booking: Booking): void {
     const fleetId = this.authState.fleetId() ?? '';
     const idBooking = this.toBookingNumericId(booking.id);
@@ -362,10 +732,16 @@ export class BookingDetailsComponent implements OnInit {
         this.paymentRows.set(normalizedList);
         if (sum !== null && Number.isFinite(sum)) {
           this.paymentCountSum.set(sum);
+          if (this.isExtendMode() && this.booking()) {
+            this.setExtendRequiredAmountFromBooking(this.booking()!);
+          }
           return;
         }
         const reduced = normalizedList.reduce((acc, row) => acc + (Number(row.paid) || 0), 0);
         this.paymentCountSum.set(Number.isFinite(reduced) ? reduced : null);
+        if (this.isExtendMode() && this.booking()) {
+          this.setExtendRequiredAmountFromBooking(this.booking()!);
+        }
       });
   }
 
@@ -561,8 +937,24 @@ export class BookingDetailsComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    const action = String(this.route.snapshot.queryParamMap.get('action') ?? '')
+      .trim()
+      .toLowerCase();
+    if (action === 'extend') {
+      this.isExtendMode.set(true);
+      this.paymentRows.set([]);
+      this.paymentCountSum.set(null);
+      this.loadExtendLookupData();
+    }
+
     const id = this.route.snapshot.paramMap.get('id');
     if (!id) {
+      if (this.isExtendMode()) {
+        const mock = this.buildExtendMockBooking();
+        this.booking.set(mock);
+        this.paymentCountSum.set(null);
+        this.setExtendRequiredAmountFromBooking(mock);
+      }
       return;
     }
 
@@ -570,9 +962,22 @@ export class BookingDetailsComponent implements OnInit {
     this.bookingService.getById(id, this.authState.fleetId() ?? '').subscribe({
       next: booking => {
         this.booking.set(booking);
+        if (this.isExtendMode()) {
+          this.setExtendRequiredAmountFromBooking(booking);
+          this.loadPaymentSummaryForBooking(booking);
+          return;
+        }
         this.loadPaymentSummaryForBooking(booking);
       },
-      error: () => this.toast.error(this.translate.instant('Failed to load booking')),
+      error: () => {
+        if (this.isExtendMode()) {
+          const mock = this.buildExtendMockBooking();
+          this.booking.set(mock);
+          this.setExtendRequiredAmountFromBooking(mock);
+          return;
+        }
+        this.toast.error(this.translate.instant('Failed to load booking'));
+      },
       complete: () => this.loading.set(false),
     });
   }
