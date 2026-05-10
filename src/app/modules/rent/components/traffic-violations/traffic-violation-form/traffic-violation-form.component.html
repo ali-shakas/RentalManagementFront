@@ -1,0 +1,80 @@
+<div class="container-fluid traffic-violation-form">
+  <app-page-header
+    [title]="(isEdit() ? 'trafficViolations.editTitle' : 'trafficViolations.createTitle') | translate"
+    [subtitle]="'trafficViolations.formSubtitle' | translate"
+  />
+
+  @if (initializing()) {
+    <div class="text-center py-5"><div class="spinner-border text-primary"></div></div>
+  } @else {
+    <div class="card">
+      <div class="card-body">
+        <form [formGroup]="form" (ngSubmit)="save()" class="row g-3" novalidate>
+          <div class="col-md-6">
+            <label class="form-label">{{ 'trafficViolations.fieldName' | translate }}</label>
+            <input class="form-control" type="text" formControlName="nameViolation" appFieldValueState />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">{{ 'trafficViolations.fieldNumber' | translate }}</label>
+            <input class="form-control" type="number" min="1" formControlName="numberViolation" appFieldValueState />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">{{ 'trafficViolations.fieldBooking' | translate }}</label>
+            <app-smooth-select
+              [ariaLabel]="'trafficViolations.fieldBooking' | translate"
+              [options]="bookingOptions()"
+              [value]="idBookingCtrl.value ?? ''"
+              (valueChange)="onBookingChange($event)"
+            />
+            @if (idBookingCtrl.invalid && idBookingCtrl.touched) {
+              <div class="invalid-feedback d-block">{{ 'This field is required' | translate }}</div>
+            }
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">{{ 'trafficViolations.fieldVehicle' | translate }}</label>
+            <input class="d-none" type="number" formControlName="idVehicle" tabindex="-1" aria-hidden="true" />
+            <div
+              class="traffic-violation-form__vehicle-readonly form-control d-flex align-items-center gap-2"
+              [class.traffic-violation-form__vehicle-readonly--empty]="!selectedVehicleLabel() && !loadingVehicle()"
+            >
+              @if (loadingVehicle()) {
+                <span class="spinner-border spinner-border-sm flex-shrink-0" role="status"></span>
+              }
+              <span class="text-truncate flex-grow-1">{{
+                selectedVehicleLabel() || ('trafficViolations.vehiclePlaceholder' | translate)
+              }}</span>
+            </div>
+            <div class="form-text">{{ 'trafficViolations.vehicleHint' | translate }}</div>
+            @if (idVehicleCtrl.invalid && idVehicleCtrl.touched) {
+              <div class="invalid-feedback d-block">{{ 'This field is required' | translate }}</div>
+            }
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">{{ 'trafficViolations.fieldDate' | translate }}</label>
+            <input class="form-control" type="datetime-local" formControlName="dateViolation" appFieldValueState />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">{{ 'trafficViolations.fieldFine' | translate }}</label>
+            <input class="form-control" type="number" min="0" step="0.01" formControlName="violationFine" appFieldValueState />
+          </div>
+          <div class="col-12">
+            <label class="form-label">{{ 'trafficViolations.fieldDescription' | translate }}</label>
+            <textarea class="form-control" rows="3" formControlName="description" appFieldValueState></textarea>
+          </div>
+          <div class="col-12 d-flex flex-wrap gap-2 justify-content-between pt-2">
+            <a class="btn btn-outline-secondary" routerLink="/traffic-violations">{{ 'Back' | translate }}</a>
+            <div class="d-flex gap-2">
+              <a class="btn btn-cancel" routerLink="/traffic-violations">{{ 'Cancel' | translate }}</a>
+              <button type="submit" class="btn btn-primary" [disabled]="saving()">
+                @if (saving()) {
+                  <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                }
+                {{ 'Save' | translate }}
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+</div>

@@ -244,6 +244,38 @@ const routes: Routes = [
     ],
   },
   {
+    path: 'traffic-violations',
+    data: {
+      title: 'Traffic Violations',
+      breadcrumb: 'Traffic Violations',
+      privileges: [APP_PRIVILEGES.booking, APP_PRIVILEGES.vehicle],
+    },
+    canActivate: [authGuard, privilegeGuard],
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./components/traffic-violations/traffic-violation-list/traffic-violation-list.component').then(
+            m => m.TrafficViolationListComponent,
+          ),
+      },
+      {
+        path: 'create',
+        loadComponent: () =>
+          import('./components/traffic-violations/traffic-violation-form/traffic-violation-form.component').then(
+            m => m.TrafficViolationFormComponent,
+          ),
+      },
+      {
+        path: ':id/edit',
+        loadComponent: () =>
+          import('./components/traffic-violations/traffic-violation-form/traffic-violation-form.component').then(
+            m => m.TrafficViolationFormComponent,
+          ),
+      },
+    ],
+  },
+  {
     path: 'settings',
     data: { title: 'Settings', breadcrumb: 'Settings' },
     canActivate: [authGuard],

@@ -4,6 +4,7 @@ export const SUPER_ADMIN_ALLOWED_PATHS = [
   '/users',
   '/roles',
   '/privileges',
+  '/traffic-violations',
 ] as const;
 
 export const SUPER_ADMIN_ALLOWED_ROUTE_ROOTS = [
@@ -12,4 +13,5 @@ export const SUPER_ADMIN_ALLOWED_ROUTE_ROOTS = [
   'users',
   'roles',
   'privileges',
+  'traffic-violations',
 ] as const;

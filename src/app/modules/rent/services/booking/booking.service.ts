@@ -22,13 +22,24 @@ export class BookingService {
   private api = inject(BaseService);
   private readonly base = 'Booking';
 
-  getList(params: { fleetId?: string | null; branchId?: number | null } = {}): Observable<Booking[]> {
+  getList(
+    params: {
+      fleetId?: string | null;
+      branchId?: number | null;
+      /**
+       * When true, sends an empty `Stutus` / `status` filter so the API can return bookings in every state
+       * (used by traffic violation booking picker).
+       */
+      includeAllStatuses?: boolean;
+    } = {},
+  ): Observable<Booking[]> {
     return this.api
       .getData<unknown[]>(
         `${this.base}/List`,
         {
           ...buildFleetQueryParams(params.fleetId, 'id'),
           BranchId: params.branchId ?? undefined,
+          ...(params.includeAllStatuses ? { Stutus: '', status: '' } : {}),
         },
         { suppressErrorToast: true },
       )
@@ -36,6 +47,18 @@ export class BookingService {
         map(items => (items ?? []).map(normalizeBooking)),
         catchError(() => of([])),
       );
+  }
+
+  /**
+   * `GetBookingsQuery` — `BookingRouting.List` → **`GET Booking/List`** (`IdFleet`, `BranchId`).
+   * Uses {@link getList} with **all statuses** so violations can be linked to any booking.
+   */
+  getBookings(params: { fleetId?: string | null; branchId: number }): Observable<Booking[]> {
+    return this.getList({
+      fleetId: params.fleetId,
+      branchId: params.branchId,
+      includeAllStatuses: true,
+    });
   }
 
   getPaginated(params: BookingFilters): Observable<PaginatedAggregatorResponse<Booking>> {
