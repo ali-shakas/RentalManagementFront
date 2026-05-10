@@ -1,6 +1,6 @@
 .bi-dashboard {
-  --bi-bg0: var(--app-dark-base, #0b2d3e);
-  --bi-bg1: color-mix(in srgb, var(--app-dark-base, #0b2d3e) 78%, black 22%);
+  --bi-bg0: var(--app-dark-base, #051a28);
+  --bi-bg1: color-mix(in srgb, var(--app-dark-base, #051a28) 78%, black 22%);
   --bi-glass: rgba(255, 255, 255, 0.06);
   --bi-glass-border: rgba(255, 255, 255, 0.12);
   --bi-text: #e8eefc;
@@ -10,7 +10,7 @@
   --bi-accent-c: #f97316;
   --bi-accent-d: #22c55e;
   --bi-radius: 20px;
-  --bi-shadow: 0 24px 60px color-mix(in srgb, var(--app-dark-base, #0b2d3e) 45%, black 55%);
+  --bi-shadow: 0 24px 60px color-mix(in srgb, var(--app-dark-base, #051a28) 45%, black 55%);
   padding-bottom: 2.5rem;
   color: var(--bi-text);
   background: radial-gradient(1200px 600px at 10% -10%, rgba(124, 58, 237, 0.28), transparent 55%),
@@ -19,7 +19,7 @@
       165deg,
       var(--bi-bg0),
       var(--bi-bg1) 45%,
-      color-mix(in srgb, var(--app-dark-base, #0b2d3e) 72%, black 28%)
+      color-mix(in srgb, var(--app-dark-base, #051a28) 72%, black 28%)
     );
   min-height: 100%;
 }
@@ -680,9 +680,9 @@ html[dir='rtl'] .bi-pbi__top-actions {
   border-radius: var(--bi-radius);
   background: linear-gradient(
     100deg,
-    color-mix(in srgb, var(--app-dark-base, #0d2d3e) 78%, black 22%) 0%,
-    var(--app-dark-base, #0d2d3e) 40%,
-    color-mix(in srgb, var(--app-dark-base, #0d2d3e) 58%, #0e7490 42%) 100%
+    color-mix(in srgb, var(--app-dark-base, #051a28) 78%, black 22%) 0%,
+    var(--app-dark-base, #051a28) 40%,
+    color-mix(in srgb, var(--app-dark-base, #051a28) 58%, #0e7490 42%) 100%
   );
   border: 1px solid rgba(148, 163, 184, 0.22);
   box-shadow: var(--bi-shadow);
@@ -868,10 +868,10 @@ html[dir='rtl'] .bi-pbi__shell {
   border: 1px solid rgba(148, 163, 184, 0.22);
   background: linear-gradient(
     165deg,
-    color-mix(in srgb, var(--app-dark-base, #0d2d3e) 62%, white 14%) 0%,
-    color-mix(in srgb, var(--app-dark-base, #0d2d3e) 48%, black 28%) 100%
+    color-mix(in srgb, var(--app-dark-base, #051a28) 62%, white 14%) 0%,
+    color-mix(in srgb, var(--app-dark-base, #051a28) 48%, black 28%) 100%
   );
-  box-shadow: 0 12px 32px color-mix(in srgb, var(--app-dark-base, #0d2d3e) 42%, black 58%);
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--app-dark-base, #051a28) 42%, black 58%);
   overflow: hidden;
 }
 
@@ -1034,8 +1034,8 @@ html[dir='rtl'] .bi-pbi__shell {
   border-radius: 50%;
   background: linear-gradient(
     165deg,
-    color-mix(in srgb, var(--app-dark-base, #0d2d3e) 92%, black 8%),
-    color-mix(in srgb, var(--app-dark-base, #0d2d3e) 72%, black 28%)
+    color-mix(in srgb, var(--app-dark-base, #051a28) 92%, black 8%),
+    color-mix(in srgb, var(--app-dark-base, #051a28) 72%, black 28%)
   );
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }

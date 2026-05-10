@@ -86,8 +86,8 @@ $font-awesome: FontAwesome;
 $font-ICO: IcoFont;
 $landing-header: #323c58;
 $landing-card-box-shadow: -13px 8px 41px rgba(42, 54, 80, 0.25);
-// dark layout — brand midnight teal navy (#0B2D3E, rgb 11 45 62)
-$dark-base: #0b2d3e;
+// dark layout — midnight teal (darker than legacy #0B2D3E for depth)
+$dark-base: #051a28;
 $dark-body-background: $dark-base;
 $dark-card-background: mix(#ffffff, $dark-base, 11%);
 $dark-background: mix(#ffffff, $dark-base, 15%);
