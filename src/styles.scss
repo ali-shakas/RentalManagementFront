@@ -5,6 +5,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
+  /* Dark theme brand base — overridden on `body.dark-only` */
+  --app-dark-base: #0b2d3e;
+  --app-dark-base-rgb: 11, 45, 62;
   --app-font-family: 'Inter', 'Cairo', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-size-h1: 1.75rem;
   --font-size-h2: 1.375rem;
@@ -126,12 +129,19 @@ body.light-only {
 }
 
 body.dark-only {
+  --app-dark-base: #0b2d3e;
+  --app-dark-base-rgb: 11, 45, 62;
   --app-page-bg-image: url('/assets/images/BG/dark.jpg');
   --app-page-bg-overlay:
-    linear-gradient(165deg, rgba(7, 13, 28, 0.78) 0%, rgba(10, 18, 35, 0.84) 52%, rgba(9, 16, 30, 0.88) 100%);
+    linear-gradient(
+      165deg,
+      rgba(var(--app-dark-base-rgb), 0.92) 0%,
+      rgba(var(--app-dark-base-rgb), 0.85) 48%,
+      rgba(7, 34, 48, 0.94) 100%
+    );
   --app-page-bg-accent:
-    radial-gradient(980px circle at 86% -12%, rgba(59, 130, 246, 0.2), transparent 60%),
-    radial-gradient(760px circle at -6% 108%, rgba(20, 184, 166, 0.14), transparent 62%);
+    radial-gradient(980px circle at 86% -12%, rgba(56, 189, 248, 0.14), transparent 58%),
+    radial-gradient(760px circle at -6% 108%, rgba(20, 184, 166, 0.12), transparent 62%);
 }
 
 .page-wrapper.compact-wrapper .page-body-wrapper {
@@ -340,26 +350,26 @@ html[dir='rtl'] .table-actions {
 }
 
 body.dark-only {
-  --app-table-border-color: rgba(148, 163, 184, 0.16);
-  --app-table-surface: linear-gradient(180deg, rgba(25, 32, 56, 0.96) 0%, rgba(23, 30, 52, 0.92) 100%);
-  --app-table-head-bg: rgba(45, 58, 96, 0.62);
+  --app-table-border-color: rgba(148, 189, 209, 0.18);
+  --app-table-surface: linear-gradient(180deg, rgba(15, 53, 73, 0.96) 0%, rgba(11, 45, 62, 0.94) 100%);
+  --app-table-head-bg: rgba(18, 72, 96, 0.72);
   --app-table-head-color: rgba(241, 245, 249, 0.88);
   --app-table-text-color: rgba(248, 250, 252, 0.92);
-  --app-table-muted-color: rgba(148, 163, 184, 0.82);
-  --app-table-row-alt: rgba(24, 34, 62, 0.9);
-  --app-table-row-hover: rgba(59, 130, 246, 0.14);
-  --app-table-shadow: 0 22px 48px -30px rgba(2, 6, 23, 0.8);
-  --app-table-action-surface: rgba(255, 255, 255, 0.04);
-  --app-form-hint-color: rgba(203, 213, 225, 0.94);
-  --app-form-label-color: rgba(241, 245, 249, 0.96);
-  --app-form-placeholder-color: rgba(148, 163, 184, 0.72);
-  --app-form-empty-bg: rgba(15, 23, 42, 0.24);
-  --app-form-empty-border: rgba(148, 163, 184, 0.3);
-  --app-form-empty-text: rgba(203, 213, 225, 0.82);
-  --app-form-filled-bg: rgba(37, 99, 235, 0.19);
-  --app-form-filled-border: rgba(96, 165, 250, 0.45);
+  --app-table-muted-color: rgba(165, 205, 222, 0.78);
+  --app-table-row-alt: rgba(11, 45, 62, 0.82);
+  --app-table-row-hover: rgba(56, 189, 248, 0.16);
+  --app-table-shadow: 0 22px 48px -30px rgba(2, 12, 20, 0.72);
+  --app-table-action-surface: rgba(255, 255, 255, 0.06);
+  --app-form-hint-color: rgba(203, 230, 240, 0.92);
+  --app-form-label-color: rgba(241, 249, 252, 0.96);
+  --app-form-placeholder-color: rgba(148, 187, 208, 0.72);
+  --app-form-empty-bg: rgba(11, 45, 62, 0.45);
+  --app-form-empty-border: rgba(129, 184, 212, 0.35);
+  --app-form-empty-text: rgba(203, 225, 235, 0.82);
+  --app-form-filled-bg: rgba(14, 116, 144, 0.22);
+  --app-form-filled-border: rgba(56, 189, 248, 0.42);
   --app-form-filled-text: rgba(248, 250, 252, 0.96);
-  --app-form-readonly-bg: rgba(59, 130, 246, 0.2);
+  --app-form-readonly-bg: rgba(14, 116, 144, 0.18);
   --app-sidebar-logo-filter: brightness(1.16) contrast(1.06) saturate(1.03);
   --app-sidebar-logo-opacity: 0.99;
   --app-btn-primary-bg: linear-gradient(135deg, #3d8bff 0%, #2f6ee4 50%, #214ec4 100%);
@@ -367,8 +377,8 @@ body.dark-only {
   --app-btn-primary-border: rgba(126, 184, 255, 0.58);
   --app-btn-primary-shadow: 0 12px 22px -14px rgba(22, 66, 168, 0.66);
   --app-btn-primary-shadow-hover: 0 16px 26px -12px rgba(40, 100, 228, 0.76);
-  --app-btn-outline-bg: linear-gradient(135deg, rgba(24, 36, 62, 0.84), rgba(14, 24, 48, 0.78));
-  --app-btn-outline-bg-hover: linear-gradient(135deg, rgba(33, 50, 84, 0.9), rgba(18, 31, 60, 0.86));
+  --app-btn-outline-bg: linear-gradient(135deg, rgba(15, 53, 73, 0.88), rgba(11, 45, 62, 0.82));
+  --app-btn-outline-bg-hover: linear-gradient(135deg, rgba(22, 66, 88, 0.92), rgba(14, 48, 66, 0.88));
   --app-btn-outline-border: rgba(125, 177, 255, 0.58);
   --app-btn-outline-border-hover: rgba(154, 198, 255, 0.86);
   --app-btn-outline-text: rgba(201, 227, 255, 0.95);
@@ -407,10 +417,10 @@ body.dark-only {
   .app-filter-field {
     --app-filter-select-border-color: rgba(100, 116, 139, 0.5);
     --app-filter-select-text: rgba(241, 245, 249, 0.95);
-    --app-filter-select-bg: linear-gradient(145deg, rgba(32, 44, 67, 0.94), rgba(16, 24, 40, 0.9));
-    --app-filter-select-bg-hover: linear-gradient(145deg, rgba(40, 55, 84, 0.96), rgba(19, 29, 49, 0.94));
+    --app-filter-select-bg: linear-gradient(145deg, rgba(15, 53, 73, 0.94), rgba(11, 45, 62, 0.9));
+    --app-filter-select-bg-hover: linear-gradient(145deg, rgba(22, 66, 88, 0.96), rgba(11, 45, 62, 0.94));
     --app-filter-select-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%2393c5fd' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M3 6l5 5 5-5'/%3E%3C/svg%3E");
-    --app-filter-option-bg: rgba(15, 23, 42, 0.98);
+    --app-filter-option-bg: rgba(8, 38, 52, 0.98);
     --app-filter-option-color: rgba(241, 245, 249, 0.96);
     --app-filter-select-radius: 15px;
     --app-filter-select-shadow:
@@ -420,12 +430,12 @@ body.dark-only {
       0 16px 26px -18px rgba(59, 130, 246, 0.38),
       inset 0 1px 0 rgba(255, 255, 255, 0.14);
     border-color: rgba(100, 116, 139, 0.38);
-    background: linear-gradient(160deg, rgba(30, 41, 59, 0.76), rgba(15, 23, 42, 0.66));
+    background: linear-gradient(160deg, rgba(15, 53, 73, 0.82), rgba(11, 45, 62, 0.72));
     box-shadow: 0 14px 24px -20px rgba(2, 6, 23, 0.68);
 
     .form-control {
       border-color: rgba(100, 116, 139, 0.45);
-      background-color: rgba(15, 23, 42, 0.5);
+      background-color: rgba(11, 45, 62, 0.55);
       color: rgba(241, 245, 249, 0.94);
     }
 
@@ -474,7 +484,7 @@ body.dark-only {
     }
 
     .form-control:focus {
-      background-color: rgba(30, 64, 175, 0.2);
+      background-color: rgba(14, 116, 144, 0.28);
     }
 
     .form-select:focus {
@@ -491,15 +501,15 @@ body.dark-only {
 }
 
 body.dark-only .table-striped > tbody > tr:nth-of-type(odd) > * {
-  background-color: rgba(24, 34, 62, 0.92) !important;
+  background-color: rgba(11, 45, 62, 0.88) !important;
 }
 
 body.dark-only .table-striped > tbody > tr:nth-of-type(even) > * {
-  background-color: rgba(16, 24, 46, 0.94) !important;
+  background-color: rgba(14, 54, 74, 0.92) !important;
 }
 
 body.dark-only .table-hover > tbody > tr:hover > * {
-  background-color: rgba(45, 96, 190, 0.28) !important;
+  background-color: rgba(14, 165, 233, 0.22) !important;
   color: var(--app-table-text-color) !important;
 }
 
