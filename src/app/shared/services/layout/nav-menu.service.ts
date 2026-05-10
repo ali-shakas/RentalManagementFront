@@ -66,6 +66,15 @@ export class NavMenuService {
     },
     {
       level: 1,
+      path: '/traffic-violations',
+      title: 'trafficViolations.title',
+      icon: 'sample-page',
+      imageIcon: 'assets/images/rent_icon/Vehicles.png',
+      type: 'link',
+      privileges: [APP_PRIVILEGES.booking, APP_PRIVILEGES.vehicle],
+    },
+    {
+      level: 1,
       path: '/customers',
       title: 'Customers',
       icon: 'sample-page',

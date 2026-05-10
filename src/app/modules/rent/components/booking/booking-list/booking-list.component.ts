@@ -97,7 +97,7 @@ export class BookingListComponent implements OnInit {
   ]);
   colorGuide = [
     { key: 'extension', label: 'تمديد', color: '#F59E0B' },
-    { key: 'finsh', label: 'إنهاء', color: '#16A34A' },
+    { key: 'finsh', label: 'مصفى', color: '#16A34A' },
     { key: 'close', label: 'إغلاق', color: '#6B7280' },
     { key: 'suspend', label: 'تعليق', color: '#111827' },
     { key: 'debts', label: 'ذمم', color: '#DC2626' },
