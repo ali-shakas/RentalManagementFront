@@ -1,0 +1,61 @@
+/**
+ * Global loading indicator: all Bootstrap `.spinner-border` / `.spinner-grow`
+ * use `public/assets/images/rent_icon/car-loading.gif` (served as `/assets/...`).
+ */
+:root {
+  --app-loading-gif-url: url('/assets/images/rent_icon/car-loading.gif');
+}
+
+.spinner-border,
+.spinner-grow {
+  vertical-align: middle;
+  color: transparent !important;
+  border: none !important;
+  border-radius: 0.25rem;
+  background-color: transparent;
+  background-image: var(--app-loading-gif-url);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  animation: none !important;
+  opacity: 1 !important;
+}
+
+.spinner-border {
+  width: 3.5rem;
+  height: 3.5rem;
+  max-width: 100%;
+}
+
+.spinner-border-sm {
+  width: 1.375rem;
+  height: 1.375rem;
+  min-width: 1.375rem;
+  min-height: 1.375rem;
+}
+
+.spinner-grow {
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+.spinner-grow::before {
+  display: none !important;
+}
+
+/** Optional: use without Bootstrap spinner markup */
+.app-loading-gif {
+  display: inline-block;
+  vertical-align: middle;
+  width: 3.5rem;
+  height: 3.5rem;
+  max-width: 100%;
+  background: var(--app-loading-gif-url) center / contain no-repeat;
+}
+
+.app-loading-gif--sm {
+  width: 1.375rem;
+  height: 1.375rem;
+  min-width: 1.375rem;
+  min-height: 1.375rem;
+}

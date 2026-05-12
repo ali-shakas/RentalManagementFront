@@ -188,10 +188,18 @@ export class BookingListComponent implements OnInit {
     return booking.status !== 'finsh' && booking.status !== 'close';
   }
 
+  /** عقد مصفى أو مغلق — يبقى العرض والطباعة فقط. */
+  bookingCardActionsLocked(booking: Booking): boolean {
+    return !this.canFinishBooking(booking);
+  }
+
   onCardAction(
     action: BookingCardAction,
     booking: Booking,
   ): void {
+    if (!this.canFinishBooking(booking) && action !== 'print') {
+      return;
+    }
     if (action === 'edit') {
       this.router.navigate(['/booking', booking.id, 'edit']);
       return;

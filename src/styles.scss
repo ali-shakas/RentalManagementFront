@@ -1,14 +1,15 @@
 /* You can add global styles to this file, and also import other style files */
 @import '../public/assets/scss/app.scss';
+@import './styles/app-loading-global';
 @import './styles/sidebar-layout-overrides';
 @import './styles/sidebar-rtl-overrides';
 @import './styles/sidebar-ltr-overrides';
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-  /* Dark theme brand base — overridden on `body.dark-only` */
-  --app-dark-base: #051a28;
-  --app-dark-base-rgb: 5, 26, 40;
+  /* Default dark-base token (overridden on `body.dark-only`) — Midnight Cyber Emerald */
+  --app-dark-base: #050816;
+  --app-dark-base-rgb: 5, 8, 22;
   --app-font-family: 'Inter', 'Cairo', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-size-h1: 1.75rem;
   --font-size-h2: 1.375rem;
@@ -130,25 +131,29 @@ body.light-only {
 }
 
 body.dark-only {
-  --app-dark-base: #051a28;
-  --app-dark-base-rgb: 5, 26, 40;
+  --app-dark-base: #050816;
+  --app-dark-base-rgb: 5, 8, 22;
+  --app-dark-surface: #0a1929;
+  --app-dark-card: #102436;
+  --app-dark-accent-emerald: #10b981;
+  --app-dark-accent-cyan: #06b6d4;
+  --app-dark-text: #ecfeff;
+  --app-dark-text-secondary: #a5f3fc;
+  --app-dark-text-muted: #67e8f9;
+  color: #ecfeff;
   --app-page-bg-image: url('/assets/images/BG/dark.jpg');
   --app-page-bg-overlay:
     linear-gradient(
-      172deg,
-      rgba(var(--app-dark-base-rgb), 0.97) 0%,
-      rgba(2, 14, 24, 0.98) 20%,
-      rgba(var(--app-dark-base-rgb), 0.91) 42%,
-      rgba(3, 20, 32, 0.96) 62%,
-      rgba(var(--app-dark-base-rgb), 0.88) 82%,
-      rgba(1, 9, 16, 0.99) 100%
+      135deg,
+      rgba(5, 8, 22, 0.94) 0%,
+      rgba(7, 27, 34, 0.9) 25%,
+      rgba(10, 25, 41, 0.88) 55%,
+      rgba(16, 36, 54, 0.86) 100%
     );
   --app-page-bg-accent:
-    radial-gradient(ellipse 130% 44% at 50% -12%, rgba(16, 90, 108, 0.1), transparent 56%),
-    radial-gradient(ellipse 96% 46% at 6% 104%, rgba(10, 72, 68, 0.07), transparent 52%),
-    radial-gradient(ellipse 90% 38% at 96% 48%, rgba(20, 68, 96, 0.08), transparent 50%),
-    radial-gradient(920px circle at 82% -8%, rgba(32, 120, 148, 0.07), transparent 58%),
-    radial-gradient(720px circle at -4% 102%, rgba(14, 88, 82, 0.055), transparent 62%);
+    radial-gradient(circle at top right, rgba(6, 182, 212, 0.15), transparent 25%),
+    radial-gradient(circle at bottom left, rgba(16, 185, 129, 0.12), transparent 30%),
+    linear-gradient(135deg, rgba(3, 7, 18, 0.92), rgba(7, 27, 34, 0.9), rgba(10, 25, 41, 0.88), rgba(16, 36, 54, 0.85));
 }
 
 .page-wrapper.compact-wrapper .page-body-wrapper {
@@ -240,6 +245,22 @@ body.dark-only {
   stroke: currentColor;
 }
 
+body.dark-only .tap-top {
+  border: 1px solid rgba(6, 182, 212, 0.35);
+  background: linear-gradient(135deg, #0a1929, rgba(16, 185, 129, 0.45));
+  color: #ecfeff;
+  box-shadow:
+    0 14px 26px -18px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+body.dark-only .tap-top:hover {
+  box-shadow:
+    0 18px 30px -18px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  filter: brightness(1.05);
+}
+
 html[dir='rtl'] .tap-top {
   right: auto !important;
   left: 18px !important;
@@ -262,6 +283,48 @@ body.light-only .page-wrapper.compact-wrapper .page-body-wrapper .form-select {
   background-color: rgba(255, 255, 255, 0.92) !important;
   color: rgba(15, 23, 42, 0.96) !important;
   border-color: rgba(148, 163, 184, 0.24) !important;
+}
+
+body.dark-only .page-wrapper.compact-wrapper .page-body-wrapper .card,
+body.dark-only .page-wrapper.compact-wrapper .page-body-wrapper .app-filter-field,
+body.dark-only .page-wrapper.compact-wrapper .page-body-wrapper .app-pagination-bar,
+body.dark-only .page-wrapper.compact-wrapper .page-body-wrapper .table-responsive,
+body.dark-only .page-wrapper.compact-wrapper .page-body-wrapper .modal-content,
+body.dark-only .page-wrapper.compact-wrapper .page-body-wrapper .dropdown-menu,
+body.dark-only .page-wrapper.compact-wrapper .page-body-wrapper .swal2-popup {
+  background: rgba(16, 36, 54, 0.72) !important;
+  border: 1px solid rgba(6, 182, 212, 0.08) !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.45) !important;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+}
+
+body.dark-only .page-wrapper.compact-wrapper .page-body-wrapper .card:hover,
+body.dark-only .page-wrapper.compact-wrapper .page-body-wrapper .app-filter-field:hover,
+body.dark-only .page-wrapper.compact-wrapper .page-body-wrapper .table-responsive:hover {
+  background: rgba(6, 182, 212, 0.08) !important;
+  border-color: rgba(6, 182, 212, 0.14) !important;
+}
+
+body.dark-only .page-wrapper.compact-wrapper .page-body-wrapper .form-control,
+body.dark-only .page-wrapper.compact-wrapper .page-body-wrapper .form-select {
+  background-color: rgba(16, 36, 54, 0.65) !important;
+  color: #ecfeff !important;
+  border: 1px solid rgba(6, 182, 212, 0.08) !important;
+}
+
+body.dark-only .page-wrapper.compact-wrapper .page-body-wrapper .form-control:focus,
+body.dark-only .page-wrapper.compact-wrapper .page-body-wrapper .form-select:focus {
+  box-shadow: 0 0 0 4px rgba(6, 182, 212, 0.15) !important;
+  border-color: rgba(6, 182, 212, 0.22) !important;
+}
+
+body.dark-only .page-wrapper.compact-wrapper .page-body-wrapper .form-control::placeholder {
+  color: rgba(103, 232, 249, 0.55) !important;
 }
 
 body.light-only .page-wrapper.compact-wrapper .page-body-wrapper .form-control::placeholder {
@@ -358,52 +421,52 @@ html[dir='rtl'] .table-actions {
 }
 
 body.dark-only {
-  --app-table-border-color: rgba(148, 189, 209, 0.18);
-  --app-table-surface: linear-gradient(180deg, rgba(8, 40, 56, 0.96) 0%, rgba(5, 26, 40, 0.94) 100%);
-  --app-table-head-bg: rgba(18, 72, 96, 0.72);
-  --app-table-head-color: rgba(241, 245, 249, 0.88);
-  --app-table-text-color: rgba(248, 250, 252, 0.92);
-  --app-table-muted-color: rgba(165, 205, 222, 0.78);
-  --app-table-row-alt: rgba(5, 26, 40, 0.82);
-  --app-table-row-hover: rgba(56, 189, 248, 0.16);
-  --app-table-shadow: 0 22px 48px -30px rgba(2, 12, 20, 0.72);
-  --app-table-action-surface: rgba(255, 255, 255, 0.06);
-  --app-form-hint-color: rgba(203, 230, 240, 0.92);
-  --app-form-label-color: rgba(241, 249, 252, 0.96);
-  --app-form-placeholder-color: rgba(148, 187, 208, 0.72);
-  --app-form-empty-bg: rgba(5, 26, 40, 0.45);
-  --app-form-empty-border: rgba(129, 184, 212, 0.35);
-  --app-form-empty-text: rgba(203, 225, 235, 0.82);
-  --app-form-filled-bg: rgba(14, 116, 144, 0.22);
-  --app-form-filled-border: rgba(56, 189, 248, 0.42);
-  --app-form-filled-text: rgba(248, 250, 252, 0.96);
-  --app-form-readonly-bg: rgba(14, 116, 144, 0.18);
-  --app-sidebar-logo-filter: brightness(1.16) contrast(1.06) saturate(1.03);
-  --app-sidebar-logo-opacity: 0.99;
-  --app-btn-primary-bg: linear-gradient(135deg, #3d8bff 0%, #2f6ee4 50%, #214ec4 100%);
-  --app-btn-primary-bg-hover: linear-gradient(135deg, #539dff 0%, #3c7ef0 50%, #2a5cd4 100%);
-  --app-btn-primary-border: rgba(126, 184, 255, 0.58);
-  --app-btn-primary-shadow: 0 12px 22px -14px rgba(22, 66, 168, 0.66);
-  --app-btn-primary-shadow-hover: 0 16px 26px -12px rgba(40, 100, 228, 0.76);
-  --app-btn-outline-bg: linear-gradient(135deg, rgba(8, 40, 56, 0.88), rgba(5, 26, 40, 0.82));
-  --app-btn-outline-bg-hover: linear-gradient(135deg, rgba(22, 66, 88, 0.92), rgba(14, 48, 66, 0.88));
-  --app-btn-outline-border: rgba(125, 177, 255, 0.58);
-  --app-btn-outline-border-hover: rgba(154, 198, 255, 0.86);
-  --app-btn-outline-text: rgba(201, 227, 255, 0.95);
-  --app-btn-outline-text-hover: #ffffff;
-  --app-btn-outline-shadow: 0 10px 18px -14px rgba(15, 23, 42, 0.58);
-  --app-btn-outline-shadow-hover: 0 14px 22px -12px rgba(30, 64, 175, 0.5);
-  --app-btn-cancel-bg: linear-gradient(135deg, rgba(97, 29, 37, 0.9), rgba(76, 23, 30, 0.88));
-  --app-btn-cancel-bg-hover: linear-gradient(135deg, rgba(120, 33, 46, 0.94), rgba(90, 26, 36, 0.92));
-  --app-btn-cancel-border: rgba(248, 113, 113, 0.46);
-  --app-btn-cancel-border-hover: rgba(252, 165, 165, 0.62);
-  --app-btn-cancel-text: rgba(254, 226, 226, 0.95);
+  --app-table-border-color: rgba(6, 182, 212, 0.1);
+  --app-table-surface: linear-gradient(180deg, rgba(16, 36, 54, 0.72) 0%, rgba(10, 25, 41, 0.88) 100%);
+  --app-table-head-bg: #0f2233;
+  --app-table-head-color: #a5f3fc;
+  --app-table-text-color: #ecfeff;
+  --app-table-muted-color: rgba(103, 232, 249, 0.82);
+  --app-table-row-alt: rgba(16, 36, 54, 0.35);
+  --app-table-row-hover: rgba(6, 182, 212, 0.06);
+  --app-table-shadow: 0 22px 48px -28px rgba(0, 0, 0, 0.55);
+  --app-table-action-surface: rgba(16, 36, 54, 0.65);
+  --app-form-hint-color: rgba(103, 232, 249, 0.88);
+  --app-form-label-color: #ecfeff;
+  --app-form-placeholder-color: rgba(103, 232, 249, 0.52);
+  --app-form-empty-bg: rgba(16, 36, 54, 0.4);
+  --app-form-empty-border: rgba(6, 182, 212, 0.08);
+  --app-form-empty-text: rgba(165, 243, 252, 0.82);
+  --app-form-filled-bg: rgba(16, 36, 54, 0.55);
+  --app-form-filled-border: rgba(6, 182, 212, 0.12);
+  --app-form-filled-text: #ecfeff;
+  --app-form-readonly-bg: rgba(16, 36, 54, 0.5);
+  --app-sidebar-logo-filter: brightness(1.08) contrast(1.04) saturate(1.02);
+  --app-sidebar-logo-opacity: 0.98;
+  --app-btn-primary-bg: linear-gradient(135deg, #0a1929 0%, #102436 42%, rgba(16, 185, 129, 0.55) 100%);
+  --app-btn-primary-bg-hover: linear-gradient(135deg, #102436 0%, #0a1929 38%, rgba(6, 182, 212, 0.35) 100%);
+  --app-btn-primary-border: rgba(6, 182, 212, 0.35);
+  --app-btn-primary-shadow: 0 12px 28px -14px rgba(0, 0, 0, 0.5);
+  --app-btn-primary-shadow-hover: 0 16px 32px -12px rgba(6, 182, 212, 0.2);
+  --app-btn-outline-bg: linear-gradient(135deg, rgba(16, 36, 54, 0.88), rgba(5, 8, 22, 0.85));
+  --app-btn-outline-bg-hover: linear-gradient(135deg, rgba(6, 182, 212, 0.1), rgba(16, 36, 54, 0.9));
+  --app-btn-outline-border: rgba(6, 182, 212, 0.22);
+  --app-btn-outline-border-hover: rgba(6, 182, 212, 0.38);
+  --app-btn-outline-text: rgba(236, 254, 255, 0.94);
+  --app-btn-outline-text-hover: #ecfeff;
+  --app-btn-outline-shadow: 0 10px 22px -14px rgba(0, 0, 0, 0.45);
+  --app-btn-outline-shadow-hover: 0 14px 28px -12px rgba(6, 182, 212, 0.15);
+  --app-btn-cancel-bg: linear-gradient(135deg, rgba(72, 28, 32, 0.92), rgba(52, 20, 24, 0.9));
+  --app-btn-cancel-bg-hover: linear-gradient(135deg, rgba(90, 32, 38, 0.94), rgba(62, 24, 28, 0.92));
+  --app-btn-cancel-border: rgba(239, 68, 68, 0.38);
+  --app-btn-cancel-border-hover: rgba(248, 113, 113, 0.48);
+  --app-btn-cancel-text: rgba(254, 226, 226, 0.94);
   --app-btn-cancel-text-hover: #fff1f2;
-  --app-btn-cancel-shadow: 0 10px 18px -14px rgba(248, 113, 113, 0.36);
-  --app-btn-cancel-shadow-hover: 0 14px 22px -12px rgba(248, 113, 113, 0.5);
-  --app-btn-cancel-focus-ring: 0 0 0 0.18rem rgba(248, 113, 113, 0.3);
-  --app-btn-focus-ring: 0 0 0 0.18rem rgba(96, 165, 250, 0.28);
-  --app-btn-focus-shadow: 0 12px 20px -14px rgba(59, 130, 246, 0.36);
+  --app-btn-cancel-shadow: 0 10px 18px -14px rgba(0, 0, 0, 0.4);
+  --app-btn-cancel-shadow-hover: 0 14px 22px -12px rgba(127, 29, 29, 0.35);
+  --app-btn-cancel-focus-ring: 0 0 0 0.18rem rgba(239, 68, 68, 0.26);
+  --app-btn-focus-ring: 0 0 0 4px rgba(6, 182, 212, 0.15);
+  --app-btn-focus-shadow: 0 12px 24px -14px rgba(6, 182, 212, 0.18);
 
   .table-action-icon {
     border-color: var(--app-table-border-color);
@@ -423,28 +486,28 @@ body.dark-only {
   }
 
   .app-filter-field {
-    --app-filter-select-border-color: rgba(100, 116, 139, 0.26);
-    --app-filter-select-text: rgba(241, 245, 249, 0.95);
-    --app-filter-select-bg: linear-gradient(145deg, rgba(8, 40, 56, 0.72), rgba(5, 26, 40, 0.62));
-    --app-filter-select-bg-hover: linear-gradient(145deg, rgba(12, 48, 64, 0.82), rgba(5, 26, 40, 0.72));
-    --app-filter-select-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%2389a8b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M3 6l5 5 5-5'/%3E%3C/svg%3E");
-    --app-filter-option-bg: rgba(5, 22, 34, 0.98);
-    --app-filter-option-color: rgba(241, 245, 249, 0.96);
+    --app-filter-select-border-color: rgba(6, 182, 212, 0.12);
+    --app-filter-select-text: #ecfeff;
+    --app-filter-select-bg: linear-gradient(145deg, rgba(16, 36, 54, 0.88), rgba(5, 8, 22, 0.82));
+    --app-filter-select-bg-hover: linear-gradient(145deg, rgba(6, 182, 212, 0.1), rgba(16, 36, 54, 0.9));
+    --app-filter-select-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%2367e8f9' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M3 6l5 5 5-5'/%3E%3C/svg%3E");
+    --app-filter-option-bg: rgba(3, 7, 18, 0.98);
+    --app-filter-option-color: #ecfeff;
     --app-filter-select-radius: 15px;
     --app-filter-select-shadow:
-      0 8px 18px -14px rgba(2, 6, 23, 0.45),
-      inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      0 8px 18px -14px rgba(0, 0, 0, 0.5),
+      inset 0 1px 0 rgba(255, 255, 255, 0.04);
     --app-filter-select-shadow-hover:
-      0 12px 22px -14px rgba(2, 12, 20, 0.5),
-      inset 0 1px 0 rgba(255, 255, 255, 0.08);
-    border-color: rgba(100, 116, 139, 0.22);
-    background: linear-gradient(160deg, rgba(8, 40, 56, 0.45), rgba(5, 26, 40, 0.32));
-    box-shadow: 0 10px 22px -18px rgba(2, 6, 23, 0.42);
+      0 12px 22px -14px rgba(0, 0, 0, 0.55),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    border-color: rgba(6, 182, 212, 0.1);
+    background: linear-gradient(160deg, rgba(16, 36, 54, 0.55), rgba(5, 8, 22, 0.42));
+    box-shadow: 0 10px 22px -18px rgba(0, 0, 0, 0.45);
 
     .form-control {
-      border-color: rgba(100, 116, 139, 0.28);
-      background-color: rgba(5, 26, 40, 0.42);
-      color: rgba(241, 245, 249, 0.94);
+      border-color: rgba(6, 182, 212, 0.08);
+      background-color: rgba(16, 36, 54, 0.65);
+      color: #ecfeff;
     }
 
     .form-select {
@@ -466,7 +529,7 @@ body.dark-only {
     }
 
     .form-select:hover:not(:disabled) {
-      border-color: rgba(100, 130, 148, 0.38);
+      border-color: rgba(6, 182, 212, 0.22);
       background:
         var(--app-filter-select-icon) no-repeat right 0.78rem center / 0.76rem,
         var(--app-filter-select-bg-hover);
@@ -480,19 +543,19 @@ body.dark-only {
     }
 
     .form-control::placeholder {
-      color: rgba(148, 163, 184, 0.82);
+      color: rgba(103, 232, 249, 0.55);
     }
 
     .form-select:focus,
     .form-control:focus {
-      border-color: rgba(100, 130, 148, 0.45);
+      border-color: rgba(6, 182, 212, 0.28);
       box-shadow:
-        0 0 0 0.14rem rgba(56, 120, 140, 0.18),
+        0 0 0 4px rgba(6, 182, 212, 0.15),
         var(--app-filter-select-shadow-hover);
     }
 
     .form-control:focus {
-      background-color: rgba(14, 116, 144, 0.28);
+      background-color: rgba(16, 36, 54, 0.72);
     }
 
     .form-select:focus {
@@ -503,34 +566,34 @@ body.dark-only {
   }
 
   .app-search-btn {
-    border-color: rgba(100, 130, 148, 0.38);
-    box-shadow: 0 10px 18px -14px rgba(2, 12, 20, 0.4);
+    border-color: rgba(6, 182, 212, 0.28);
+    box-shadow: 0 10px 18px -14px rgba(0, 0, 0, 0.45);
   }
 }
 
 html[data-bs-theme='dark'] .app-filter-field {
-  --app-filter-select-border-color: rgba(100, 116, 139, 0.26);
-  --app-filter-select-text: rgba(241, 245, 249, 0.95);
-  --app-filter-select-bg: linear-gradient(145deg, rgba(8, 40, 56, 0.72), rgba(5, 26, 40, 0.62));
-  --app-filter-select-bg-hover: linear-gradient(145deg, rgba(12, 48, 64, 0.82), rgba(5, 26, 40, 0.72));
-  --app-filter-select-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%2389a8b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M3 6l5 5 5-5'/%3E%3C/svg%3E");
-  --app-filter-option-bg: rgba(5, 22, 34, 0.98);
-  --app-filter-option-color: rgba(241, 245, 249, 0.96);
+  --app-filter-select-border-color: rgba(6, 182, 212, 0.12);
+  --app-filter-select-text: #ecfeff;
+  --app-filter-select-bg: linear-gradient(145deg, rgba(16, 36, 54, 0.88), rgba(5, 8, 22, 0.82));
+  --app-filter-select-bg-hover: linear-gradient(145deg, rgba(6, 182, 212, 0.1), rgba(16, 36, 54, 0.9));
+  --app-filter-select-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%2367e8f9' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M3 6l5 5 5-5'/%3E%3C/svg%3E");
+  --app-filter-option-bg: rgba(3, 7, 18, 0.98);
+  --app-filter-option-color: #ecfeff;
   --app-filter-select-radius: 15px;
   --app-filter-select-shadow:
-    0 8px 18px -14px rgba(2, 6, 23, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    0 8px 18px -14px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
   --app-filter-select-shadow-hover:
-    0 12px 22px -14px rgba(2, 12, 20, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  border-color: rgba(100, 116, 139, 0.22);
-  background: linear-gradient(160deg, rgba(8, 40, 56, 0.45), rgba(5, 26, 40, 0.32));
-  box-shadow: 0 10px 22px -18px rgba(2, 6, 23, 0.42);
+    0 12px 22px -14px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  border-color: rgba(6, 182, 212, 0.1);
+  background: linear-gradient(160deg, rgba(16, 36, 54, 0.55), rgba(5, 8, 22, 0.42));
+  box-shadow: 0 10px 22px -18px rgba(0, 0, 0, 0.45);
 
   .form-control {
-    border-color: rgba(100, 116, 139, 0.28);
-    background-color: rgba(5, 26, 40, 0.42);
-    color: rgba(241, 245, 249, 0.94);
+    border-color: rgba(6, 182, 212, 0.08);
+    background-color: rgba(16, 36, 54, 0.65);
+    color: #ecfeff;
   }
 
   .form-select {
@@ -552,7 +615,7 @@ html[data-bs-theme='dark'] .app-filter-field {
   }
 
   .form-select:hover:not(:disabled) {
-    border-color: rgba(100, 130, 148, 0.38);
+    border-color: rgba(6, 182, 212, 0.22);
     background:
       var(--app-filter-select-icon) no-repeat right 0.78rem center / 0.76rem,
       var(--app-filter-select-bg-hover);
@@ -566,19 +629,19 @@ html[data-bs-theme='dark'] .app-filter-field {
   }
 
   .form-control::placeholder {
-    color: rgba(148, 163, 184, 0.82);
+    color: rgba(103, 232, 249, 0.55);
   }
 
   .form-select:focus,
   .form-control:focus {
-    border-color: rgba(100, 130, 148, 0.45);
+    border-color: rgba(6, 182, 212, 0.28);
     box-shadow:
-      0 0 0 0.14rem rgba(56, 120, 140, 0.18),
+      0 0 0 4px rgba(6, 182, 212, 0.15),
       var(--app-filter-select-shadow-hover);
   }
 
   .form-control:focus {
-    background-color: rgba(14, 116, 144, 0.28);
+    background-color: rgba(16, 36, 54, 0.72);
   }
 
   .form-select:focus {
@@ -589,15 +652,15 @@ html[data-bs-theme='dark'] .app-filter-field {
 }
 
 body.dark-only .table-striped > tbody > tr:nth-of-type(odd) > * {
-  background-color: rgba(5, 26, 40, 0.88) !important;
+  background-color: rgba(16, 36, 54, 0.42) !important;
 }
 
 body.dark-only .table-striped > tbody > tr:nth-of-type(even) > * {
-  background-color: rgba(14, 54, 74, 0.92) !important;
+  background-color: rgba(16, 36, 54, 0.55) !important;
 }
 
 body.dark-only .table-hover > tbody > tr:hover > * {
-  background-color: rgba(14, 165, 233, 0.22) !important;
+  background-color: rgba(6, 182, 212, 0.06) !important;
   color: var(--app-table-text-color) !important;
 }
 

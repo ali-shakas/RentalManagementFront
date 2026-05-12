@@ -7,6 +7,7 @@ import { finalize } from 'rxjs';
 
 import { AuthStateService } from '../../core/auth/auth-state.service';
 import { AuthService } from '../../shared/services/auth/auth.service';
+import { AppShellLoadingService } from '../../shared/services/app-shell-loading.service';
 import { TokenService } from '../../shared/services/storage/token.service';
 import { ToastService } from '../../shared/services/toast.service';
 import { focusFirstInvalidControl } from '../../shared/utils/focus-first-invalid-control.util';
@@ -36,6 +37,7 @@ export class LoginComponent implements OnInit {
   private tokenService = inject(TokenService);
   private toast = inject(ToastService);
   private translate = inject(TranslateService);
+  private appShellLoading = inject(AppShellLoadingService);
 
   loading = false;
   loginDisabled = false;
@@ -91,6 +93,7 @@ export class LoginComponent implements OnInit {
               }
 
               this.toast.success(this.translate.instant('Login successful'));
+              this.appShellLoading.enterPostAuthTransition();
               this.router.navigate(['/dashboard']);
             } else {
               const msg = this.resolveLoginError(result.message);

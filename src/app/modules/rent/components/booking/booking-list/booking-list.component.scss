@@ -856,6 +856,11 @@ html[dir='rtl'] .booking-card__actions {
   background: rgba(148, 163, 184, 0.2);
 }
 
+.booking-card__menu-item:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .booking-card__menu-item i {
   width: 1.1rem;
   text-align: center;
@@ -1261,6 +1266,12 @@ html[dir='rtl'] .booking-card__actions {
 
   .booking-card__menu-item:hover {
     background: rgba(59, 130, 246, 0.16);
+  }
+
+  .booking-card__menu-item:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    color: rgba(148, 163, 184, 0.55);
   }
 
   .booking-card__action:disabled {

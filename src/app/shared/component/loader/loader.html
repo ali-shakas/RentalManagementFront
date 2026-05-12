@@ -1,5 +1,15 @@
-<div class="loader-wrapper" [class.loderhide]="!show">
-  <div class="theme-loader">
-    <div class="loader-p"></div>
+@if (display()) {
+  <div class="loading-screen" [class.hide]="hiding()">
+    <div class="overlay" aria-hidden="true"></div>
+
+    <div class="content">
+      <img [src]="carSrc()" class="car-image" alt="" role="presentation" (error)="onCarImgError()" />
+
+      <div class="loading-text">{{ 'App shell loading tagline' | translate }}</div>
+
+      <div class="loading-bar" aria-hidden="true">
+        <div class="loading-progress"></div>
+      </div>
+    </div>
   </div>
-</div>
+}
