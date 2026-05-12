@@ -1,38 +1,109 @@
-import { Component, inject, OnDestroy } from '@angular/core';
-import { Router, NavigationEnd } from '@angular/router';
-import { filter, take } from 'rxjs/operators';
+import { CommonModule } from '@angular/common';
+import { Component, DestroyRef, OnDestroy, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { NavigationEnd, Router } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
+import { filter } from 'rxjs/operators';
+
+import { AppShellLoadingService } from '../../services/app-shell-loading.service';
 
 @Component({
   selector: 'app-loader',
+  standalone: true,
+  imports: [CommonModule, TranslateModule],
   templateUrl: './loader.html',
   styleUrls: ['./loader.scss'],
-  imports: [],
 })
 export class Loader implements OnDestroy {
-  public show = true;
-  private router = inject(Router);
-  private hideTimeout = 0;
+  private readonly router = inject(Router);
+  private readonly shell = inject(AppShellLoadingService);
+  private readonly destroyRef = inject(DestroyRef);
+
+  /** First app paint until the initial route has finished navigating. */
+  private readonly boot = signal(true);
+
+  /** Fade-out class before removing overlay from the DOM. */
+  readonly hiding = signal(false);
+
+  readonly carSrc = signal('assets/loading/car-loading.png');
+
+  private imgErrorStep = 0;
+
+  private fadeTimer = 0;
+  private bootFallbackTimer = 0;
+
+  readonly display = computed(() => this.boot() || this.shell.transitionActive());
 
   constructor() {
-    // إخفاء الـ loader عند اكتمال أول تنقل
     this.router.events
       .pipe(
         filter((e): e is NavigationEnd => e instanceof NavigationEnd),
-        take(1),
+        takeUntilDestroyed(this.destroyRef),
       )
-      .subscribe(() => {
-        this.show = false;
-      });
+      .subscribe(() => this.onNavigationEnd());
 
-    // fallback: إخفاء بعد 1.5 ثانية كحد أقصى إن لم يحصل تنقل
-    this.hideTimeout = window.setTimeout(() => {
-      this.show = false;
-    }, 1500);
+    this.bootFallbackTimer = window.setTimeout(() => {
+      if (this.boot()) {
+        this.beginDismiss(() => {
+          this.boot.set(false);
+          this.clearBootFallback();
+        });
+      }
+    }, 12000);
+  }
+
+  onCarImgError(): void {
+    if (this.imgErrorStep === 0) {
+      this.imgErrorStep = 1;
+      this.carSrc.set('assets/loading/car-loading.gif');
+      return;
+    }
+    if (this.imgErrorStep === 1) {
+      this.imgErrorStep = 2;
+      this.carSrc.set('assets/images/rent_icon/car-loading.gif');
+    }
+  }
+
+  private onNavigationEnd(): void {
+    if (this.boot()) {
+      this.beginDismiss(() => {
+        this.boot.set(false);
+        this.clearBootFallback();
+      });
+      return;
+    }
+    if (this.shell.transitionActive()) {
+      this.beginDismiss(() => this.shell.exitPostAuthTransition());
+    }
+  }
+
+  private beginDismiss(afterFade: () => void): void {
+    if (this.hiding()) {
+      return;
+    }
+    this.hiding.set(true);
+    if (this.fadeTimer) {
+      window.clearTimeout(this.fadeTimer);
+    }
+    this.fadeTimer = window.setTimeout(() => {
+      afterFade();
+      this.hiding.set(false);
+      this.fadeTimer = 0;
+    }, 520);
+  }
+
+  private clearBootFallback(): void {
+    if (this.bootFallbackTimer) {
+      window.clearTimeout(this.bootFallbackTimer);
+      this.bootFallbackTimer = 0;
+    }
   }
 
   ngOnDestroy(): void {
-    if (this.hideTimeout) {
-      window.clearTimeout(this.hideTimeout);
+    this.clearBootFallback();
+    if (this.fadeTimer) {
+      window.clearTimeout(this.fadeTimer);
+      this.fadeTimer = 0;
     }
   }
 }

@@ -171,7 +171,7 @@
                     <button
                       class="table-action-icon booking-card__action booking-card__action--labeled booking-card__action--close-contract booking-card__action--tooltip"
                       type="button"
-                      [disabled]="!canFinishBooking(booking)"
+                      [disabled]="bookingCardActionsLocked(booking)"
                       [attr.aria-label]="'Booking card close contract' | translate"
                       [attr.data-action-tooltip]="'Booking card close contract' | translate"
                       (click)="onCardAction('closeContract', booking)"
@@ -184,7 +184,7 @@
                       type="button"
                       [attr.aria-label]="'Booking card finish' | translate"
                       [attr.data-action-tooltip]="'Booking card finish' | translate"
-                      [disabled]="!canFinishBooking(booking)"
+                      [disabled]="bookingCardActionsLocked(booking)"
                       (click)="onCardAction('finish', booking)"
                     >
                       <i class="fa-solid fa-flag-checkered" aria-hidden="true"></i>
@@ -204,6 +204,7 @@
                         class="booking-card__menu-item booking-card__menu-item--suspend booking-card__action--tooltip"
                         type="button"
                         role="menuitem"
+                        [disabled]="bookingCardActionsLocked(booking)"
                         [attr.data-action-tooltip]="'Booking card menu suspend' | translate"
                         (click)="onCardAction('suspend', booking); closeBookingCardMore(bookingCardMore)"
                       >
@@ -214,6 +215,7 @@
                         class="booking-card__menu-item booking-card__menu-item--edit booking-card__action--tooltip"
                         type="button"
                         role="menuitem"
+                        [disabled]="bookingCardActionsLocked(booking)"
                         [attr.data-action-tooltip]="'Booking card menu edit' | translate"
                         (click)="onCardAction('edit', booking); closeBookingCardMore(bookingCardMore)"
                       >
@@ -224,6 +226,7 @@
                         class="booking-card__menu-item booking-card__menu-item--extend booking-card__action--tooltip"
                         type="button"
                         role="menuitem"
+                        [disabled]="bookingCardActionsLocked(booking)"
                         [attr.data-action-tooltip]="'Booking card menu extend' | translate"
                         (click)="onCardAction('extend', booking); closeBookingCardMore(bookingCardMore)"
                       >

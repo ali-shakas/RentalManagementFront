@@ -118,7 +118,8 @@
   gap: 0.5rem;
   padding: 0.35rem 0.65rem;
   border-radius: 10px;
-  background: rgba(127, 29, 63, 0.06);
+  background: rgba(20, 83, 45, 0.18);
+  border: 1px solid rgba(34, 197, 94, 0.12);
 }
 
 .ops-kpi__label {
@@ -150,12 +151,12 @@
 }
 
 :host-context(body.dark-only) {
-  --ops-bg: #0f172a;
-  --ops-surface: #182235;
-  --ops-border: rgba(148, 163, 184, 0.16);
-  --ops-shadow: 0 12px 28px rgba(2, 6, 23, 0.45);
-  --ops-muted: #94a3b8;
-  --ops-heading: #f1f5f9;
+  --ops-bg: #050816;
+  --ops-surface: rgba(16, 36, 54, 0.72);
+  --ops-border: rgba(6, 182, 212, 0.08);
+  --ops-shadow: 0 10px 40px rgba(0, 0, 0, 0.45);
+  --ops-muted: #a5f3fc;
+  --ops-heading: #ecfeff;
 }
 
 html[dir='rtl'] {

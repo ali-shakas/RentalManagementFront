@@ -1,14 +1,34 @@
+:host {
+  display: block;
+  --dashboard-surface: linear-gradient(165deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.92));
+  --dashboard-border: rgba(148, 163, 184, 0.22);
+  --dashboard-shadow: 0 12px 28px -22px rgba(15, 23, 42, 0.12);
+  --dashboard-text-muted: #64748b;
+  --dashboard-text: #0f172a;
+}
+
+:host-context(body.dark-only) {
+  --dashboard-surface: rgba(16, 36, 54, 0.72);
+  --dashboard-border: rgba(6, 182, 212, 0.08);
+  --dashboard-shadow: 0 10px 40px rgba(0, 0, 0, 0.45);
+  --dashboard-text-muted: #67e8f9;
+  --dashboard-text: #ecfeff;
+}
+
 .dashboard-widget {
   border-radius: 16px;
   padding: 16px;
   background: var(--dashboard-surface);
   box-shadow: var(--dashboard-shadow);
   border: 1px solid var(--dashboard-border);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .dashboard-widget__header h3 {
   margin: 0;
   font-size: 1rem;
+  color: var(--dashboard-text);
 }
 
 .dashboard-widget__header p {
@@ -33,6 +53,15 @@
   background: linear-gradient(90deg, rgba(148, 163, 184, 0.16), rgba(148, 163, 184, 0.32), rgba(148, 163, 184, 0.16));
   background-size: 200% 100%;
   animation: shimmer 1.1s infinite;
+}
+
+:host-context(body.dark-only) .skeleton--table {
+  background: linear-gradient(90deg, rgba(6, 182, 212, 0.08), rgba(165, 243, 252, 0.12), rgba(6, 182, 212, 0.08));
+}
+
+:host-context(body.dark-only) .dashboard-widget {
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
 }
 
 @keyframes shimmer {

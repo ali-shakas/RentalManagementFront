@@ -553,9 +553,10 @@
         </details>
         }
 
-        <div class="contract-details__footer">
+        <div class="contract-details__footer" [class.contract-details__footer--extend]="isExtendMode()">
           @if (isExtendMode()) {
-            <button type="button" class="btn btn-primary" (click)="submitExtend()">تمديد</button>
+            <button type="button" class="btn contract-details__extend-submit" (click)="submitExtend()">تمديد</button>
+            <a class="btn contract-details__extend-back" routerLink="/booking">{{ 'Back' | translate }}</a>
           } @else {
             <div class="contract-details__toolbar">
               <button
@@ -608,8 +609,8 @@
                 {{ 'Booking card finish' | translate }}
               </button>
             </div>
+            <a class="btn btn-cancel" routerLink="/booking">{{ 'Back' | translate }}</a>
           }
-          <a class="btn btn-cancel" routerLink="/booking">{{ 'Back' | translate }}</a>
         </div>
       </div>
     </div>
