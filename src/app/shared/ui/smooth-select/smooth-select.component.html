@@ -13,7 +13,7 @@
     [disabled]="isDisabled()"
     (click)="toggle()"
   >
-    <span class="app-soft-select__label">{{ selectedLabel() | translate }}</span>
+    <span class="app-soft-select__label">{{ selectedLabel() }}</span>
     <i class="fa fa-angle-down app-soft-select__caret" aria-hidden="true"></i>
   </button>
 
@@ -30,7 +30,7 @@
           />
         </div>
       }
-      @for (option of filteredOptions(); track option.label + ':' + option.value) {
+      @for (option of filteredOptions(); track $index) {
         <button
           type="button"
           class="app-soft-select__option"
@@ -39,7 +39,7 @@
           [class.is-selected]="isSelected(option.value)"
           (click)="selectOption(option.value, $event)"
         >
-          <span>{{ option.label | translate }}</span>
+          <span>{{ optionLabelText(option) }}</span>
           @if (isSelected(option.value)) {
             <i class="fa fa-check" aria-hidden="true"></i>
           }

@@ -256,6 +256,48 @@ export interface BookingExtensionRequest {
   paymentType: number;
 }
 
+/**
+ * POST `Booking/finsh` — maps to `FinshBookingCommand` (same property names as the MediatR model;
+ * `AllowToall`, `PricekmAllExcess`, `PriceoAllHoure` follow backend spelling).
+ */
+export interface FinshBookingRequest {
+  id: number;
+  dateReturnVehical: string;
+  numberOfHoursExcess: number;
+  numberKmExcess: number;
+  dayExcess: number;
+  note?: string;
+  allowToall: number;
+  pricekmAllExcess: number;
+  priceoAllHoure: number;
+  priceAllDayExcess: number;
+  idVehicle: number;
+  idCustomer: number;
+  idBranch: number;
+  fleetId: string;
+  checkoutCounter: number;
+  checkinCounter: number;
+  countOfDay: number;
+  total: number;
+  countKMExtra: number;
+  priceHoureExtra: number;
+  priceKmExtra: number;
+  otherExpenses: number;
+  discount?: number | null;
+  totaltax?: number | null;
+  distancetraveledgps?: string;
+  totalTrafic: number;
+  totalMaintance: number;
+  transportationFees: number;
+  idCountingCustVehicle?: string;
+  paid: number;
+  idBank?: string;
+  idCash?: string;
+  paidCash?: number | null;
+  paidBank?: number | null;
+  paymentType: number;
+}
+
 const BOOKING_MONEY_EPS = 1e-6;
 
 /**

@@ -20,6 +20,33 @@
   gap: 0.75rem 0.85rem;
 }
 
+/** Schedule block: fixed 3 columns (7 fields → 3 + 3 + 1) */
+.finish-schedule-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem 0.85rem;
+  margin-top: 0.15rem;
+}
+
+@media (max-width: 767px) {
+  .finish-schedule-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.finish-val-cell {
+  margin: 0;
+  border-radius: 12px;
+  padding: 0.45rem 0.55rem 0.55rem;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.finish-val-cell .form-label {
+  font-size: 0.76rem;
+  letter-spacing: 0.01em;
+}
+
 @media (max-width: 1199px) {
   .finish-form-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -47,12 +74,118 @@
   border-color: #e2e8f0;
 }
 
+/**
+ * Live stats (signals / computed): use a div instead of `<input [value]>` so the DOM always
+ * reflects the latest value when return datetime changes (avoids rare browser quirks with readonly inputs).
+ */
+.finish-stat-display {
+  margin-bottom: 0;
+  width: 100%;
+  min-height: calc(1.5em + 0.75rem + 2px);
+  display: flex;
+  align-items: center;
+  font-variant-numeric: tabular-nums;
+  cursor: default;
+  user-select: text;
+}
+
+.finish-field--readonly .finish-stat-display {
+  opacity: 1;
+  background: #f1f5f9;
+  color: #0f172a;
+  border: 1px solid #e2e8f0;
+}
+
+.finish-payment-card .finish-field--readonly .finish-stat-display {
+  cursor: default;
+  background: rgba(241, 245, 249, 0.72);
+  border: 1px dashed rgba(148, 163, 184, 0.55);
+  color: #475569;
+}
+
+.finish-payment-card .finish-val-cell.finish-field--readonly .finish-stat-display {
+  border-style: solid;
+  border-width: 2px;
+  border-color: rgba(148, 163, 184, 0.55);
+  background: #f8fafc;
+  color: #0f172a;
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
+.finish-summary-grid .finish-field--readonly .finish-stat-display {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #0f172a;
+}
+
+/**
+ * داخل بطاقتي «الفترة…» و«العداد…»: الحقول المعطّلة تُعرض كقيم محسوبة وليست حقول إدخال نشطة.
+ */
+.finish-payment-card .finish-field--readonly .form-control[disabled],
+.finish-payment-card .finish-field--readonly .form-control[readonly] {
+  cursor: default;
+  background: rgba(241, 245, 249, 0.72);
+  border-style: dashed;
+  border-color: rgba(148, 163, 184, 0.55);
+  color: #475569;
+  font-variant-numeric: tabular-nums;
+}
+
+/** داخل `finish-val-cell`: نفس «بئر» الـ input مثل عداد الرجوع (حدود صلبة + ظل داخلي) */
+.finish-payment-card .finish-val-cell.finish-field--readonly .form-control[disabled],
+.finish-payment-card .finish-val-cell.finish-field--readonly .form-control[readonly] {
+  cursor: default;
+  border-style: solid;
+  border-width: 2px;
+  border-color: rgba(148, 163, 184, 0.55);
+  background: #f8fafc;
+  color: #0f172a;
+  font-variant-numeric: tabular-nums;
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
+/** حقول الإنهاء الأساسية التي يحرّكها المستخدم */
+.finish-field--contract-input.finish-val-cell {
+  border-color: rgba(13, 148, 136, 0.45);
+  background: rgba(236, 253, 245, 0.92);
+}
+
+.finish-field--contract-input .form-label {
+  font-weight: 700;
+  color: #0f766e;
+}
+
+.finish-field--contract-input .form-control:not([disabled]) {
+  border-width: 2px;
+  border-color: rgba(13, 148, 136, 0.55);
+  background: #fff;
+  box-shadow:
+    0 0 0 1px rgba(45, 212, 191, 0.2),
+    0 10px 26px -18px rgba(13, 148, 136, 0.45);
+}
+
+.finish-field--contract-input .form-control:focus:not([disabled]) {
+  border-color: rgba(13, 148, 136, 0.85);
+  box-shadow:
+    0 0 0 3px rgba(45, 212, 191, 0.28),
+    0 12px 28px -16px rgba(13, 148, 136, 0.5);
+}
+
 .finish-payment-card {
   margin-top: 1rem;
   padding: 1rem;
   border-radius: 14px;
   border: 1px solid rgba(59, 130, 246, 0.28);
   background: linear-gradient(140deg, #f8fafc, #eff6ff 55%, #e8f1fe);
+}
+
+/** Nested main grid inside a subcard (schedule / odometer–km blocks) */
+.finish-form-grid--in-card {
+  margin-top: 0.15rem;
+}
+
+.finish-summary-grid {
+  margin-top: 1rem;
 }
 
 .finish-payment-card__title {
@@ -98,6 +231,55 @@
   border-color: rgba(100, 116, 139, 0.45);
 }
 
+:host-context(body.dark-only) .finish-field--readonly .finish-stat-display {
+  background: rgba(30, 41, 59, 0.72);
+  color: #e2e8f0;
+  border-color: rgba(100, 116, 139, 0.45);
+}
+
+:host-context(body.dark-only) .finish-payment-card .finish-field--readonly .form-control[disabled],
+:host-context(body.dark-only) .finish-payment-card .finish-field--readonly .form-control[readonly] {
+  cursor: default;
+  background: rgba(15, 23, 42, 0.55);
+  border-style: dashed;
+  border-color: rgba(100, 116, 139, 0.55);
+  color: rgba(226, 232, 240, 0.88);
+  font-variant-numeric: tabular-nums;
+}
+
+:host-context(body.dark-only) .finish-payment-card .finish-field--readonly .finish-stat-display {
+  cursor: default;
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px dashed rgba(100, 116, 139, 0.55);
+  color: rgba(226, 232, 240, 0.88);
+  font-variant-numeric: tabular-nums;
+}
+
+:host-context(body.dark-only) .finish-payment-card .finish-val-cell.finish-field--readonly .finish-stat-display {
+  border-style: solid;
+  border-width: 2px;
+  border-color: rgba(100, 116, 139, 0.6);
+  background: rgba(15, 23, 42, 0.72);
+  color: #e2e8f0;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+
+:host-context(body.dark-only) .finish-summary-grid .finish-field--readonly .finish-stat-display {
+  background: rgba(30, 41, 59, 0.72);
+  border-color: rgba(100, 116, 139, 0.45);
+  color: #e2e8f0;
+}
+
+:host-context(body.dark-only) .finish-payment-card .finish-val-cell.finish-field--readonly .form-control[disabled],
+:host-context(body.dark-only) .finish-payment-card .finish-val-cell.finish-field--readonly .form-control[readonly] {
+  border-style: solid;
+  border-width: 2px;
+  border-color: rgba(100, 116, 139, 0.6);
+  background: rgba(15, 23, 42, 0.72);
+  color: #e2e8f0;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+
 :host-context(body.dark-only) .finish-payment-card {
   border-color: rgba(59, 130, 246, 0.4);
   background: linear-gradient(140deg, rgba(15, 23, 42, 0.55), rgba(30, 58, 138, 0.35));
@@ -111,4 +293,34 @@
   background: rgba(15, 23, 42, 0.55);
   color: #f8fafc;
   border-color: rgba(100, 116, 139, 0.45);
+}
+
+:host-context(body.dark-only) .finish-field--contract-input.finish-val-cell {
+  border-color: rgba(52, 211, 153, 0.42);
+  background: rgba(6, 78, 59, 0.28);
+}
+
+:host-context(body.dark-only) .finish-field--contract-input .form-label {
+  color: #5eead4;
+}
+
+:host-context(body.dark-only) .finish-field--contract-input .form-control:not([disabled]) {
+  background: rgba(6, 78, 59, 0.42);
+  color: #ecfdf5;
+  border-color: rgba(52, 211, 153, 0.55);
+  box-shadow:
+    0 0 0 1px rgba(16, 185, 129, 0.22),
+    0 12px 30px -18px rgba(16, 185, 129, 0.4);
+}
+
+:host-context(body.dark-only) .finish-field--contract-input .form-control:focus:not([disabled]) {
+  border-color: rgba(110, 231, 183, 0.75);
+  box-shadow:
+    0 0 0 3px rgba(16, 185, 129, 0.2),
+    0 14px 32px -16px rgba(16, 185, 129, 0.45);
+}
+
+:host-context(body.dark-only) .finish-val-cell {
+  border-color: rgba(100, 116, 139, 0.38);
+  background: rgba(15, 23, 42, 0.28);
 }

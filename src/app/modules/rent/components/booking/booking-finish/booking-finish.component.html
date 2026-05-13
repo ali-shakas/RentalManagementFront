@@ -25,74 +25,122 @@
             <label class="form-label">{{ 'Contract finish plate' | translate }}</label>
             <input class="form-control" readonly disabled [value]="valueOrDash(item.vehiclePlateNumber)" />
           </div>
-          <div class="finish-field finish-field--readonly">
-            <label class="form-label">{{ 'Contract finish days' | translate }}</label>
-            <input class="form-control" readonly disabled [value]="numberOrDash(item.countOfDay)" />
-          </div>
-          <div class="finish-field finish-field--readonly">
-            <label class="form-label">{{ 'Contract finish odometer checkout' | translate }}</label>
-            <input class="form-control" readonly disabled [value]="numberOrDash(item.checkoutCounter)" />
-          </div>
-          <div class="finish-field finish-field--readonly">
-            <label class="form-label">{{ 'Contract finish odometer return' | translate }}</label>
-            <input class="form-control" readonly disabled [value]="numberOrDash(item.checkinCounter)" />
-          </div>
+        </div>
 
-          <div class="finish-field finish-field--readonly">
-            <label class="form-label">{{ 'Contract finish km allowed per day' | translate }}</label>
-            <input class="form-control" readonly disabled [value]="moneyOrDash(item.allowTo)" />
+        <div class="finish-payment-card">
+          <div class="finish-payment-card__title">{{ 'Contract finish section schedule block' | translate }}</div>
+          <div class="finish-schedule-grid">
+            <div class="finish-field finish-field--readonly finish-val-cell">
+              <label class="form-label">{{ 'Contract finish booked days' | translate }}</label>
+              <input class="form-control" readonly disabled [value]="numberOrDash(item.countOfDay)" />
+            </div>
+            <div class="finish-field finish-field--readonly finish-val-cell">
+              <label class="form-label">{{ 'Contract finish billed days' | translate }}</label>
+              <div class="form-control finish-stat-display" aria-readonly="true">
+                {{ numberOrDash(billingElapsedDays()) }}
+              </div>
+            </div>
+            <div class="finish-field finish-field--readonly finish-val-cell">
+              <label class="form-label">{{ 'Contract finish checkout time' | translate }}</label>
+              <input class="form-control" readonly disabled [value]="formatDateTime(item.startDate)" />
+            </div>
+            <div class="finish-field finish-val-cell finish-field--contract-input">
+              <label class="form-label">{{ 'Contract finish return time' | translate }}</label>
+              <input
+                class="form-control"
+                type="datetime-local"
+                [disabled]="finishLocked()"
+                [ngModel]="returnDateTime()"
+                [ngModelOptions]="{ standalone: true }"
+                (ngModelChange)="onReturnDateChange($event)"
+                (change)="onReturnDateChange($any($event.target).value)"
+                (input)="onReturnDateChange($any($event.target).value)"
+              />
+            </div>
+            <div class="finish-field finish-field--readonly finish-val-cell">
+              <label class="form-label">{{ 'Contract finish extra hour price' | translate }}</label>
+              <input class="form-control" readonly disabled [value]="moneyOrDash(item.priceHoureExtra)" />
+            </div>
+            <div class="finish-field finish-field--readonly finish-val-cell">
+              <label class="form-label">{{ 'Contract finish extra hours' | translate }}</label>
+              <div class="form-control finish-stat-display" aria-readonly="true">
+                {{ numberOrDash(numberOfHoursExcessComputed()) }}
+              </div>
+            </div>
+            <div class="finish-field finish-field--readonly finish-val-cell">
+              <label class="form-label">{{ 'Contract finish extra hours total' | translate }}</label>
+              <div class="form-control finish-stat-display" aria-readonly="true">
+                {{ moneyOrDash(extraHoursTotal()) }}
+              </div>
+            </div>
           </div>
-          <div class="finish-field finish-field--readonly">
-            <label class="form-label">{{ 'Contract finish km allowed total' | translate }}</label>
-            <input class="form-control" readonly disabled [value]="moneyOrDash(totalKmAllowance())" />
-          </div>
-          <div class="finish-field finish-field--readonly">
-            <label class="form-label">{{ 'Contract finish extra km' | translate }}</label>
-            <input class="form-control" readonly disabled [value]="numberOrDash(item.numberKmExcess)" />
-          </div>
-          <div class="finish-field finish-field--readonly">
-            <label class="form-label">{{ 'Contract finish extra km price' | translate }}</label>
-            <input class="form-control" readonly disabled [value]="moneyOrDash(item.priceKmExtra)" />
-          </div>
-          <div class="finish-field finish-field--readonly">
-            <label class="form-label">{{ 'Contract finish extra km total' | translate }}</label>
-            <input class="form-control" readonly disabled [value]="moneyOrDash(extraKmTotal())" />
-          </div>
+        </div>
 
-          <div class="finish-field finish-field--readonly">
-            <label class="form-label">{{ 'Contract finish extra hour price' | translate }}</label>
-            <input class="form-control" readonly disabled [value]="moneyOrDash(item.priceHoureExtra)" />
+        <div class="finish-payment-card">
+          <div class="finish-payment-card__title">{{ 'Contract finish section odometer km block' | translate }}</div>
+          <div class="finish-form-grid finish-form-grid--in-card">
+            <div class="finish-field finish-field--readonly">
+              <label class="form-label">{{ 'Contract finish odometer checkout' | translate }}</label>
+              <input class="form-control" readonly disabled [value]="numberOrDash(item.checkoutCounter)" />
+            </div>
+            <div class="finish-field finish-val-cell finish-field--contract-input">
+              <label class="form-label">
+                {{ 'Contract finish odometer return' | translate }} <span class="text-danger">*</span>
+              </label>
+              <input
+                class="form-control"
+                type="number"
+                inputmode="numeric"
+                min="0"
+                step="1"
+                [disabled]="finishLocked()"
+                [value]="returnOdometerText()"
+                (input)="onReturnOdometerInput($any($event.target).value)"
+              />
+            </div>
+
+            <div class="finish-field finish-field--readonly">
+              <label class="form-label">{{ 'Contract finish km allowed per day' | translate }}</label>
+              <input class="form-control" readonly disabled [value]="moneyOrDash(item.allowTo)" />
+            </div>
+            <div class="finish-field finish-field--readonly">
+              <label class="form-label">{{ 'Contract finish km allowed total' | translate }}</label>
+              <div class="form-control finish-stat-display" aria-readonly="true">
+                {{ moneyOrDash(totalKmAllowance()) }}
+              </div>
+            </div>
+            <div class="finish-field finish-field--readonly">
+              <label class="form-label">{{ 'Contract finish extra km' | translate }}</label>
+              <div class="form-control finish-stat-display" aria-readonly="true">
+                {{ numberOrDash(numberKmExcessComputed()) }}
+              </div>
+            </div>
+            <div class="finish-field finish-field--readonly">
+              <label class="form-label">{{ 'Contract finish extra km price' | translate }}</label>
+              <input class="form-control" readonly disabled [value]="moneyOrDash(item.priceKmExtra)" />
+            </div>
+            <div class="finish-field finish-field--readonly">
+              <label class="form-label">{{ 'Contract finish extra km total' | translate }}</label>
+              <div class="form-control finish-stat-display" aria-readonly="true">
+                {{ moneyOrDash(extraKmTotal()) }}
+              </div>
+            </div>
           </div>
-          <div class="finish-field finish-field--readonly">
-            <label class="form-label">{{ 'Contract finish extra hours' | translate }}</label>
-            <input class="form-control" readonly disabled [value]="numberOrDash(item.numberOfHoursExcess)" />
-          </div>
+        </div>
+
+        <div class="finish-form-grid finish-summary-grid">
           <div class="finish-field finish-field--readonly">
             <label class="form-label">{{ 'Contract finish daily rent' | translate }}</label>
             <input class="form-control" readonly disabled [value]="moneyOrDash(item.priceInDay)" />
           </div>
           <div class="finish-field finish-field--readonly">
-            <label class="form-label">{{ 'Contract finish checkout time' | translate }}</label>
-            <input class="form-control" readonly disabled [value]="formatDateTime(item.startDate)" />
-          </div>
-          <div class="finish-field">
-            <label class="form-label">{{ 'Contract finish return time' | translate }}</label>
+            <label class="form-label">{{ 'Contract finish payments total' | translate }}</label>
             <input
               class="form-control"
-              type="datetime-local"
-              [disabled]="finishLocked()"
-              [value]="returnDateTime()"
-              (input)="onReturnDateChange($any($event.target).value)"
+              readonly
+              disabled
+              [value]="moneyOrDash(paymentsTotalDisplay())"
             />
-          </div>
-
-          <div class="finish-field finish-field--readonly">
-            <label class="form-label">{{ 'Contract finish extra hours total' | translate }}</label>
-            <input class="form-control" readonly disabled [value]="moneyOrDash(extraHoursTotal())" />
-          </div>
-          <div class="finish-field finish-field--readonly">
-            <label class="form-label">{{ 'Contract finish payments total' | translate }}</label>
-            <input class="form-control" readonly disabled [value]="moneyOrDash(item.paidtotal)" />
           </div>
           <div class="finish-field finish-field--readonly">
             <label class="form-label">{{ 'Contract finish discount' | translate }}</label>
@@ -125,21 +173,40 @@
 
           <div class="finish-field finish-field--readonly">
             <label class="form-label">{{ 'Contract finish tax' | translate }}</label>
-            <input class="form-control" readonly disabled [value]="moneyOrDash(item.totaltax)" />
+            <div class="form-control finish-stat-display" aria-readonly="true">
+              {{ moneyOrDash(computedTaxAmount()) }}
+            </div>
           </div>
           <div class="finish-field finish-field--readonly">
             <label class="form-label">{{ 'Contract finish grand total' | translate }}</label>
-            <input class="form-control" readonly disabled [value]="moneyOrDash(item.totalAmount)" />
+            <div class="form-control finish-stat-display" aria-readonly="true">
+              {{ moneyOrDash(computedGrandTotal()) }}
+            </div>
           </div>
           <div class="finish-field finish-field--readonly">
             <label class="form-label">{{ 'Contract finish balance' | translate }}</label>
-            <input class="form-control" readonly disabled [value]="moneyOrDash(balanceDisplay())" />
+            <div class="form-control finish-stat-display" aria-readonly="true">
+              {{ moneyOrDash(balanceDisplay()) }}
+            </div>
           </div>
         </div>
 
         <div class="finish-payment-card">
           <div class="finish-payment-card__title">{{ 'Contract finish payment section' | translate }}</div>
           <div class="finish-payment-grid">
+            <div class="finish-field">
+              <label class="form-label">{{ 'Contract finish paid at settlement' | translate }}</label>
+              <input
+                class="form-control"
+                type="number"
+                min="0"
+                step="0.01"
+                [value]="settlementPaidDisplay()"
+                [readonly]="paymentTypeIsMixed() || finishLocked()"
+                [disabled]="finishLocked()"
+                (input)="onSettlementPaidInput($any($event.target).value)"
+              />
+            </div>
             <div class="finish-field">
               <label class="form-label">
                 {{ 'Contract finish payment method' | translate }} <span class="text-danger">*</span>
@@ -167,19 +234,6 @@
               />
             </div>
             <div class="finish-field">
-              <label class="form-label">{{ 'Contract finish paid cash' | translate }}</label>
-              <input
-                class="form-control"
-                type="number"
-                min="0"
-                step="0.01"
-                [value]="paidCash()"
-                [disabled]="paymentTypeIsBankOnly() || finishLocked()"
-                [readonly]="!paymentTypeIsMixed()"
-                (input)="onPaidCashChange($any($event.target).value)"
-              />
-            </div>
-            <div class="finish-field finish-field--span-2">
               <label class="form-label">
                 {{ 'Contract finish bank account' | translate }} <span class="text-danger">*</span>
               </label>
@@ -190,6 +244,19 @@
                 [options]="bankAccountOptions()"
                 [disabled]="paymentTypeIsCash() || finishLocked()"
                 (valueChange)="onBankChange('' + $any($event))"
+              />
+            </div>
+            <div class="finish-field">
+              <label class="form-label">{{ 'Contract finish paid cash' | translate }}</label>
+              <input
+                class="form-control"
+                type="number"
+                min="0"
+                step="0.01"
+                [value]="paidCash()"
+                [disabled]="paymentTypeIsBankOnly() || finishLocked()"
+                [readonly]="!paymentTypeIsMixed()"
+                (input)="onPaidCashChange($any($event.target).value)"
               />
             </div>
             <div class="finish-field">

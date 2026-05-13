@@ -86,6 +86,13 @@ export class SettingService {
     if (Array.isArray(peeled)) {
       return this.pickSettingFromList(peeled, fleetId);
     }
+    /* `GetSettingResponseDto` / nested envelope after List unwrap */
+    if (peeled && typeof peeled === 'object') {
+      const again = this.unwrapNestedSettingDto(peeled);
+      if (again !== peeled) {
+        return again;
+      }
+    }
     return peeled;
   }
 

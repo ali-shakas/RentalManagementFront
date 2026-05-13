@@ -119,9 +119,18 @@ export class PaymentCountService {
             return raw;
           }
           const source = (raw ?? {}) as Record<string, unknown>;
+          const inner = source['data'] ?? source['Data'];
+          const obj =
+            typeof inner === 'object' && inner !== null && !Array.isArray(inner)
+              ? (inner as Record<string, unknown>)
+              : source;
           const candidate =
+            obj['sumPaymentBooking'] ??
+            obj['SumPaymentBooking'] ??
             source['sumPaymentBooking'] ??
             source['SumPaymentBooking'] ??
+            obj['sum'] ??
+            obj['Sum'] ??
             source['sum'] ??
             source['Sum'];
           const n = Number(candidate);
