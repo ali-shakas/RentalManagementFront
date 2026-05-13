@@ -17,7 +17,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { NavigationStart, Router } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 export type SmoothSelectValue = string | number | '' | null;
 
@@ -32,6 +32,9 @@ export interface SmoothSelectOption {
   imports: [CommonModule, TranslateModule],
   templateUrl: './smooth-select.component.html',
   styleUrl: './smooth-select.component.scss',
+  host: {
+    '[class.app-smooth-select-host--open]': 'isOpen()',
+  },
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
@@ -44,6 +47,7 @@ export class SmoothSelectComponent implements ControlValueAccessor, OnInit {
   private elementRef = inject(ElementRef<HTMLElement>);
   private readonly destroyRef = inject(DestroyRef);
   private readonly router = inject(Router, { optional: true });
+  private readonly translate = inject(TranslateService);
   @ViewChild('triggerBtn') private triggerRef?: ElementRef<HTMLButtonElement>;
 
   @Input() options: SmoothSelectOption[] = [];
@@ -79,23 +83,34 @@ export class SmoothSelectComponent implements ControlValueAccessor, OnInit {
     }
 
     return this.options.filter(option => {
-      const label = String(option.label).toLowerCase();
+      const label = this.optionLabelText(option).toLowerCase();
       const value = String(option.value ?? '').toLowerCase();
       return label.includes(query) || value.includes(query);
     });
   });
 
+  /** نص العرض للخيار — دون الاعتماد على أن يكون مفتاح ترجمة. */
+  optionLabelText(option: SmoothSelectOption): string {
+    const raw = option?.label;
+    if (raw === null || raw === undefined) {
+      return String(option?.value ?? '');
+    }
+    const s = String(raw).trim();
+    return s.length > 0 ? s : String(option?.value ?? '');
+  }
+
   selectedLabel = computed(() => {
     const selectedOption = this.options.find(option => this.areValuesEqual(option.value, this.internalValue()));
     if (selectedOption) {
-      return selectedOption.label;
+      return this.optionLabelText(selectedOption);
     }
 
     if (this.placeholder) {
-      return this.placeholder;
+      return this.translate.instant(this.placeholder);
     }
 
-    return this.options[0]?.label ?? '';
+    const first = this.options[0];
+    return first ? this.optionLabelText(first) : '';
   });
 
   ngOnInit(): void {
@@ -122,6 +137,8 @@ export class SmoothSelectComponent implements ControlValueAccessor, OnInit {
       return;
     }
     this.updateMenuPosition();
+    // Re-measure after DOM paints (caret/layout) so fixed coords stay aligned to the trigger.
+    requestAnimationFrame(() => this.updateMenuPosition());
   }
 
   selectOption(value: SmoothSelectValue, event: Event): void {
@@ -233,22 +250,48 @@ export class SmoothSelectComponent implements ControlValueAccessor, OnInit {
     }
 
     const rect = triggerEl.getBoundingClientRect();
-    const viewportHeight = window.innerHeight;
+    const vh = window.innerHeight;
     const gap = 6;
-    const edgePadding = 8;
-    const spaceBelow = Math.max(0, viewportHeight - rect.bottom - edgePadding);
-    const spaceAbove = Math.max(0, rect.top - edgePadding);
-    const preferUp = spaceBelow < 220 && spaceAbove > spaceBelow;
-    const availableHeight = Math.max(120, preferUp ? spaceAbove - gap : spaceBelow - gap);
-    const maxHeight = Math.min(this.menuMaxHeight, availableHeight);
+    const pad = 8;
+    const minMenuH = 120;
 
-    const top = preferUp ? rect.top - maxHeight - gap : rect.bottom + gap;
-    this.menuStyles.set({
-      position: 'fixed',
-      top: `${Math.max(edgePadding, top)}px`,
-      left: `${Math.max(edgePadding, rect.left)}px`,
-      width: `${rect.width}px`,
+    const spaceBelow = Math.max(0, vh - rect.bottom - pad);
+    const spaceAbove = Math.max(0, rect.top - pad);
+
+    // Open upward only when there is almost no room below the trigger. A loose threshold
+    // caused menus to flip up inside filter toolbars and sit under the previous row (e.g. Sort by).
+    const criticalBelow = 40;
+    const openUp = spaceBelow < criticalBelow && spaceAbove > spaceBelow + criticalBelow;
+
+    let maxHeight: number;
+
+    if (openUp) {
+      maxHeight = Math.min(this.menuMaxHeight, Math.max(minMenuH, spaceAbove - gap));
+      if (rect.top - maxHeight - gap < pad) {
+        maxHeight = Math.max(minMenuH, rect.top - pad - gap);
+        maxHeight = Math.min(maxHeight, this.menuMaxHeight);
+      }
+    } else {
+      maxHeight = Math.min(this.menuMaxHeight, Math.max(minMenuH, spaceBelow - gap));
+      const bottomPx = rect.bottom + gap + maxHeight;
+      if (bottomPx > vh - pad) {
+        maxHeight = Math.max(minMenuH, vh - pad - rect.bottom - gap);
+      }
+    }
+
+    // Anchor to trigger via absolute positioning inside .app-soft-select (avoids fixed + transform bugs).
+    const base = {
+      position: 'absolute' as const,
+      left: '0',
+      right: '0',
+      width: 'auto',
       maxHeight: `${maxHeight}px`,
-    });
+    };
+
+    this.menuStyles.set(
+      openUp
+        ? { ...base, top: 'auto', bottom: 'calc(100% + 6px)' }
+        : { ...base, top: 'calc(100% + 6px)', bottom: 'auto' },
+    );
   }
 }

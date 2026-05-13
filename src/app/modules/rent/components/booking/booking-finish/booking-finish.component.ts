@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { catchError, forkJoin, of } from 'rxjs';
@@ -16,23 +17,32 @@ import { Bank } from '../../../../finance/models/banks/bank.model';
 import { BankService } from '../../../../finance/services/banks/bank.service';
 import { CashAccount } from '../../../../finance/models/cash/cash-account.model';
 import { CashAccountService } from '../../../../finance/services/cash/cash-account.service';
-import { Booking, BookingUpdateRequest } from '../../../models';
+import { PaymentCountService } from '../../../../finance/services/payment-counts/payment-count.service';
+import { Booking, FinshBookingRequest } from '../../../models';
+import { normalizeSetting } from '../../../models/settings/setting.normalizer';
+import { Setting } from '../../../models/settings/setting.model';
 import { BookingService } from '../../../services/booking/booking.service';
+import { SettingService } from '../../../services/settings/setting.service';
 
 @Component({
   selector: 'app-booking-finish',
   standalone: true,
-  imports: [CommonModule, RouterLink, TranslateModule, PageHeaderComponent, SmoothSelectComponent],
+  imports: [CommonModule, FormsModule, RouterLink, TranslateModule, PageHeaderComponent, SmoothSelectComponent],
   templateUrl: './booking-finish.component.html',
   styleUrl: './booking-finish.component.scss',
 })
 export class BookingFinishComponent implements OnInit {
+  private static readonly MS_PER_DAY = 86_400_000;
+  private static readonly MS_PER_HOUR = 3_600_000;
+
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private authState = inject(AuthStateService);
   private bookingService = inject(BookingService);
   private bankService = inject(BankService);
   private cashAccountService = inject(CashAccountService);
+  private paymentCountService = inject(PaymentCountService);
+  private settingService = inject(SettingService);
   private toast = inject(ToastService);
   private translate = inject(TranslateService);
 
@@ -41,6 +51,8 @@ export class BookingFinishComponent implements OnInit {
   saving = signal(false);
 
   returnDateTime = signal('');
+  /** Return odometer — required at submit; must exceed contract checkout reading. */
+  returnOdometerText = signal('');
   repairs = signal(0);
   traffic = signal(0);
   notes = signal('');
@@ -53,6 +65,15 @@ export class BookingFinishComponent implements OnInit {
 
   banks = signal<Bank[]>([]);
   cashAccounts = signal<CashAccount[]>([]);
+
+  /**
+   * `GetPaymentcountsSumForBookingQuery` → `GET Paymentcount/sum/{IdBooking}/{fleetId}` (`SumPaymentBooking`).
+   * When null, UI falls back to booking snapshot `paidtotal`.
+   */
+  bookingsPaymentSumFromApi = signal<number | null>(null);
+
+  /** Fleet settings: grace minutes, free late hours, late-hours-per-day threshold. */
+  settings = signal<Setting | null>(null);
 
   paymentTypeOptions = computed<SmoothSelectOption[]>(() => [
     { label: this.translate.instant('Cash'), value: 1 },
@@ -78,14 +99,190 @@ export class BookingFinishComponent implements OnInit {
     })),
   ]);
 
+  /**
+   * المبلغ المدفوع عند التصفية: نقدي فقط → المبلغ النقدي؛ بنكي فقط → المبلغ البنكي؛ مختلط → مجموع النقد + البنك (للعرض).
+   */
+  settlementPaidDisplay = computed(() => {
+    const cash = Math.max(0, Number(this.paidCash()) || 0);
+    const bank = Math.max(0, Number(this.paidBank()) || 0);
+    if (this.paymentMethod() === 5) {
+      return Math.round((cash + bank) * 100) / 100;
+    }
+    if (this.paymentMethod() === 1) {
+      return Math.round(cash * 100) / 100;
+    }
+    return Math.round(bank * 100) / 100;
+  });
+
   totalKmAllowance = computed(() => {
     const b = this.booking();
     if (!b) {
       return 0;
     }
     const perDay = Math.max(0, Number(b.allowTo ?? 0) || 0);
-    const days = Math.max(0, Number(b.countOfDay ?? 0) || 0);
+    const days = Math.max(1, this.billingElapsedDays());
     return Math.round(perDay * days * 100) / 100;
+  });
+
+  /**
+   * أيام المدة من (الإرجاع − الخروج) بـ **أرض** 24 ساعة: `max(1, floor(المدة ÷ 24h))`.
+   * لا نستخدم `ceil` هنا حتى لا يُحسب يوم كامل لبضع دقائق/ساعات دون قاعدة الساعات الزائدة؛ **زيادة يوم** تُضاف فقط في {@link billingElapsedDays} عندما `L >` حد الساعات المتأخرة لليوم.
+   */
+  billingElapsedDaysFromSpanFloor = computed(() => {
+    const b = this.booking();
+    if (!b) {
+      return 1;
+    }
+    const startMs = this.parseBookingInstantMs(b.startDate);
+    const retMs = this.parseReturnDateTimeMs(this.returnDateTime());
+    if (startMs === null || retMs === null) {
+      return Math.max(1, Math.trunc(Number(b.countOfDay ?? 0) || 1));
+    }
+    if (retMs < startMs) {
+      return 1;
+    }
+    const elapsedMs = Math.max(0, retMs - startMs);
+    return Math.max(1, Math.floor(elapsedMs / BookingFinishComponent.MS_PER_DAY));
+  });
+
+  /**
+   * ساعات زائدة من الفرونت:
+   * - **ما دامت المدة ≤ أيام العقد المحجوزة ×24:** التأخر عن **نهاية العقد** (`endDate` من الـ API إن صالحاً، وإلا خروج + محجوز ×24).
+   * - **بعد تجاوز المحجوز وما دامت المدة ≤ عدد أيام الأرض ×24:** الباقي داخل آخر سلّة 24 ساعة من وقت الخروج (`phase % 24h`) — يُستخدم {@link billingElapsedDaysFromSpanFloor} هنا حتى لا يتداخل مع يوم «قاعدة الساعات» في {@link billingElapsedDays}.
+   * - **إن تجاوزت المدة سقف التقويم ×24:** الباقي بعد السقف.
+   * ثم دقائق السماح → `L` بالساعات (كسور) للمقارنة مع المجانية وحد اليوم.
+   */
+  lateHoursAfterGraceDecimal = computed((): number => {
+    const b = this.booking();
+    if (!b) {
+      return 0;
+    }
+    const exitMs = this.parseBookingInstantMs(b.startDate);
+    const retMs = this.parseReturnDateTimeMs(this.returnDateTime());
+    if (exitMs === null || retMs === null || retMs <= exitMs) {
+      return 0;
+    }
+    const phaseMs = retMs - exitMs;
+    const bookedDays = Math.max(0, Math.trunc(Number(b.countOfDay ?? 0) || 0));
+    const bookedWallMs = bookedDays <= 0 ? BookingFinishComponent.MS_PER_DAY : bookedDays * BookingFinishComponent.MS_PER_DAY;
+
+    let rawLateMs: number;
+    if (phaseMs <= bookedWallMs) {
+      const baselineMs = this.resolvePlannedReturnBaselineMs(b, exitMs);
+      rawLateMs = Math.max(0, retMs - baselineMs);
+    } else {
+      const n = this.billingElapsedDaysFromSpanFloor();
+      const paidCoverMs = n * BookingFinishComponent.MS_PER_DAY;
+      if (phaseMs <= paidCoverMs) {
+        rawLateMs = phaseMs % BookingFinishComponent.MS_PER_DAY;
+      } else {
+        rawLateMs = Math.max(0, phaseMs - paidCoverMs);
+      }
+    }
+
+    const s = this.settings();
+    const graceM = Math.max(0, Math.trunc(Number(s?.number_mints_late_forr_finshcontract ?? 0) || 0));
+    const afterGraceMs = Math.max(0, rawLateMs - graceM * 60_000);
+    return afterGraceMs / BookingFinishComponent.MS_PER_HOUR;
+  });
+
+  /**
+   * «الأيام المفوترة حتى الإرجاع»: **أرض** مدة (الإرجاع − الخروج) ÷24h + **يوم واحد** فقط إذا `L` (بعد السماح) **أكبر من** حد «الساعات المتأخرة لليوم» (`number_hour_late_forr_finshinday`) وكان الحد > 0.
+   * لا يُضاف يوم من `ceil` لبقايا دقائق؛ الزيادة من قاعدة الساعات فقط.
+   */
+  billingElapsedDays = computed(() => {
+    const base = this.billingElapsedDaysFromSpanFloor();
+    const L = this.lateHoursAfterGraceDecimal();
+    const s = this.settings();
+    const cap = Math.max(0, Math.trunc(Number(s?.number_hour_late_forr_finshinday ?? 0) || 0));
+    const hourRuleAddsDay = cap > 0 && L > cap;
+    return base + (hourRuleAddsDay ? 1 : 0);
+  });
+
+  dayExcessComputed = computed(() => {
+    const b = this.booking();
+    if (!b) {
+      return 0;
+    }
+    const booked = Math.max(0, Math.trunc(Number(b.countOfDay ?? 0) || 0));
+    return Math.max(0, this.billingElapsedDays() - booked);
+  });
+
+  /**
+   * ساعات تُحاسب بسعر الساعة الزائدة وتُعرض وتُرسل كـ `numberOfHoursExcess` — تُحدَّث مباشرة مع `returnDateTime` و`settings`:
+   * — إذا `L ≤` الساعات المجانية (`number_hour_latefree`) → **0** (سعر كل ساعة زائدة = 0).
+   * — إذا `L >` المجانية و`L ≤` حد الساعات المتأخرة لليوم (`number_hour_late_forr_finshinday`) → **`floor(L − المجانية)`** × سعر الساعة من العقد.
+   * — إذا `L >` حد اليوم (وكان الحد > 0) → **0** ساعات بالسعر الساعي، ويُزاد **يوم** في {@link billingElapsedDays}.
+   * إذا حد اليوم = 0: كل الساعات فوق المجانية تُحسب بالسعر الساعي (بدون قاعدة اليوم).
+   */
+  chargeableLateHoursCeiled = computed(() => {
+    const L = this.lateHoursAfterGraceDecimal();
+    const s = this.settings();
+    const freeHr = Math.max(0, Math.trunc(Number(s?.number_hour_latefree ?? 0) || 0));
+    const cap = Math.max(0, Math.trunc(Number(s?.number_hour_late_forr_finshinday ?? 0) || 0));
+
+    if (L <= 0 || L <= freeHr) {
+      return 0;
+    }
+
+    if (cap > 0 && L > cap) {
+      return 0;
+    }
+
+    return Math.max(0, Math.floor(L - freeHr));
+  });
+
+  hoursBilledAtLateHourlyRate = computed(() => this.chargeableLateHoursCeiled());
+
+  /**
+   * ساعات التأخر بعد السماح (عرض فقط، `floor`) — تتحرك مع وقت/تاريخ الإرجاع قبل تطبيق شرائح المجانية وحد اليوم على المبلغ.
+   * الحقل «الساعات الزائدة» في الواجهة؛ الإرسال يستخدم {@link hoursBilledAtLateHourlyRate}.
+   */
+  extraLateHoursDisplayFloor = computed((): number => {
+    const L = this.lateHoursAfterGraceDecimal();
+    if (L <= 0) {
+      return 0;
+    }
+    return Math.floor(L);
+  });
+
+  /**
+   * كان يُضاف كسطر منفصل؛ اليوم الإضافي عند تجاوز حد الساعات أصبح في {@link billingElapsedDays} فقط — يبقى **0** لتفادي الازدواجية في الإجمالي.
+   */
+  lateHourExtraFullDayPenalty = computed(() => 0);
+
+  /** أيام زائدة عن المحجوز (يوم قاعدة الساعات يُحسب ضمن {@link billingElapsedDays}). */
+  dayExcessWithLatePenalty = computed(() => this.dayExcessComputed());
+
+  /** ما يُعرض تحت «الساعات الزائدة» — بعد السماح، يتبع وقت الإرجاع مباشرة. */
+  numberOfHoursExcessComputed = computed(() => this.extraLateHoursDisplayFloor());
+
+  /** Parsed return odometer; `null` if user has not entered a valid integer. */
+  returnOdometerParsed = computed((): number | null => {
+    const raw = String(this.returnOdometerText() ?? '').trim();
+    if (!raw) {
+      return null;
+    }
+    const n = Number(raw);
+    if (!Number.isFinite(n)) {
+      return null;
+    }
+    return Math.trunc(n);
+  });
+
+  numberKmExcessComputed = computed(() => {
+    const b = this.booking();
+    if (!b) {
+      return 0;
+    }
+    const checkout = Math.trunc(Number(b.checkoutCounter ?? 0) || 0);
+    const ret = this.returnOdometerParsed();
+    if (ret === null) {
+      return 0;
+    }
+    const driven = Math.max(0, ret - checkout);
+    const allow = this.totalKmAllowance();
+    return Math.max(0, Math.trunc(driven - allow));
   });
 
   extraKmTotal = computed(() => {
@@ -93,7 +290,7 @@ export class BookingFinishComponent implements OnInit {
     if (!b) {
       return 0;
     }
-    const km = Number(b.numberKmExcess ?? 0) || 0;
+    const km = this.numberKmExcessComputed();
     const rate = Number(b.priceKmExtra ?? 0) || 0;
     return Math.round(Math.max(0, km) * Math.max(0, rate) * 100) / 100;
   });
@@ -103,9 +300,61 @@ export class BookingFinishComponent implements OnInit {
     if (!b) {
       return 0;
     }
-    const hours = Number(b.numberOfHoursExcess ?? 0) || 0;
+    const hours = this.hoursBilledAtLateHourlyRate();
     const rate = Number(b.priceHoureExtra ?? 0) || 0;
-    return Math.round(hours * rate * 100) / 100;
+    return Math.round(Math.max(0, hours) * Math.max(0, rate) * 100) / 100;
+  });
+
+  computedNetBeforeTax = computed(() => {
+    const b = this.booking();
+    if (!b) {
+      return 0;
+    }
+    const priceInDay = Number(b.priceInDay ?? 0) || 0;
+    const rental = this.billingElapsedDays() * priceInDay;
+    const disc = Math.max(0, Number(b.discount ?? 0) || 0);
+    const other = Math.max(0, Number(b.otherExpenses ?? 0) || 0);
+    const trans = Math.max(0, Number(b.transportationFees ?? 0) || 0);
+    const sum =
+      rental +
+      this.extraHoursTotal() +
+      this.extraKmTotal() +
+      other +
+      this.traffic() +
+      this.repairs() +
+      trans -
+      disc;
+    return Math.round(Math.max(0, sum) * 100) / 100;
+  });
+
+  /** Scale tax with net so changing return time/odometer updates VAT roughly like the original contract ratio. */
+  computedTaxAmount = computed(() => {
+    const b = this.booking();
+    if (!b) {
+      return 0;
+    }
+    const net = this.computedNetBeforeTax();
+    const oldTotal = Math.max(0, Number(b.totalAmount ?? 0) || 0);
+    const oldTax = Math.max(0, Number(b.totaltax ?? 0) || 0);
+    const oldNet = Math.max(0, oldTotal - oldTax);
+    if (oldNet < 1e-4) {
+      return Math.round(oldTax * 100) / 100;
+    }
+    return Math.round(Math.max(0, net * (oldTax / oldNet)) * 100) / 100;
+  });
+
+  computedGrandTotal = computed(() => {
+    return Math.round((this.computedNetBeforeTax() + this.computedTaxAmount()) * 100) / 100;
+  });
+
+  /** Paid total from payment-counts aggregate, else booking `paidtotal`. */
+  paymentsTotalDisplay = computed(() => {
+    const fromApi = this.bookingsPaymentSumFromApi();
+    if (fromApi !== null && fromApi !== undefined && Number.isFinite(fromApi)) {
+      return Math.max(0, fromApi);
+    }
+    const b = this.booking();
+    return Math.max(0, Number(b?.paidtotal ?? 0) || 0);
   });
 
   balanceDisplay = computed(() => {
@@ -113,8 +362,8 @@ export class BookingFinishComponent implements OnInit {
     if (!b) {
       return 0;
     }
-    const total = Math.max(0, Number(b.totalAmount ?? 0) || 0);
-    const paid = Math.max(0, Number(b.paidtotal ?? 0) || 0);
+    const total = this.computedGrandTotal();
+    const paid = this.paymentsTotalDisplay();
     return Math.max(0, Math.round((total - paid) * 100) / 100);
   });
 
@@ -190,8 +439,15 @@ export class BookingFinishComponent implements OnInit {
     });
   }
 
-  onReturnDateChange(value: string): void {
+  onReturnDateChange(value: unknown): void {
+    if (value === undefined || value === null) {
+      return;
+    }
     this.returnDateTime.set(String(value ?? ''));
+  }
+
+  onReturnOdometerInput(value: string): void {
+    this.returnOdometerText.set(String(value ?? ''));
   }
 
   onRepairsChange(value: string): void {
@@ -249,6 +505,25 @@ export class BookingFinishComponent implements OnInit {
     this.paidBank.set(bank);
   }
 
+  /** يحدّث المبلغ النقدي أو البنكي حسب طريقة الدفع (لا يُستخدم في الدفع المختلط). */
+  onSettlementPaidInput(value: string): void {
+    if (this.finishLocked() || this.paymentMethod() === 5) {
+      return;
+    }
+    const raw = String(value ?? '').trim().replace(',', '.');
+    const parsed = Number(raw);
+    const n = Number.isFinite(parsed) ? Math.max(0, Math.round(parsed * 100) / 100) : 0;
+    if (this.paymentMethod() === 1) {
+      this.paidCash.set(n);
+      this.paidBank.set(0);
+      return;
+    }
+    if ([2, 3, 4].includes(this.paymentMethod())) {
+      this.paidCash.set(0);
+      this.paidBank.set(n);
+    }
+  }
+
   paymentTypeIsCash(): boolean {
     return this.paymentMethod() === 1;
   }
@@ -280,7 +555,7 @@ export class BookingFinishComponent implements OnInit {
 
     const idCustomer = this.toBookingNumericId(item.customerId);
     const idVehicle = this.toBookingNumericId(item.vehicleId);
-    if (!idCustomer) {
+    if (!idCustomer || !idVehicle) {
       this.toast.error(this.translate.instant('Contract finish missing ids'));
       return;
     }
@@ -288,6 +563,29 @@ export class BookingFinishComponent implements OnInit {
     const paymentType = Number(this.paymentMethod()) || 1;
     const bankId = this.bankCashIdOrUndefined(this.bankAccount());
     const cashId = this.bankCashIdOrUndefined(this.cashAccount());
+
+    const returnIso = this.dateTimeLocalToApi(this.returnDateTime());
+    if (!returnIso) {
+      this.toast.error(this.translate.instant('Contract finish return time invalid'));
+      return;
+    }
+    const startMs = this.parseBookingInstantMs(item.startDate);
+    const retMs = this.parseReturnDateTimeMs(this.returnDateTime());
+    if (startMs !== null && retMs !== null && retMs < startMs) {
+      this.toast.error(this.translate.instant('Contract finish return before checkout'));
+      return;
+    }
+
+    const retOdo = this.returnOdometerParsed();
+    if (retOdo === null) {
+      this.toast.error(this.translate.instant('Contract finish return odometer required'));
+      return;
+    }
+    const checkoutOdo = Math.trunc(Number(item.checkoutCounter ?? 0) || 0);
+    if (retOdo <= checkoutOdo) {
+      this.toast.error(this.translate.instant('Contract finish return odometer below checkout'));
+      return;
+    }
 
     if (paymentType === 1 && !cashId) {
       this.toast.error(this.translate.instant('Contract finish cash required'));
@@ -304,48 +602,63 @@ export class BookingFinishComponent implements OnInit {
 
     const paidCash = Math.max(0, Number(this.paidCash()) || 0);
     const paidBank = Math.max(0, Number(this.paidBank()) || 0);
+    const paidTotal = Math.round((paidCash + paidBank) * 100) / 100;
 
-    const payload: BookingUpdateRequest = {
+    const nHr = this.hoursBilledAtLateHourlyRate();
+    const nKm = this.numberKmExcessComputed();
+    const dEx = this.dayExcessWithLatePenalty();
+    const pKm = Number(item.priceKmExtra ?? 0) || 0;
+    const pHr = Number(item.priceHoureExtra ?? 0) || 0;
+    const priceInDay = Number(item.priceInDay ?? 0) || 0;
+    const pricekmAllExcess = Math.round(Math.max(0, nKm) * Math.max(0, pKm) * 100) / 100;
+    const priceoAllHoure = this.extraHoursTotal();
+    const calendarDayExcess = this.dayExcessComputed();
+    const priceAllDayExcess =
+      Math.round((Math.max(0, calendarDayExcess) * Math.max(0, priceInDay)) * 100) / 100;
+
+    const billedDays = this.billingElapsedDays();
+    const grandTotal = this.computedGrandTotal();
+
+    const finishPayload: FinshBookingRequest = {
       id: idBooking,
-      idCustomer,
-      idVehicle: idVehicle ?? undefined,
-      idBranch,
-      checkoutCounter: item.checkoutCounter,
-      checkinCounter: item.checkinCounter,
-      countOfDay: item.countOfDay,
-      total: item.totalAmount,
-      discount: item.discount,
-      priceInDay: item.priceInDay,
-      priceInMonth: item.priceInMonth,
-      allowTo: item.allowTo,
-      countKMExtra: item.countKMExtra,
-      priceHoureExtra: item.priceHoureExtra,
-      priceKmExtra: item.priceKmExtra,
-      otherExpenses: item.otherExpenses,
-      totaltax: item.totaltax ?? undefined,
-      startDate: item.startDate,
-      endDate: item.endDate,
-      dateReturnVehical: this.dateTimeLocalToApi(this.returnDateTime()) || item.returnDate || item.endDate,
+      dateReturnVehical: returnIso,
+      numberOfHoursExcess: nHr,
+      numberKmExcess: nKm,
+      dayExcess: dEx,
       note: this.notes().trim() || undefined,
-      placeUSE: item.placeUSE,
-      numberBookingINBasame: item.numberBookingINBasame,
+      allowToall: Number(item.allowTo ?? 0) || 0,
+      pricekmAllExcess,
+      priceoAllHoure,
+      priceAllDayExcess,
+      idVehicle,
+      idCustomer,
+      idBranch,
+      fleetId,
+      checkoutCounter: Math.trunc(Number(item.checkoutCounter ?? 0) || 0),
+      checkinCounter: retOdo,
+      countOfDay: billedDays,
+      total: grandTotal,
+      countKMExtra: nKm,
+      priceHoureExtra: pHr,
+      priceKmExtra: pKm,
+      otherExpenses: Number(item.otherExpenses ?? 0) || 0,
+      discount: item.discount ?? null,
+      totaltax: this.computedTaxAmount(),
       distancetraveledgps: item.distancetraveledgps,
       totalTrafic: this.traffic(),
       totalMaintance: this.repairs(),
-      totalReceivedVehicle: item.totalReceivedVehicle,
-      transportationFees: item.transportationFees,
+      transportationFees: Number(item.transportationFees ?? 0) || 0,
       idCountingCustVehicle: item.idCountingCustVehicle,
-      stutus: 'finsh',
-      paymentType,
-      bondType: 1,
+      paid: paidTotal,
       idBank: bankId,
       idCash: cashId,
       paidCash,
       paidBank,
+      paymentType,
     };
 
     this.saving.set(true);
-    this.bookingService.update(payload).subscribe({
+    this.bookingService.finish(finishPayload).subscribe({
       next: () => {
         this.toast.success(this.translate.instant('Contract finish success'));
         this.router.navigate(['/booking', item.id, 'details']);
@@ -373,22 +686,46 @@ export class BookingFinishComponent implements OnInit {
       return;
     }
     this.loading.set(true);
-    this.bookingService
-      .getById(id, fleetId)
+    forkJoin({
+      booking: this.bookingService.getById(id, fleetId).pipe(catchError(() => of(null))),
+      setting: this.settingService.getCurrent(fleetId).pipe(
+        catchError(() => {
+          this.toast.warning(this.translate.instant('Contract finish settings load failed'));
+          return of(normalizeSetting({ fleetId }));
+        }),
+      ),
+    }).subscribe(({ booking: b, setting: st }) => {
+      this.loading.set(false);
+      if (!b) {
+        this.toast.error(this.translate.instant('Failed to load booking'));
+        this.settings.set(null);
+        return;
+      }
+      this.booking.set(b);
+      this.settings.set(st);
+      this.patchFormFromBooking(b);
+      this.loadBookingsPaymentSum(b.id, fleetId);
+    });
+  }
+
+  private loadBookingsPaymentSum(bookingId: string, fleetId: string): void {
+    const idBooking = this.toBookingNumericId(bookingId);
+    if (!idBooking) {
+      this.bookingsPaymentSumFromApi.set(null);
+      return;
+    }
+    this.bookingsPaymentSumFromApi.set(null);
+    this.paymentCountService
+      .getSumForBooking(idBooking, fleetId)
       .pipe(catchError(() => of(null)))
-      .subscribe(b => {
-        this.loading.set(false);
-        if (!b) {
-          this.toast.error(this.translate.instant('Failed to load booking'));
-          return;
-        }
-        this.booking.set(b);
-        this.patchFormFromBooking(b);
+      .subscribe(sum => {
+        this.bookingsPaymentSumFromApi.set(sum);
       });
   }
 
   private patchFormFromBooking(b: Booking): void {
-    this.returnDateTime.set(this.toDateTimeLocalValue(b.returnDate || b.endDate));
+    this.returnDateTime.set(this.nowDateTimeLocalValue());
+    this.returnOdometerText.set('');
     this.repairs.set(Math.max(0, Number(b.totalMaintance ?? 0) || 0));
     this.traffic.set(Math.max(0, Number(b.totalTrafic ?? 0) || 0));
     this.notes.set(String(b.notes ?? ''));
@@ -489,5 +826,63 @@ export class BookingFinishComponent implements OnInit {
     }
     const d = new Date(text);
     return Number.isNaN(d.getTime()) ? '' : d.toISOString();
+  }
+
+  private nowDateTimeLocalValue(): string {
+    return this.toDateTimeLocalValue(new Date().toISOString());
+  }
+
+  private parseBookingInstantMs(iso: string | undefined): number | null {
+    const t = String(iso ?? '').trim();
+    if (!t) {
+      return null;
+    }
+    const ms = new Date(t).getTime();
+    return Number.isNaN(ms) ? null : ms;
+  }
+
+  /** نهاية الإيجار المتفق عليها لحساب التأخر داخل أيام المحجوز. */
+  private resolvePlannedReturnBaselineMs(b: Booking, exitMs: number): number {
+    const endMs = this.parseBookingInstantMs(b.endDate);
+    if (endMs !== null && endMs >= exitMs) {
+      return endMs;
+    }
+    const bookedDays = Math.max(1, Math.trunc(Number(b.countOfDay ?? 0) || 1));
+    return exitMs + bookedDays * BookingFinishComponent.MS_PER_DAY;
+  }
+
+  private parseReturnDateTimeMs(value: string): number | null {
+    const text = String(value ?? '').trim();
+    if (!text) {
+      return null;
+    }
+    const parts = this.tryParseDateTimeLocalParts(text);
+    if (parts) {
+      const d = new Date(parts.y, parts.m - 1, parts.d, parts.hh, parts.mm, parts.ss);
+      const ms = d.getTime();
+      return Number.isNaN(ms) ? null : ms;
+    }
+    const ms = new Date(text).getTime();
+    return Number.isNaN(ms) ? null : ms;
+  }
+
+  /** `YYYY-MM-DDTHH:mm` / `…THH:mm:ss` as **local** wall time (same as `datetime-local`). */
+  private tryParseDateTimeLocalParts(
+    text: string,
+  ): { y: number; m: number; d: number; hh: number; mm: number; ss: number } | null {
+    const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?/.exec(text);
+    if (!m) {
+      return null;
+    }
+    const y = Number(m[1]);
+    const mo = Number(m[2]);
+    const d = Number(m[3]);
+    const hh = Number(m[4]);
+    const mm = Number(m[5]);
+    const ss = m[6] !== undefined && m[6] !== '' ? Number(m[6]) : 0;
+    if (![y, mo, d, hh, mm, ss].every(n => Number.isFinite(n))) {
+      return null;
+    }
+    return { y, m: mo, d, hh, mm, ss };
   }
 }

@@ -12,6 +12,7 @@ import {
   BookingExtensionRequest,
   BookingFilters,
   BookingUpdateRequest,
+  FinshBookingRequest,
 } from '../../models';
 import { normalizeBooking } from '../../models/booking/booking.normalizer';
 
@@ -194,6 +195,17 @@ export class BookingService {
   }
 
   /**
+   * `FinshBookingCommand` — `BookingRouting.Finsh` → **POST `Booking/finsh`**
+   * (history + optional receipt + vehicle available). Falls back to `Finsh` if routing differs.
+   */
+  finish(body: FinshBookingRequest): Observable<unknown> {
+    const payload = this.toFinishBookingPayload(body);
+    return this.api.postData(`${this.base}/finsh`, payload, { suppressErrorToast: true }).pipe(
+      catchError(() => this.api.postData(`${this.base}/Finsh`, payload)),
+    );
+  }
+
+  /**
    * Mirrors `toCreateBookingPayload`: duplicate PascalCase for ASP.NET binders.
    * When `paid` is `undefined`, `Paid` is omitted (JSON.stringify drops undefined) so the server
    * treats the amount as unchanged; `paid: null` sends explicit null for the same semantics.
@@ -310,6 +322,104 @@ export class BookingService {
       paymentType: body.paymentType,
       PaymentType: body.paymentType,
     };
+  }
+
+  /** Duplicate camelCase + PascalCase for ASP.NET binders (`FinshBookingCommand`). */
+  private toFinishBookingPayload(b: FinshBookingRequest): Record<string, unknown> {
+    const out: Record<string, unknown> = {
+      id: b.id,
+      Id: b.id,
+      dateReturnVehical: b.dateReturnVehical,
+      DateReturnVehical: b.dateReturnVehical,
+      numberOfHoursExcess: b.numberOfHoursExcess,
+      NumberOfHoursExcess: b.numberOfHoursExcess,
+      numberKmExcess: b.numberKmExcess,
+      NumberKmExcess: b.numberKmExcess,
+      dayExcess: b.dayExcess,
+      DayExcess: b.dayExcess,
+      allowToall: b.allowToall,
+      AllowToall: b.allowToall,
+      pricekmAllExcess: b.pricekmAllExcess,
+      PricekmAllExcess: b.pricekmAllExcess,
+      priceoAllHoure: b.priceoAllHoure,
+      PriceoAllHoure: b.priceoAllHoure,
+      priceAllDayExcess: b.priceAllDayExcess,
+      PriceAllDayExcess: b.priceAllDayExcess,
+      idVehicle: b.idVehicle,
+      IdVehicle: b.idVehicle,
+      idCustomer: b.idCustomer,
+      IdCustomer: b.idCustomer,
+      idBranch: b.idBranch,
+      IdBranch: b.idBranch,
+      fleetId: b.fleetId,
+      FleetId: b.fleetId,
+      checkoutCounter: b.checkoutCounter,
+      CheckoutCounter: b.checkoutCounter,
+      checkinCounter: b.checkinCounter,
+      CheckinCounter: b.checkinCounter,
+      countOfDay: b.countOfDay,
+      CountOfDay: b.countOfDay,
+      total: b.total,
+      Total: b.total,
+      TOTAL: b.total,
+      countKMExtra: b.countKMExtra,
+      CountKMExtra: b.countKMExtra,
+      priceHoureExtra: b.priceHoureExtra,
+      PriceHoureExtra: b.priceHoureExtra,
+      priceKmExtra: b.priceKmExtra,
+      PriceKmExtra: b.priceKmExtra,
+      otherExpenses: b.otherExpenses,
+      OtherExpenses: b.otherExpenses,
+      totalTrafic: b.totalTrafic,
+      TotalTrafic: b.totalTrafic,
+      totalMaintance: b.totalMaintance,
+      TotalMaintance: b.totalMaintance,
+      transportationFees: b.transportationFees,
+      TransportationFees: b.transportationFees,
+      paid: b.paid,
+      Paid: b.paid,
+      paymentType: b.paymentType,
+      PaymentType: b.paymentType,
+    };
+
+    if (b.note !== undefined && b.note !== '') {
+      out['note'] = b.note;
+      out['Note'] = b.note;
+    }
+    if (b.discount !== undefined && b.discount !== null) {
+      out['discount'] = b.discount;
+      out['Discount'] = b.discount;
+    }
+    if (b.totaltax !== undefined && b.totaltax !== null) {
+      out['totaltax'] = b.totaltax;
+      out['Totaltax'] = b.totaltax;
+    }
+    if (b.distancetraveledgps) {
+      out['distancetraveledgps'] = b.distancetraveledgps;
+      out['Distancetraveledgps'] = b.distancetraveledgps;
+    }
+    if (b.idCountingCustVehicle) {
+      out['idCountingCustVehicle'] = b.idCountingCustVehicle;
+      out['IdCountingCustVehicle'] = b.idCountingCustVehicle;
+    }
+    if (b.idBank) {
+      out['idBank'] = b.idBank;
+      out['IdBank'] = b.idBank;
+    }
+    if (b.idCash) {
+      out['idCash'] = b.idCash;
+      out['IdCash'] = b.idCash;
+    }
+    if (b.paidCash !== undefined && b.paidCash !== null) {
+      out['paidCash'] = b.paidCash;
+      out['PaidCash'] = b.paidCash;
+    }
+    if (b.paidBank !== undefined && b.paidBank !== null) {
+      out['paidBank'] = b.paidBank;
+      out['PaidBank'] = b.paidBank;
+    }
+
+    return out;
   }
 
   /**

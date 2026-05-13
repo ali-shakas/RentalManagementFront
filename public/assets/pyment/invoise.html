@@ -1689,9 +1689,11 @@
         const paid = num(get('paid', ''));
         const bondType = Number(get('bondType', '0'));
         const paymentType = Number(get('paymentType', '0'));
-        const voucherTitle = bondType === 2 ? 'سند صرف' : 'سند قبض';
-        const personTitleAr = bondType === 1 ? 'استلمت من / ' : 'اصرفوا الى / ';
-        const personTitleEn = bondType === 1 ? 'Received from' : 'Pay To';
+        // bondType 1 = payment/disbursement (سند صرف), 2 = receipt (سند قبض) — matches list + API
+        const voucherTitle =
+          bondType === 1 ? 'سند صرف' : bondType === 2 ? 'سند قبض' : 'سند';
+        const personTitleAr = bondType === 1 ? 'اصرفوا الى / ' : 'استلمت من / ';
+        const personTitleEn = bondType === 1 ? 'Pay To' : 'Received from';
         const paymentMethodAr =
           paymentType === 1 ? 'نقدًا' :
           paymentType === 2 ? 'شبكة' :

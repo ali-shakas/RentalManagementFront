@@ -6,23 +6,26 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { catchError, forkJoin, of } from 'rxjs';
 
 import { AuthStateService } from '../../../../../core/auth/auth-state.service';
-import { resolveMediaUrl } from '../../../../../shared/utils/media-url.utils';
-import { PaymentCount } from '../../../../finance/models/payment-counts/payment-count.model';
-import { PaymentCountService } from '../../../../finance/services/payment-counts/payment-count.service';
-import { Bank } from '../../../../finance/models/banks/bank.model';
-import { BankService } from '../../../../finance/services/banks/bank.service';
-import { CashAccount } from '../../../../finance/models/cash/cash-account.model';
-import { CashAccountService } from '../../../../finance/services/cash/cash-account.service';
-import { Booking, BookingStatus } from '../../../models';
-import { bookingStatusTone, bookingStatusTranslationKey } from '../../../models/booking/booking-status.utils';
-import { BookingService } from '../../../services/booking/booking.service';
 import { ToastService } from '../../../../../shared/services/toast.service';
 import { PageHeaderComponent } from '../../../../../shared/ui/page-header/page-header.component';
-import { StatusBadgeComponent } from '../../../../../shared/ui/status-badge/status-badge.component';
 import {
   SmoothSelectComponent,
   SmoothSelectOption,
 } from '../../../../../shared/ui/smooth-select/smooth-select.component';
+import { StatusBadgeComponent } from '../../../../../shared/ui/status-badge/status-badge.component';
+import { resolveMediaUrl } from '../../../../../shared/utils/media-url.utils';
+import { Bank } from '../../../../finance/models/banks/bank.model';
+import { CashAccount } from '../../../../finance/models/cash/cash-account.model';
+import { PaymentCount } from '../../../../finance/models/payment-counts/payment-count.model';
+import { BankService } from '../../../../finance/services/banks/bank.service';
+import { CashAccountService } from '../../../../finance/services/cash/cash-account.service';
+import { PaymentCountService } from '../../../../finance/services/payment-counts/payment-count.service';
+import { Booking, BookingStatus } from '../../../models';
+import {
+  bookingStatusTone,
+  bookingStatusTranslationKey,
+} from '../../../models/booking/booking-status.utils';
+import { BookingService } from '../../../services/booking/booking.service';
 
 type BookingDetailsToolbarAction = 'suspend' | 'extend' | 'print' | 'finish' | 'closeContract';
 
@@ -107,10 +110,7 @@ export class BookingDetailsComponent implements OnInit {
   }
 
   contractNumber(item: Booking): string {
-    return (
-      String(item.numberBookingINBasame ?? item.bookingNumber ?? item.id ?? '')
-        .trim() || '-'
-    );
+    return String(item.numberBookingINBasame ?? item.bookingNumber ?? item.id ?? '').trim() || '-';
   }
 
   contractSubtitle(item: Booking): string {
@@ -733,7 +733,9 @@ export class BookingDetailsComponent implements OnInit {
   }
 
   private normalizeGuidOrUndefined(value: string): string | undefined {
-    const normalized = String(value ?? '').trim().replace(/^\{|\}$/g, '');
+    const normalized = String(value ?? '')
+      .trim()
+      .replace(/^\{|\}$/g, '');
     if (!normalized) {
       return undefined;
     }
@@ -767,24 +769,28 @@ export class BookingDetailsComponent implements OnInit {
     }
 
     forkJoin({
-      sum: this.paymentCountService.getSumForBooking(idBooking, fleetId).pipe(catchError(() => of(null))),
-      list: this.paymentCountService.getByBookingId(idBooking, fleetId).pipe(catchError(() => of([]))),
+      sum: this.paymentCountService
+        .getSumForBooking(idBooking, fleetId)
+        .pipe(catchError(() => of(null))),
+      list: this.paymentCountService
+        .getByBookingId(idBooking, fleetId)
+        .pipe(catchError(() => of([]))),
     }).subscribe(({ sum, list }) => {
-        const normalizedList = list ?? [];
-        this.paymentRows.set(normalizedList);
-        if (sum !== null && Number.isFinite(sum)) {
-          this.paymentCountSum.set(sum);
-          if (this.isExtendMode() && this.booking()) {
-            this.setExtendRequiredAmountFromBooking(this.booking()!);
-          }
-          return;
-        }
-        const reduced = normalizedList.reduce((acc, row) => acc + (Number(row.paid) || 0), 0);
-        this.paymentCountSum.set(Number.isFinite(reduced) ? reduced : null);
+      const normalizedList = list ?? [];
+      this.paymentRows.set(normalizedList);
+      if (sum !== null && Number.isFinite(sum)) {
+        this.paymentCountSum.set(sum);
         if (this.isExtendMode() && this.booking()) {
           this.setExtendRequiredAmountFromBooking(this.booking()!);
         }
-      });
+        return;
+      }
+      const reduced = normalizedList.reduce((acc, row) => acc + (Number(row.paid) || 0), 0);
+      this.paymentCountSum.set(Number.isFinite(reduced) ? reduced : null);
+      if (this.isExtendMode() && this.booking()) {
+        this.setExtendRequiredAmountFromBooking(this.booking()!);
+      }
+    });
   }
 
   dateOrDash(value: string | undefined, format: 'date' | 'datetime' = 'datetime'): string {
@@ -843,7 +849,9 @@ export class BookingDetailsComponent implements OnInit {
     const idBooking = this.toBookingNumericId(item.id);
     const lastPayment$ =
       idBooking && fleetId
-        ? this.paymentCountService.getLastForBooking(idBooking, fleetId).pipe(catchError(() => of(null)))
+        ? this.paymentCountService
+            .getLastForBooking(idBooking, fleetId)
+            .pipe(catchError(() => of(null)))
         : of(null);
     lastPayment$.subscribe(lastPayment => {
       const payloadKey = `booking-print-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
@@ -924,7 +932,9 @@ export class BookingDetailsComponent implements OnInit {
       Number.isFinite(cIn) && Number.isFinite(cOut) ? String(Math.round(cIn - cOut)) : '-';
 
     const receiptAmount = this.moneyOrDash(lastPayment?.paid ?? this.displayedPaidTotal(item));
-    const receiptDateGreg = this.formatBookingDateTimeForPrint(lastPayment?.createdAt ?? new Date());
+    const receiptDateGreg = this.formatBookingDateTimeForPrint(
+      lastPayment?.createdAt ?? new Date(),
+    );
     const receiptCustomerName = this.valueOrDash(item.customerName);
     const paymentMethodAr = this.paymentMethodArabicForPrint(lastPayment?.paymentType);
     const amountTextFromApi = String(lastPayment?.monyToText ?? '').trim();
@@ -1031,7 +1041,9 @@ export class BookingDetailsComponent implements OnInit {
 
   ngOnInit(): void {
     const extendFromQuery =
-      String(this.route.snapshot.queryParamMap.get('action') ?? '').trim().toLowerCase() === 'extend';
+      String(this.route.snapshot.queryParamMap.get('action') ?? '')
+        .trim()
+        .toLowerCase() === 'extend';
     if (extendFromQuery) {
       this.isExtendMode.set(true);
     }

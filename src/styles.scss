@@ -983,6 +983,8 @@ thead th,
   overflow: hidden;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  position: relative;
+  z-index: 0;
 }
 
 .table {
@@ -1060,6 +1062,15 @@ thead th,
   gap: 0.85rem;
   margin-bottom: 1rem;
   align-items: end;
+  /* Stacking: following .table-responsive paints later and can cover overflow; keep toolbar above. */
+  position: relative;
+  z-index: 8;
+}
+
+/* Lift the whole filter cell while its smooth-select is open so the panel clears sibling fields (grid overlap). */
+.app-filters-toolbar .app-filter-field:has(app-smooth-select.app-smooth-select-host--open) {
+  position: relative;
+  z-index: 30;
 }
 
 .app-filter-field {

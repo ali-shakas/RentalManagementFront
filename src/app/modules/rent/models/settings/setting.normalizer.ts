@@ -29,13 +29,34 @@ export function normalizeSetting(raw: unknown): Setting {
   const source = (raw ?? {}) as Record<string, unknown>;
   return {
     id: toNumber(pick(source, 'id', 'Id'), 0),
-    number_hour_latefree: toNumber(pick(source, 'number_hour_latefree', 'Number_hour_latefree'), 0),
+    number_hour_latefree: toNumber(
+      pick(
+        source,
+        'number_hour_latefree',
+        'Number_hour_latefree',
+        'numberHourLatefree',
+        'NumberHourLatefree',
+      ),
+      0,
+    ),
     number_mints_late_forr_finshcontract: toNumber(
-      pick(source, 'number_mints_late_forr_finshcontract', 'Number_mints_late_forr_finshcontract'),
+      pick(
+        source,
+        'number_mints_late_forr_finshcontract',
+        'Number_mints_late_forr_finshcontract',
+        'numberMintsLateForrFinshcontract',
+        'NumberMintsLateForrFinshcontract',
+      ),
       0,
     ),
     number_hour_late_forr_finshinday: toNumber(
-      pick(source, 'number_hour_late_forr_finshinday', 'Number_hour_late_forr_finshinday'),
+      pick(
+        source,
+        'number_hour_late_forr_finshinday',
+        'Number_hour_late_forr_finshinday',
+        'numberHourLateForrFinshinday',
+        'NumberHourLateForrFinshinday',
+      ),
       0,
     ),
     number_incres_km_for_finshcontract: toNumber(
