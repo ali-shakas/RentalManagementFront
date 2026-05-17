@@ -9,6 +9,29 @@ function pick<T>(source: Record<string, unknown>, ...keys: string[]): T | undefi
   return undefined;
 }
 
+function toBoolean(value: unknown): boolean {
+  if (typeof value === 'boolean') {
+    return value;
+  }
+
+  if (typeof value === 'number') {
+    return value !== 0;
+  }
+
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    if (['true', '1', 'yes', 'y'].includes(normalized)) {
+      return true;
+    }
+
+    if (['false', '0', 'no', 'n', ''].includes(normalized)) {
+      return false;
+    }
+  }
+
+  return Boolean(value);
+}
+
 export function normalizeUser(raw: unknown): User {
   const source = (raw ?? {}) as Record<string, unknown>;
   return {
@@ -18,18 +41,18 @@ export function normalizeUser(raw: unknown): User {
     password: pick<string>(source, 'password', 'Password'),
     nameAr: pick<string>(source, 'nameAr', 'NameAr'),
     nameEn: pick<string>(source, 'nameEn', 'NameEn'),
-    isActive: Boolean(pick(source, 'isActive', 'IsActive') ?? false),
-    isAdmin: pick<boolean>(source, 'isAdmin', 'IsAdmin'),
+    isActive: toBoolean(pick(source, 'isActive', 'IsActive') ?? false),
+    isAdmin: toBoolean(pick(source, 'isAdmin', 'IsAdmin')),
     expirationDate: pick<string>(source, 'expirationDate', 'ExpirationDate'),
     appId: pick<string>(source, 'appId', 'AppId'),
     companyId: pick<string>(source, 'companyId', 'CompanyId'),
     connectionId: pick<string>(source, 'connectionId', 'ConnectionId'),
-    connected: pick<boolean>(source, 'connected', 'Connected'),
+    connected: toBoolean(pick(source, 'connected', 'Connected')),
     connectionDate: pick<string>(source, 'connectionDate', 'ConnectionDate'),
     disconnectionDate: pick<string>(source, 'disconnectionDate', 'DisconnectionDate'),
     currentViewingPageUrl: pick<string>(source, 'currentViewingPageUrl', 'CurrentViewingPageUrl'),
-    enableAlert: pick<boolean>(source, 'enableAlert', 'EnableAlert'),
-    enableMobileAlerts: pick<boolean>(source, 'enableMobileAlerts', 'EnableMobileAlerts'),
+    enableAlert: toBoolean(pick(source, 'enableAlert', 'EnableAlert')),
+    enableMobileAlerts: toBoolean(pick(source, 'enableMobileAlerts', 'EnableMobileAlerts')),
     branchId: pick<number>(source, 'branchId', 'BranchId'),
     branchNameAr: pick<string>(source, 'branchNameAr', 'BranchNameAr'),
     branchNameEn: pick<string>(source, 'branchNameEn', 'BranchNameEn'),
