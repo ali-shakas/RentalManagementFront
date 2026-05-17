@@ -6,5 +6,8 @@
     "outDir": "./out-tsc/spec",
     "types": ["jasmine"]
   },
-  "include": ["src/**/*.spec.ts", "src/**/*.d.ts"]
+  "include": [
+    "src/app/modules/rent/models/users/user.normalizer.spec.ts",
+    "src/**/*.d.ts"
+  ]
 }

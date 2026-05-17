@@ -92,6 +92,7 @@
             "polyfills": ["zone.js", "zone.js/testing"],
             "tsConfig": "tsconfig.spec.json",
             "inlineStyleLanguage": "scss",
+            "include": ["src/app/modules/rent/models/users/user.normalizer.spec.ts"],
             "assets": [
               {
                 "glob": "**/*",
