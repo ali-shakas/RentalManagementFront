@@ -45,6 +45,11 @@ const HIJRI_NUMERIC_PARTS_FORMAT = new Intl.DateTimeFormat('en-u-ca-islamic', {
   year: 'numeric',
 });
 
+const GREGORIAN_MONTH_INDICES = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] as const;
+const HIJRI_MONTH_INDICES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const;
+const YEAR_RANGE_PAST = 120;
+const YEAR_RANGE_FUTURE = 15;
+
 @Component({
   selector: 'app-date-picker',
   standalone: true,
@@ -74,6 +79,8 @@ export class DatePickerComponent implements ControlValueAccessor, OnInit, OnChan
   @Input() mode: DatePickerMode = 'date';
   @Input() valueFormat: DatePickerValueFormat = 'iso';
   @Input() disabled = false;
+  /** Compact layout for filter toolbars (hides calendar badge, tighter trigger). */
+  @Input() compact = false;
 
   @Input() set calendarMode(next: CalendarMode) {
     this.calendarModeState.set(next === 'hijri' ? 'hijri' : 'gregorian');
@@ -194,6 +201,9 @@ export class DatePickerComponent implements ControlValueAccessor, OnInit, OnChan
     return ordered.map(key => this.translate.instant(`datePicker.week.${key}`));
   }
 
+  readonly gregorianMonthIndices = GREGORIAN_MONTH_INDICES;
+  readonly hijriMonthIndices = HIJRI_MONTH_INDICES;
+
   monthLabel(): string {
     const anchor = new Date(this.currentYear(), this.currentMonth(), 1);
     if (this.calendarModeState() === 'hijri') {
@@ -202,6 +212,70 @@ export class DatePickerComponent implements ControlValueAccessor, OnInit, OnChan
     const monthKey = `datePicker.month.${this.currentMonth()}`;
     const month = this.translate.instant(monthKey);
     return `${month} ${this.currentYear()}`;
+  }
+
+  gregorianYearOptions(): number[] {
+    const now = new Date().getFullYear();
+    const start = now - YEAR_RANGE_PAST;
+    const end = now + YEAR_RANGE_FUTURE;
+    return Array.from({ length: end - start + 1 }, (_, index) => end - index);
+  }
+
+  hijriYearOptions(): number[] {
+    const current = this.viewHijriYear();
+    const start = current - YEAR_RANGE_PAST;
+    const end = current + YEAR_RANGE_FUTURE;
+    return Array.from({ length: end - start + 1 }, (_, index) => end - index);
+  }
+
+  viewHijriMonth(): number {
+    return this.getHijriNumericParts(this.calendarAnchorDate()).month;
+  }
+
+  viewHijriYear(): number {
+    return this.getHijriNumericParts(this.calendarAnchorDate()).year;
+  }
+
+  hijriMonthLabel(month: number): string {
+    const anchor =
+      this.gregorianFromHijri(15, month, this.viewHijriYear()) ??
+      new Date(this.currentYear(), this.currentMonth(), 15);
+    const locale = this.translate.currentLang === 'ar' ? 'ar-SA-u-ca-islamic' : 'en-u-ca-islamic';
+    return new Intl.DateTimeFormat(locale, { month: 'long' }).format(anchor);
+  }
+
+  onGregorianMonthChange(raw: string): void {
+    const month = Number.parseInt(raw, 10);
+    if (!Number.isFinite(month) || month < 0 || month > 11) {
+      return;
+    }
+    this.currentMonth.set(month);
+    this.buildCalendar();
+  }
+
+  onGregorianYearChange(raw: string): void {
+    const year = Number.parseInt(raw, 10);
+    if (!Number.isFinite(year)) {
+      return;
+    }
+    this.currentYear.set(year);
+    this.buildCalendar();
+  }
+
+  onHijriMonthChange(raw: string): void {
+    const month = Number.parseInt(raw, 10);
+    if (!Number.isFinite(month) || month < 1 || month > 12) {
+      return;
+    }
+    this.applyHijriAnchor(this.viewHijriYear(), month);
+  }
+
+  onHijriYearChange(raw: string): void {
+    const year = Number.parseInt(raw, 10);
+    if (!Number.isFinite(year)) {
+      return;
+    }
+    this.applyHijriAnchor(year, this.viewHijriMonth());
   }
 
   formatGregorianDate(date: Date): string {
@@ -416,6 +490,38 @@ export class DatePickerComponent implements ControlValueAccessor, OnInit, OnChan
     return h === 12 ? 12 : h + 12;
   }
 
+  private calendarAnchorDate(): Date {
+    return new Date(this.currentYear(), this.currentMonth(), 15);
+  }
+
+  private applyHijriAnchor(hijriYear: number, hijriMonth: number): void {
+    const gregorian = this.gregorianFromHijri(1, hijriMonth, hijriYear);
+    if (!gregorian) {
+      return;
+    }
+    this.currentYear.set(gregorian.getFullYear());
+    this.currentMonth.set(gregorian.getMonth());
+    this.buildCalendar();
+  }
+
+  private gregorianFromHijri(day: number, month: number, year: number): Date | null {
+    if (month < 1 || month > 12 || day < 1 || day > 30) {
+      return null;
+    }
+
+    const cursor = new Date(1990, 0, 1);
+    const end = new Date(2060, 11, 31);
+    while (cursor <= end) {
+      const parts = this.getHijriNumericParts(cursor);
+      if (parts.day === day && parts.month === month && parts.year === year) {
+        return new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate());
+      }
+      cursor.setDate(cursor.getDate() + 1);
+    }
+
+    return null;
+  }
+
   private buildCalendar(): void {
     const totalDays = new Date(this.currentYear(), this.currentMonth() + 1, 0).getDate();
     const firstJsDay = new Date(this.currentYear(), this.currentMonth(), 1).getDay();
@@ -531,33 +637,11 @@ export class DatePickerComponent implements ControlValueAccessor, OnInit, OnChan
     const targetDay = Number(match[1]);
     const targetMonth = Number(match[2]);
     const targetYear = Number(match[3]);
-    if (
-      !Number.isFinite(targetDay) ||
-      !Number.isFinite(targetMonth) ||
-      !Number.isFinite(targetYear) ||
-      targetMonth < 1 ||
-      targetMonth > 12 ||
-      targetDay < 1 ||
-      targetDay > 30
-    ) {
+    if (!Number.isFinite(targetDay) || !Number.isFinite(targetMonth) || !Number.isFinite(targetYear)) {
       return null;
     }
 
-    const cursor = new Date(1990, 0, 1);
-    const end = new Date(2060, 11, 31);
-    while (cursor <= end) {
-      const parts = this.getHijriNumericParts(cursor);
-      if (
-        parts.day === targetDay &&
-        parts.month === targetMonth &&
-        parts.year === targetYear
-      ) {
-        return new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate());
-      }
-      cursor.setDate(cursor.getDate() + 1);
-    }
-
-    return null;
+    return this.gregorianFromHijri(targetDay, targetMonth, targetYear);
   }
 
   private serializeValue(): string | null {

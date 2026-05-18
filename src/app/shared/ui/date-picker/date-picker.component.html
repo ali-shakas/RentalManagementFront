@@ -1,6 +1,7 @@
 <div
   class="date-picker"
   [class.open]="isOpen()"
+  [class.date-picker--compact]="compact"
   [class.date-picker--datetime]="mode === 'datetime'"
   [class.date-picker--hijri]="calendarModeState() === 'hijri'"
 >
@@ -24,7 +25,9 @@
       {{ selectedDate() ? displayValue() : placeholderText() }}
     </span>
 
-    <span class="calendar-type-badge">{{ calendarModeBadge() }}</span>
+    @if (!compact) {
+      <span class="calendar-type-badge">{{ calendarModeBadge() }}</span>
+    }
 
     <span class="chevron" aria-hidden="true"><i class="fa-solid fa-chevron-down"></i></span>
   </button>
@@ -54,7 +57,53 @@
         <button type="button" class="nav-btn" (click)="prevMonth()" [attr.aria-label]="'datePicker.prevMonth' | translate">
           <i class="fa-solid fa-chevron-right"></i>
         </button>
-        <strong>{{ monthLabel() }}</strong>
+
+        <div class="calendar-header__selects">
+          @if (calendarModeState() === 'hijri') {
+            <select
+              class="calendar-header__select"
+              [attr.aria-label]="'datePicker.selectMonth' | translate"
+              [value]="viewHijriMonth()"
+              (change)="onHijriMonthChange($any($event.target).value)"
+            >
+              @for (month of hijriMonthIndices; track month) {
+                <option [value]="month">{{ hijriMonthLabel(month) }}</option>
+              }
+            </select>
+            <select
+              class="calendar-header__select calendar-header__select--year"
+              [attr.aria-label]="'datePicker.selectYear' | translate"
+              [value]="viewHijriYear()"
+              (change)="onHijriYearChange($any($event.target).value)"
+            >
+              @for (year of hijriYearOptions(); track year) {
+                <option [value]="year">{{ year }}</option>
+              }
+            </select>
+          } @else {
+            <select
+              class="calendar-header__select"
+              [attr.aria-label]="'datePicker.selectMonth' | translate"
+              [value]="currentMonth()"
+              (change)="onGregorianMonthChange($any($event.target).value)"
+            >
+              @for (month of gregorianMonthIndices; track month) {
+                <option [value]="month">{{ 'datePicker.month.' + month | translate }}</option>
+              }
+            </select>
+            <select
+              class="calendar-header__select calendar-header__select--year"
+              [attr.aria-label]="'datePicker.selectYear' | translate"
+              [value]="currentYear()"
+              (change)="onGregorianYearChange($any($event.target).value)"
+            >
+              @for (year of gregorianYearOptions(); track year) {
+                <option [value]="year">{{ year }}</option>
+              }
+            </select>
+          }
+        </div>
+
         <button type="button" class="nav-btn" (click)="nextMonth()" [attr.aria-label]="'datePicker.nextMonth' | translate">
           <i class="fa-solid fa-chevron-left"></i>
         </button>

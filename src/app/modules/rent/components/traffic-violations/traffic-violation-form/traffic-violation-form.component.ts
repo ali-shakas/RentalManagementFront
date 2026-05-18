@@ -1,12 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { Component, ElementRef, OnInit, inject, signal } from '@angular/core';
-import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { SHARED_FORM_FIELD_DIRECTIVES } from '../../../../../shared/forms/shared-form-field.imports';
+import { coerceFormNumber, requiredNumber } from '../../../../../shared/validators/required-number.validator';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { catchError, finalize, forkJoin, of } from 'rxjs';
 
 import { AuthStateService } from '../../../../../core/auth/auth-state.service';
-import { FieldValueStateDirective } from '../../../../../shared/directives/field-value-state.directive';
 import { DatePickerComponent } from '../../../../../shared/ui/date-picker/date-picker.component';
 import { ToastService } from '../../../../../shared/services/toast.service';
 import { PageHeaderComponent } from '../../../../../shared/ui/page-header/page-header.component';
@@ -16,7 +17,8 @@ import {
   SmoothSelectValue,
 } from '../../../../../shared/ui/smooth-select/smooth-select.component';
 import { focusFirstInvalidControl } from '../../../../../shared/utils/focus-first-invalid-control.util';
-import { Booking, Vehicle } from '../../../models';
+import { Vehicle } from '../../../models';
+import { TrafficBooking } from '../../../models/booking/traffic-booking.model';
 import { TrafficViolationUpsertRequest } from '../../../models/traffic-violations/traffic-violation.model';
 import { BookingService } from '../../../services/booking/booking.service';
 import { TrafficViolationService } from '../../../services/traffic-violations/traffic-violation.service';
@@ -30,7 +32,7 @@ import { VehicleService } from '../../../services/vehicles/vehicle.service';
     ReactiveFormsModule,
     RouterLink,
     TranslateModule,
-    FieldValueStateDirective,
+    ...SHARED_FORM_FIELD_DIRECTIVES,
     PageHeaderComponent,
     SmoothSelectComponent,
     DatePickerComponent,
@@ -41,6 +43,7 @@ import { VehicleService } from '../../../services/vehicles/vehicle.service';
 export class TrafficViolationFormComponent implements OnInit {
   private readonly hostEl = inject(ElementRef<HTMLElement>);
   private fb = inject(NonNullableFormBuilder);
+  private readonly nullableFb = inject(FormBuilder);
   private authState = inject(AuthStateService);
   private trafficViolationService = inject(TrafficViolationService);
   private bookingService = inject(BookingService);
@@ -57,8 +60,8 @@ export class TrafficViolationFormComponent implements OnInit {
   saving = signal(false);
   bookingOptions = signal<SmoothSelectOption[]>([]);
   vehicleOptions = signal<SmoothSelectOption[]>([]);
-  /** Raw rows from `GetBookingsQuery` for resolving `vehicleId` after pick */
-  bookings = signal<Booking[]>([]);
+  /** Raw rows from `GetTrafficBookingsQuery` for resolving `idVehicle` after pick */
+  bookings = signal<TrafficBooking[]>([]);
   /** Fleet/branch vehicles from `Vehicle/List` (same shape as `GetVehiclesQuery`). */
   vehicles = signal<Vehicle[]>([]);
   loadingVehicle = signal(false);
@@ -68,9 +71,9 @@ export class TrafficViolationFormComponent implements OnInit {
     idBooking: this.fb.control<number | null>(null),
     idVehicle: this.fb.control<number | null>(null, [Validators.required]),
     dateViolation: ['', [Validators.required]],
-    violationFine: [0, [Validators.required, Validators.min(0)]],
+    violationFine: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
     description: [''],
-    numberViolation: [1, [Validators.required, Validators.min(1)]],
+    numberViolation: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 1 })]),
   });
 
   get idBookingCtrl() {
@@ -90,12 +93,12 @@ export class TrafficViolationFormComponent implements OnInit {
       return;
     }
 
-    const booking = this.bookings().find(b => Number(b.id) === next);
+    const booking = this.bookings().find(b => b.id === next);
     if (!booking) {
       return;
     }
 
-    const vehicleId = Number(booking.vehicleId);
+    const vehicleId = booking.idVehicle;
     if (!Number.isFinite(vehicleId) || vehicleId <= 0) {
       this.toast.error(this.translate.instant('trafficViolations.noVehicleOnBooking'));
       return;
@@ -129,7 +132,7 @@ export class TrafficViolationFormComponent implements OnInit {
 
     this.initializing.set(true);
     forkJoin({
-      bookings: this.bookingService.getBookings({ fleetId, branchId }),
+      bookings: this.bookingService.getTrafficBookings({ fleetId, branchId }),
       vehicles: this.vehicleService
         .getListMergedAllStatuses({
           fleetId,
@@ -191,9 +194,9 @@ export class TrafficViolationFormComponent implements OnInit {
       idBooking,
       idVehicle,
       dateViolation: dateIso,
-      violationFine: Number(raw.violationFine),
+      violationFine: coerceFormNumber(raw.violationFine),
       description: raw.description.trim() || undefined,
-      numberViolation: Number(raw.numberViolation),
+      numberViolation: coerceFormNumber(raw.numberViolation, 1),
     };
 
     this.saving.set(true);
@@ -309,7 +312,7 @@ export class TrafficViolationFormComponent implements OnInit {
     }
   }
 
-  private buildBookingOptions(bookings: Booking[]): SmoothSelectOption[] {
+  private buildBookingOptions(bookings: TrafficBooking[]): SmoothSelectOption[] {
     const none: SmoothSelectOption = {
       label: this.translate.instant('trafficViolations.bookingNone'),
       value: '',
@@ -317,13 +320,13 @@ export class TrafficViolationFormComponent implements OnInit {
     return [none, ...this.toBookingOptions(bookings)];
   }
 
-  private toBookingOptions(bookings: Booking[]): SmoothSelectOption[] {
+  private toBookingOptions(bookings: TrafficBooking[]): SmoothSelectOption[] {
     return bookings.map(b => {
-      const idNum = Number(b.id);
-      const ref = (b.numberBookingINBasame || b.bookingNumber || '').trim();
-      const labelParts = [ref, b.customerName, b.vehiclePlateNumber].filter(Boolean);
+      const ref = (b.numberBookingINBasame || '').trim();
+      const status = String(b.status ?? '').trim();
+      const labelParts = [ref, status].filter(Boolean);
       const label = labelParts.length ? labelParts.join(' · ') : `#${b.id}`;
-      return { label: String(label), value: idNum };
+      return { label, value: b.id };
     });
   }
 

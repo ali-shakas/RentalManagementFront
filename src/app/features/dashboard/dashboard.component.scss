@@ -108,21 +108,30 @@
 }
 
 .bi-filters {
-  padding: 1.25rem 1.5rem;
-  margin-bottom: 1.25rem;
+  padding: 0.85rem 1rem;
+  margin-bottom: 0.85rem;
 }
 
 .bi-filters__grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 0.75rem 1rem;
+  gap: 0.55rem 0.75rem;
+}
+
+.bi-filters .form-control,
+.bi-filters .form-select {
+  min-height: 36px;
+  height: 36px;
+  padding-block: 0.22rem;
+  border-radius: 10px;
+  font-size: 0.78rem;
 }
 
 .bi-filters label span,
 .bi-filters .form-check-label {
   display: block;
-  margin-bottom: 0.35rem;
-  font-size: 0.78rem;
+  margin-bottom: 0.2rem;
+  font-size: 0.65rem;
   color: var(--bi-muted);
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
 }
@@ -300,9 +309,14 @@
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
 }
 
-.bi-slicer__field .form-control {
+.bi-slicer__field .form-control,
+.bi-slicer__field .form-select {
   min-width: 6.5rem;
+  min-height: 36px;
+  height: 36px;
+  padding-block: 0.22rem;
   border-radius: 10px;
+  font-size: 0.78rem;
 }
 
 .bi-kpi-group {

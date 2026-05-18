@@ -1,6 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, ElementRef, OnInit, inject, signal } from '@angular/core';
-import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { SHARED_FORM_FIELD_DIRECTIVES } from '../../../../../shared/forms/shared-form-field.imports';
+import { coerceFormNumber, requiredNumber } from '../../../../../shared/validators/required-number.validator';
 import { Router, RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
@@ -15,12 +17,21 @@ import { focusFirstInvalidControl } from '../../../../../shared/utils/focus-firs
 @Component({
   selector: 'app-financial-year-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, TranslateModule, PageHeaderComponent, DatePickerComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterLink,
+    TranslateModule,
+    PageHeaderComponent,
+    DatePickerComponent,
+    ...SHARED_FORM_FIELD_DIRECTIVES,
+  ],
   templateUrl: './financial-year-form.component.html',
 })
 export class FinancialYearFormComponent implements OnInit {
   private readonly hostEl = inject(ElementRef<HTMLElement>);
   private fb = inject(NonNullableFormBuilder);
+  private readonly nullableFb = inject(FormBuilder);
   private authState = inject(AuthStateService);
   private financialYearService = inject(FinancialYearService);
   private toast = inject(ToastService);
@@ -30,7 +41,7 @@ export class FinancialYearFormComponent implements OnInit {
   loading = signal(false);
 
   form = this.fb.group({
-    financialYearNumber: [new Date().getFullYear(), [Validators.required, Validators.min(2000)]],
+    financialYearNumber: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 2000 })]),
     name: ['', [Validators.required, Validators.maxLength(255)]],
     startDate: ['', [Validators.required]],
     endDate: ['', [Validators.required]],
@@ -51,7 +62,7 @@ export class FinancialYearFormComponent implements OnInit {
 
     const raw = this.form.getRawValue();
     const body: CreateFinancialYearRequest = {
-      financialYearNumber: raw.financialYearNumber,
+      financialYearNumber: coerceFormNumber(raw.financialYearNumber),
       name: raw.name.trim(),
       startDate: new Date(raw.startDate).toISOString(),
       endDate: new Date(raw.endDate).toISOString(),

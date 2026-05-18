@@ -30,6 +30,7 @@
     "@ngrx/store": "^21.0.1",
     "@ngx-translate/core": "^15.0.0",
     "@ngx-translate/http-loader": "^8.0.0",
+    "@rushdi94/hijri-datepicker": "^1.0.1",
     "@types/feather-icons": "^4.29.4",
     "bootstrap": "^5.3.8",
     "chart.js": "^4.5.1",

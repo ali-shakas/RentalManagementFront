@@ -1,7 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, ElementRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { SHARED_FORM_FIELD_DIRECTIVES } from '../../../../../shared/forms/shared-form-field.imports';
+import { coerceFormNumber, requiredNumber } from '../../../../../shared/validators/required-number.validator';
 
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { firstValueFrom, startWith } from 'rxjs';
@@ -83,6 +85,7 @@ export class CountingEntryListComponent implements OnInit {
    */
   private readonly hostEl = inject(ElementRef<HTMLElement>);
   private fb = inject(NonNullableFormBuilder);
+  private readonly nullableFb = inject(FormBuilder);
   private authState = inject(AuthStateService);
   private countingService = inject(CountingEntryService);
   private toast = inject(ToastService);
@@ -173,16 +176,16 @@ export class CountingEntryListComponent implements OnInit {
   form = this.fb.group(
     {
       id: [''],
-      countingNumber: [0, [Validators.required, Validators.min(0)]],
-      countingMain: [0, [Validators.required, Validators.min(0)]],
+      countingNumber: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
+      countingMain: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
       nameAr: ['', [Validators.required, Validators.maxLength(255)]],
       nameEn: ['', [Validators.maxLength(255)]],
-      countingLevel: [1, [Validators.required, Validators.min(1)]],
-      debtir: [0, [Validators.required, Validators.min(0)]],
-      credit: [0, [Validators.required, Validators.min(0)]],
-      balannce: [0, [Validators.required]],
-      countingType: [1, [Validators.required, Validators.min(1)]],
-      reportNumber: [1, [Validators.required, Validators.min(1)]],
+      countingLevel: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 1 })]),
+      debtir: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
+      credit: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
+      balannce: this.nullableFb.control<number | null>(null, [requiredNumber()]),
+      countingType: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 1 })]),
+      reportNumber: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 1 })]),
       fleetId: ['', [Validators.required]],
     },
     { validators: countingNumberByTypeValidator() },
@@ -537,7 +540,9 @@ export class CountingEntryListComponent implements OnInit {
     }
 
     const raw = this.form.getRawValue();
-    if (raw.countingMain === raw.countingNumber && raw.countingMain > 0) {
+    const countingNumber = coerceFormNumber(raw.countingNumber);
+    const countingMain = coerceFormNumber(raw.countingMain);
+    if (countingMain === countingNumber && countingMain > 0) {
       this.toast.error(this.translate.instant('You cannot set the account as its own parent'));
       return;
     }
@@ -549,14 +554,14 @@ export class CountingEntryListComponent implements OnInit {
     }
 
     const payload: CreateCountingEntryRequest = {
-      countingNumber: raw.countingNumber,
-      countingMain: raw.countingMain,
-      countingType: raw.countingType,
-      reportNumber: raw.reportNumber,
-      countingLevel: raw.countingLevel,
-      debtir: raw.debtir,
-      credit: raw.credit,
-      balannce: raw.balannce,
+      countingNumber,
+      countingMain,
+      countingType: coerceFormNumber(raw.countingType, 1),
+      reportNumber: coerceFormNumber(raw.reportNumber, 1),
+      countingLevel: coerceFormNumber(raw.countingLevel, 1),
+      debtir: coerceFormNumber(raw.debtir),
+      credit: coerceFormNumber(raw.credit),
+      balannce: coerceFormNumber(raw.balannce),
       nameAr: raw.nameAr.trim(),
       nameEn: raw.nameEn.trim() || undefined,
       fleetId,

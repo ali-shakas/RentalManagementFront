@@ -1,6 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, ElementRef, OnInit, inject, signal } from '@angular/core';
-import { FormArray, FormsModule, NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, FormsModule, NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { SHARED_FORM_FIELD_DIRECTIVES } from '../../../../../shared/forms/shared-form-field.imports';
+import { coerceFormNumber, requiredNumber } from '../../../../../shared/validators/required-number.validator';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { forkJoin } from 'rxjs';
@@ -14,7 +16,15 @@ import { focusFirstInvalidControl } from '../../../../../shared/utils/focus-firs
 @Component({
   selector: 'app-privilege-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterLink, TranslateModule, PageHeaderComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    FormsModule,
+    RouterLink,
+    TranslateModule,
+    PageHeaderComponent,
+    ...SHARED_FORM_FIELD_DIRECTIVES,
+  ],
   templateUrl: './privilege-form.component.html',
 })
 export class PrivilegeFormComponent implements OnInit {
@@ -24,6 +34,7 @@ export class PrivilegeFormComponent implements OnInit {
   private static readonly PRIVILEGE_CODE_REGEX = /^[A-Z0-9_]{3,500}$/;
 
   private fb = inject(NonNullableFormBuilder);
+  private readonly nullableFb = inject(FormBuilder);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private privilegeService = inject(PrivilegeService);
@@ -39,7 +50,7 @@ export class PrivilegeFormComponent implements OnInit {
     name: ['', [Validators.required, Validators.maxLength(255), Validators.pattern(PrivilegeFormComponent.ARABIC_NAME_REGEX)]],
     nameEn: ['', [Validators.required, Validators.maxLength(255), Validators.pattern(PrivilegeFormComponent.ENGLISH_NAME_REGEX)]],
     privilegeName: ['', [Validators.required, Validators.maxLength(500), Validators.pattern(PrivilegeFormComponent.PRIVILEGE_CODE_REGEX)]],
-    order: [0, [Validators.required, Validators.min(0)]],
+    order: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
   });
   bulkForm = this.fb.group({
     items: this.fb.array([this.createBulkRow(1)]),
@@ -146,7 +157,7 @@ export class PrivilegeFormComponent implements OnInit {
       name: raw.name.trim(),
       nameEn: raw.nameEn.trim(),
       privilegeName: raw.privilegeName.trim(),
-      order: raw.order,
+      order: coerceFormNumber(raw.order),
     };
 
     this.loading.set(true);
@@ -177,7 +188,7 @@ export class PrivilegeFormComponent implements OnInit {
         name: String(raw.name ?? '').trim(),
         nameEn: String(raw.nameEn ?? '').trim(),
         privilegeName: String(raw.privilegeName ?? '').trim().toUpperCase(),
-        order: Number(raw.order ?? 0),
+        order: coerceFormNumber(raw.order),
       };
     });
 
@@ -231,7 +242,7 @@ export class PrivilegeFormComponent implements OnInit {
           Validators.pattern(PrivilegeFormComponent.PRIVILEGE_CODE_REGEX),
         ],
       ],
-      order: [order, [Validators.required, Validators.min(0)]],
+      order: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
     });
   }
 

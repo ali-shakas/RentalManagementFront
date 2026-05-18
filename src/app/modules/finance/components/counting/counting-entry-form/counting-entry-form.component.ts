@@ -1,6 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, ElementRef, OnInit, computed, inject, signal } from '@angular/core';
-import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { SHARED_FORM_FIELD_DIRECTIVES } from '../../../../../shared/forms/shared-form-field.imports';
+import { coerceFormNumber, requiredNumber } from '../../../../../shared/validators/required-number.validator';
 import { Router, RouterLink } from '@angular/router';
 
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -20,12 +22,20 @@ import { focusFirstInvalidControl } from '../../../../../shared/utils/focus-firs
 @Component({
   selector: 'app-counting-entry-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, TranslateModule, PageHeaderComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterLink,
+    TranslateModule,
+    PageHeaderComponent,
+    ...SHARED_FORM_FIELD_DIRECTIVES,
+  ],
   templateUrl: './counting-entry-form.component.html',
 })
 export class CountingEntryFormComponent implements OnInit {
   private readonly hostEl = inject(ElementRef<HTMLElement>);
   private fb = inject(NonNullableFormBuilder);
+  private readonly nullableFb = inject(FormBuilder);
   private authState = inject(AuthStateService);
   private countingService = inject(CountingEntryService);
   private toast = inject(ToastService);
@@ -40,12 +50,12 @@ export class CountingEntryFormComponent implements OnInit {
 
   form = this.fb.group(
     {
-      countingNumber: [0, [Validators.required, Validators.min(0)]],
-      countingMain: [0, [Validators.required, Validators.min(0)]],
-      countingType: [1, [Validators.required, Validators.min(1)]],
-      reportNumber: [1, [Validators.required, Validators.min(1)]],
-      countingLevel: [1, [Validators.required, Validators.min(1)]],
-      balannce: [0, [Validators.required]],
+      countingNumber: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
+      countingMain: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
+      countingType: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 1 })]),
+      reportNumber: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 1 })]),
+      countingLevel: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 1 })]),
+      balannce: this.nullableFb.control<number | null>(null, [requiredNumber()]),
       nameAr: ['', [Validators.required, Validators.maxLength(255)]],
       nameEn: ['', [Validators.maxLength(255)]],
       fleetId: ['', [Validators.required]],
@@ -69,14 +79,14 @@ export class CountingEntryFormComponent implements OnInit {
 
     const raw = this.form.getRawValue();
     const body: CreateCountingEntryRequest = {
-      countingNumber: raw.countingNumber,
-      countingMain: raw.countingMain,
-      countingType: raw.countingType,
-      reportNumber: raw.reportNumber,
-      countingLevel: raw.countingLevel,
+      countingNumber: coerceFormNumber(raw.countingNumber),
+      countingMain: coerceFormNumber(raw.countingMain),
+      countingType: coerceFormNumber(raw.countingType, 1),
+      reportNumber: coerceFormNumber(raw.reportNumber, 1),
+      countingLevel: coerceFormNumber(raw.countingLevel, 1),
       debtir: 0,
       credit: 0,
-      balannce: raw.balannce,
+      balannce: coerceFormNumber(raw.balannce),
       nameAr: raw.nameAr.trim(),
       nameEn: raw.nameEn.trim() || undefined,
       fleetId: raw.fleetId.trim(),

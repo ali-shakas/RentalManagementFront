@@ -31,7 +31,8 @@
   [rowActions]="rowActions"
   (rowAction)="onRowAction($event)"
 >
-  <div finance-extra-filters class="app-filter-field app-filter-field--narrow journal-extra-filter">
+  <div finance-extra-filters class="journal-filters-row2">
+  <div class="app-filter-field app-filter-field--narrow journal-extra-filter">
     <label class="app-filter-label">{{ 'Status' | translate }}</label>
     <app-smooth-select
       [ariaLabel]="'Status' | translate"
@@ -42,7 +43,7 @@
     />
   </div>
 
-  <div finance-extra-filters class="app-filter-field app-filter-field--narrow journal-extra-filter">
+  <div class="app-filter-field app-filter-field--narrow journal-extra-filter">
     <label class="app-filter-label">{{ 'Journal Type' | translate }}</label>
     <app-smooth-select
       [ariaLabel]="'Journal Type' | translate"
@@ -53,7 +54,7 @@
     />
   </div>
 
-  <div finance-extra-filters class="app-filter-field app-filter-field--narrow journal-extra-filter">
+  <div class="app-filter-field app-filter-field--narrow journal-extra-filter">
     <label class="app-filter-label">{{ 'Operation Type' | translate }}</label>
     <app-smooth-select
       [ariaLabel]="'Operation Type' | translate"
@@ -64,7 +65,7 @@
     />
   </div>
 
-  <div finance-extra-filters class="app-filter-field app-filter-field--narrow journal-extra-filter">
+  <div class="app-filter-field app-filter-field--narrow journal-extra-filter">
     <label class="app-filter-label">{{ 'Branch' | translate }}</label>
     <app-smooth-select
       [ariaLabel]="'Branch' | translate"
@@ -73,5 +74,6 @@
       [value]="branchFilter()"
       (valueChange)="onBranchFilterChange($any($event))"
     />
+  </div>
   </div>
 </app-finance-list-shell>

@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, ElementRef, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, ElementRef, OnInit, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 
@@ -41,18 +42,23 @@ export class CashAccountFormComponent implements OnInit {
   private toast = inject(ToastService);
   private translate = inject(TranslateService);
   private router = inject(Router);
+  private destroyRef = inject(DestroyRef);
 
   loading = signal(false);
+  private readonly i18nTick = signal(0);
   loadingAccounts = signal(false);
   countingEntries = signal<CountingEntry[]>([]);
 
-  readonly countingOptions = computed<SmoothSelectOption[]>(() => [
-    { label: 'Select account from chart', value: '' },
-    ...this.countingEntries().map(entry => ({
-      label: this.formatAccountLabel(entry),
-      value: entry.id,
-    })),
-  ]);
+  readonly countingOptions = computed<SmoothSelectOption[]>(() => {
+    this.i18nTick();
+    return [
+      { label: this.translate.instant('Select account from chart'), value: '' },
+      ...this.countingEntries().map(entry => ({
+        label: this.formatAccountLabel(entry),
+        value: entry.id,
+      })),
+    ];
+  });
 
   form = this.fb.group({
     countingId: ['', [Validators.required]],
@@ -62,6 +68,9 @@ export class CashAccountFormComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    this.translate.onLangChange.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.i18nTick.update(value => value + 1);
+    });
     this.form.controls.fleetId.setValue(this.authState.fleetId() ?? '');
     this.loadCountingEntries();
   }

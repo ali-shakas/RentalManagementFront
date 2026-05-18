@@ -15,6 +15,8 @@ import {
   FinshBookingRequest,
 } from '../../models';
 import { normalizeBooking } from '../../models/booking/booking.normalizer';
+import { TrafficBooking } from '../../models/booking/traffic-booking.model';
+import { normalizeTrafficBooking } from '../../models/booking/traffic-booking.normalizer';
 
 @Injectable({
   providedIn: 'root',
@@ -27,10 +29,7 @@ export class BookingService {
     params: {
       fleetId?: string | null;
       branchId?: number | null;
-      /**
-       * When true, sends an empty `Stutus` / `status` filter so the API can return bookings in every state
-       * (used by traffic violation booking picker).
-       */
+      /** When true, sends an empty `Stutus` / `status` filter so the API can return bookings in every state. */
       includeAllStatuses?: boolean;
     } = {},
   ): Observable<Booking[]> {
@@ -60,6 +59,29 @@ export class BookingService {
       branchId: params.branchId,
       includeAllStatuses: true,
     });
+  }
+
+  /**
+   * `GetTrafficBookingsQuery` — `BookingRouting.Triffic` → **`GET Booking/List/traffic`**
+   * (`IdFleet`, `BranchId`). Returns bookings eligible for traffic-violation linking.
+   */
+  getTrafficBookings(params: {
+    fleetId?: string | null;
+    branchId: number;
+  }): Observable<TrafficBooking[]> {
+    return this.api
+      .getData<unknown[]>(
+        `${this.base}/List/traffic`,
+        {
+          ...buildFleetQueryParams(params.fleetId, 'id'),
+          BranchId: params.branchId,
+        },
+        { suppressErrorToast: true },
+      )
+      .pipe(
+        map(items => (items ?? []).map(normalizeTrafficBooking).filter(b => b.id > 0)),
+        catchError(() => of([])),
+      );
   }
 
   getPaginated(params: BookingFilters): Observable<PaginatedAggregatorResponse<Booking>> {
