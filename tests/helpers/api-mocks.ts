@@ -264,6 +264,19 @@ function resolveApiResponse(route: Route): Record<string, unknown> {
   if (path.includes('/paymentcount') && path.includes('/list')) return result(mockData.paymentCounts);
   if (path.includes('/categoryvehicle') && path.includes('/paginated')) return paginated([]);
   if (path.includes('/categoryvehicle') && path.includes('/list')) return result([]);
+  if (path.includes('/booking') && path.includes('/list/traffic')) {
+    return [
+      {
+        id: 1,
+        idCustomer: 10,
+        idVehicle: 20,
+        idBranch: 1,
+        fleetId: '00000000-0000-0000-0000-000000000001',
+        stutus: 'open',
+        numberBookingINBasame: 'BK-001',
+      },
+    ];
+  }
   if (path.includes('/booking') && path.includes('/paginated')) return paginated([]);
   if (path.includes('/subscription') && path.includes('/paginated')) return paginated([]);
   if (path.includes('/trafficviolation') && path.includes('/paginated')) return paginated([]);

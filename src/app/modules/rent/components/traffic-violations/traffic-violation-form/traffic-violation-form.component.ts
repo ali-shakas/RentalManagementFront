@@ -17,7 +17,8 @@ import {
   SmoothSelectValue,
 } from '../../../../../shared/ui/smooth-select/smooth-select.component';
 import { focusFirstInvalidControl } from '../../../../../shared/utils/focus-first-invalid-control.util';
-import { Booking, Vehicle } from '../../../models';
+import { Vehicle } from '../../../models';
+import { TrafficBooking } from '../../../models/booking/traffic-booking.model';
 import { TrafficViolationUpsertRequest } from '../../../models/traffic-violations/traffic-violation.model';
 import { BookingService } from '../../../services/booking/booking.service';
 import { TrafficViolationService } from '../../../services/traffic-violations/traffic-violation.service';
@@ -59,8 +60,8 @@ export class TrafficViolationFormComponent implements OnInit {
   saving = signal(false);
   bookingOptions = signal<SmoothSelectOption[]>([]);
   vehicleOptions = signal<SmoothSelectOption[]>([]);
-  /** Raw rows from `GetBookingsQuery` for resolving `vehicleId` after pick */
-  bookings = signal<Booking[]>([]);
+  /** Raw rows from `GetTrafficBookingsQuery` for resolving `idVehicle` after pick */
+  bookings = signal<TrafficBooking[]>([]);
   /** Fleet/branch vehicles from `Vehicle/List` (same shape as `GetVehiclesQuery`). */
   vehicles = signal<Vehicle[]>([]);
   loadingVehicle = signal(false);
@@ -92,12 +93,12 @@ export class TrafficViolationFormComponent implements OnInit {
       return;
     }
 
-    const booking = this.bookings().find(b => Number(b.id) === next);
+    const booking = this.bookings().find(b => b.id === next);
     if (!booking) {
       return;
     }
 
-    const vehicleId = Number(booking.vehicleId);
+    const vehicleId = booking.idVehicle;
     if (!Number.isFinite(vehicleId) || vehicleId <= 0) {
       this.toast.error(this.translate.instant('trafficViolations.noVehicleOnBooking'));
       return;
@@ -131,7 +132,7 @@ export class TrafficViolationFormComponent implements OnInit {
 
     this.initializing.set(true);
     forkJoin({
-      bookings: this.bookingService.getBookings({ fleetId, branchId }),
+      bookings: this.bookingService.getTrafficBookings({ fleetId, branchId }),
       vehicles: this.vehicleService
         .getListMergedAllStatuses({
           fleetId,
@@ -311,7 +312,7 @@ export class TrafficViolationFormComponent implements OnInit {
     }
   }
 
-  private buildBookingOptions(bookings: Booking[]): SmoothSelectOption[] {
+  private buildBookingOptions(bookings: TrafficBooking[]): SmoothSelectOption[] {
     const none: SmoothSelectOption = {
       label: this.translate.instant('trafficViolations.bookingNone'),
       value: '',
@@ -319,13 +320,13 @@ export class TrafficViolationFormComponent implements OnInit {
     return [none, ...this.toBookingOptions(bookings)];
   }
 
-  private toBookingOptions(bookings: Booking[]): SmoothSelectOption[] {
+  private toBookingOptions(bookings: TrafficBooking[]): SmoothSelectOption[] {
     return bookings.map(b => {
-      const idNum = Number(b.id);
-      const ref = (b.numberBookingINBasame || b.bookingNumber || '').trim();
-      const labelParts = [ref, b.customerName, b.vehiclePlateNumber].filter(Boolean);
+      const ref = (b.numberBookingINBasame || '').trim();
+      const status = String(b.status ?? '').trim();
+      const labelParts = [ref, status].filter(Boolean);
       const label = labelParts.length ? labelParts.join(' · ') : `#${b.id}`;
-      return { label: String(label), value: idNum };
+      return { label, value: b.id };
     });
   }
 
