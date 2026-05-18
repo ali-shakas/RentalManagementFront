@@ -54,13 +54,19 @@
               </div>
               <div class="col-md-4">
                 <label class="form-label">{{ 'Amount' | translate }} <span class="text-danger">*</span></label>
-                <input type="number" step="0.01" class="form-control" formControlName="paid" />
+                <input
+                  type="number"
+                  step="0.01"
+                  class="form-control"
+                  formControlName="paid"
+                  numericPlaceholderKey="Enter amount"
+                />
               </div>
               <div class="col-md-4">
                 <label class="form-label">{{ 'Payment Type' | translate }} <span class="text-danger">*</span></label>
                 <app-smooth-select
                   formControlName="paymentType"
-                  [options]="paymentTypeOptions"
+                  [options]="paymentTypeOptions()"
                   [placeholder]="'Payment Type' | translate"
                   [ariaLabel]="'Payment Type' | translate"
                 />
@@ -69,7 +75,7 @@
                 <label class="form-label">{{ 'Bond Type' | translate }} <span class="text-danger">*</span></label>
                 <app-smooth-select
                   formControlName="bondType"
-                  [options]="bondTypeOptions"
+                  [options]="bondTypeOptions()"
                   [placeholder]="'Bond Type' | translate"
                   [ariaLabel]="'Bond Type' | translate"
                 />
@@ -78,7 +84,7 @@
                 <label class="form-label">{{ 'Payment Status' | translate }} <span class="text-danger">*</span></label>
                 <app-smooth-select
                   formControlName="status"
-                  [options]="statusOptions"
+                  [options]="statusOptions()"
                   [placeholder]="'Payment Status' | translate"
                   [ariaLabel]="'Payment Status' | translate"
                 />
@@ -90,7 +96,7 @@
                   >
                   <app-smooth-select
                     formControlName="expenseCategory"
-                    [options]="expenseCategoryOptions"
+                    [options]="expenseCategoryOptions()"
                     [placeholder]="'Select expense category' | translate"
                     [ariaLabel]="'Expense Category' | translate"
                   />
@@ -110,11 +116,23 @@
 
               <div class="col-md-4">
                 <label class="form-label">{{ 'Paid Cash' | translate }} <span class="text-danger">*</span></label>
-                <input type="number" step="0.01" class="form-control" formControlName="paidCash" />
+                <input
+                  type="number"
+                  step="0.01"
+                  class="form-control"
+                  formControlName="paidCash"
+                  numericPlaceholderKey="Enter amount"
+                />
               </div>
               <div class="col-md-4">
                 <label class="form-label">{{ 'Paid Bank' | translate }} <span class="text-danger">*</span></label>
-                <input type="number" step="0.01" class="form-control" formControlName="paidBank" />
+                <input
+                  type="number"
+                  step="0.01"
+                  class="form-control"
+                  formControlName="paidBank"
+                  numericPlaceholderKey="Enter amount"
+                />
               </div>
               <div class="col-md-4">
                 <label class="form-label">{{ 'Booking Status' | translate }} <span class="text-danger">*</span></label>
@@ -193,7 +211,14 @@
                   </div>
                   <div class="voucher-add-row__field">
                     <label class="form-label">{{ 'Amount' | translate }}</label>
-                    <input type="number" min="0" step="0.01" class="form-control text-end" formControlName="price" />
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      class="form-control text-end"
+                      formControlName="price"
+                      numericPlaceholderKey="Enter amount"
+                    />
                   </div>
                   <div class="voucher-add-row__field voucher-add-row__field--wide">
                     <label class="form-label">{{ 'Note' | translate }}</label>

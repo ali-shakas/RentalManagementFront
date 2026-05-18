@@ -1,7 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, ElementRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { SHARED_FORM_FIELD_DIRECTIVES } from '../../../../../shared/forms/shared-form-field.imports';
+import {
+  coerceFormNumber,
+  isEmptyNumericValue,
+  requiredNumber,
+} from '../../../../../shared/validators/required-number.validator';
 import { Router, RouterLink } from '@angular/router';
 
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -49,6 +55,7 @@ import { BookingService } from '../../../../rent/services/booking/booking.servic
     TranslateModule,
     PageHeaderComponent,
     SmoothSelectComponent,
+    ...SHARED_FORM_FIELD_DIRECTIVES,
   ],
   templateUrl: './payment-count-form.component.html',
   styleUrls: ['./payment-count-form.component.scss'],
@@ -56,6 +63,7 @@ import { BookingService } from '../../../../rent/services/booking/booking.servic
 export class PaymentCountFormComponent implements OnInit {
   private readonly hostEl = inject(ElementRef<HTMLElement>);
   private fb = inject(NonNullableFormBuilder);
+  private readonly nullableFb = inject(FormBuilder);
   private authState = inject(AuthStateService);
   private paymentCountService = inject(PaymentCountService);
   private bankService = inject(BankService);
@@ -89,6 +97,7 @@ export class PaymentCountFormComponent implements OnInit {
   bookings = signal<Booking[]>([]);
   paymentTypeValue = signal(1);
   statusValue = signal(1);
+  private readonly i18nTick = signal(0);
   private readonly minimumRequiredLines = 1;
   private syncingSplitAmounts = false;
 
@@ -156,43 +165,59 @@ export class PaymentCountFormComponent implements OnInit {
     })),
   ]);
 
-  readonly paymentTypeOptions: SmoothSelectOption[] = [
-    { label: 'Cash', value: 1 },
-    { label: 'Network/POS', value: 2 },
-    { label: 'Cheque', value: 3 },
-    { label: 'Bank Transfer', value: 4 },
-    { label: 'Bank/Cash', value: 5 },
-  ];
+  readonly paymentTypeOptions = computed<SmoothSelectOption[]>(() => {
+    this.i18nTick();
+    return [
+      { label: this.translate.instant('Cash'), value: 1 },
+      { label: this.translate.instant('Network/POS'), value: 2 },
+      { label: this.translate.instant('Cheque'), value: 3 },
+      { label: this.translate.instant('Bank Transfer'), value: 4 },
+      { label: this.translate.instant('Bank/Cash'), value: 5 },
+    ];
+  });
 
-  readonly bondTypeOptions: SmoothSelectOption[] = [
-    { label: 'Payment Count', value: 1 },
-    { label: 'Receipt Count', value: 2 },
-  ];
+  readonly bondTypeOptions = computed<SmoothSelectOption[]>(() => {
+    this.i18nTick();
+    return [
+      { label: this.translate.instant('Payment Voucher'), value: 1 },
+      { label: this.translate.instant('Receipt Voucher'), value: 2 },
+    ];
+  });
 
-  readonly statusOptions: SmoothSelectOption[] = [
-    { label: 'Confirmed', value: 1 },
-    { label: 'Pending', value: 2 },
-  ];
+  readonly statusOptions = computed<SmoothSelectOption[]>(() => {
+    this.i18nTick();
+    return [
+      { label: this.translate.instant('Confirmed'), value: 1 },
+      { label: this.translate.instant('Pending'), value: 2 },
+    ];
+  });
 
-  readonly bookingStatusOptions = computed<SmoothSelectOption[]>(() => [
-    { label: this.translate.instant('Select booking status'), value: '' },
-    { label: this.translate.instant('Confirmed'), value: 1 },
-    { label: this.translate.instant('Pending'), value: 2 },
-    { label: this.translate.instant('Cancelled'), value: 3 },
-  ]);
-  readonly expenseCategoryOptions: SmoothSelectOption[] = [
-    { label: 'Select expense category', value: '' },
-    { label: 'Maintenance', value: 1 },
-    { label: 'Operations', value: 2 },
-    { label: 'Bank Charges', value: 3 },
-    { label: 'Fuel', value: 4 },
-    { label: 'Insurance', value: 5 },
-    { label: 'Other', value: 99 },
-  ];
+  readonly bookingStatusOptions = computed<SmoothSelectOption[]>(() => {
+    this.i18nTick();
+    return [
+      { label: this.translate.instant('Select booking status'), value: '' },
+      { label: this.translate.instant('Confirmed'), value: 1 },
+      { label: this.translate.instant('Pending'), value: 2 },
+      { label: this.translate.instant('Cancelled'), value: 3 },
+    ];
+  });
+
+  readonly expenseCategoryOptions = computed<SmoothSelectOption[]>(() => {
+    this.i18nTick();
+    return [
+      { label: this.translate.instant('Select expense category'), value: '' },
+      { label: this.translate.instant('Maintenance'), value: 1 },
+      { label: this.translate.instant('Operations'), value: 2 },
+      { label: this.translate.instant('Bank Charges'), value: 3 },
+      { label: this.translate.instant('Fuel'), value: 4 },
+      { label: this.translate.instant('Insurance'), value: 5 },
+      { label: this.translate.instant('Other'), value: 99 },
+    ];
+  });
 
   form = this.fb.group({
     idCustomer: [''],
-    paid: [0, [Validators.required, Validators.min(0.01)]],
+    paid: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0.01 })]),
     dscription: ['', [Validators.required, Validators.maxLength(500)]],
     idVehicle: [''],
     idBranch: [Number(this.authState.branchId() ?? 0) as number | '', [Validators.required]],
@@ -202,8 +227,8 @@ export class PaymentCountFormComponent implements OnInit {
     idFinancialYear: ['', [Validators.required]],
     idCash: [''],
     idBank: [''],
-    paidCash: [0, [Validators.required, Validators.min(0)]],
-    paidBank: [0, [Validators.required, Validators.min(0)]],
+    paidCash: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
+    paidBank: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
     expenseCategory: ['' as number | ''],
     idBooking: [''],
     stutusbooking: [1 as number | '', [Validators.required]],
@@ -226,6 +251,10 @@ export class PaymentCountFormComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.translate.onLangChange.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.i18nTick.update(value => value + 1);
+    });
+
     this.form.controls.paymentType.valueChanges
       .pipe(startWith(this.form.controls.paymentType.value), takeUntilDestroyed(this.destroyRef))
       .subscribe(value => {
@@ -277,13 +306,13 @@ export class PaymentCountFormComponent implements OnInit {
     const newLine = this.createDetailLineForm();
     newLine.patchValue({
       idCounting: String(raw.idCounting ?? '').trim(),
-      price: Number(raw.price ?? 0),
+      price: coerceFormNumber(raw.price),
       node: String(raw.node ?? '').trim(),
     });
     this.detailsArray.push(newLine);
     this.detailDraft.reset({
       idCounting: '',
-      price: 0,
+      price: null,
       node: '',
     });
   }
@@ -427,7 +456,7 @@ export class PaymentCountFormComponent implements OnInit {
     }
     const body: CreatePaymentCountRequest = {
       idCustomer,
-      paid: raw.paid,
+      paid: coerceFormNumber(raw.paid),
       dscription: raw.dscription.trim(),
       idVehicle,
       idBranch,
@@ -436,8 +465,8 @@ export class PaymentCountFormComponent implements OnInit {
       status: raw.status,
       idCash: raw.idCash || undefined,
       idBank: raw.idBank || undefined,
-      paidCash: raw.paidCash,
-      paidBank: raw.paidBank,
+      paidCash: coerceFormNumber(raw.paidCash),
+      paidBank: coerceFormNumber(raw.paidBank),
       expenseCategory,
       idBooking,
       stutusbooking: idBooking ? Number(raw.stutusbooking) : undefined,
@@ -515,7 +544,7 @@ export class PaymentCountFormComponent implements OnInit {
   private createDetailLineForm() {
     return this.fb.group({
       idCounting: ['', [Validators.required]],
-      price: [0, [Validators.required, Validators.min(0.01)]],
+      price: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0.01 })]),
       node: ['', [Validators.maxLength(250)]],
     });
   }
@@ -790,23 +819,32 @@ export class PaymentCountFormComponent implements OnInit {
     }
 
     const paymentType = Number(this.form.controls.paymentType.value ?? 1);
-    const paid = this.toNonNegativeNumber(this.form.controls.paid.value);
-    const currentCash = this.toNonNegativeNumber(this.form.controls.paidCash.value);
-    const currentBank = this.toNonNegativeNumber(this.form.controls.paidBank.value);
+    const paidEmpty = isEmptyNumericValue(this.form.controls.paid.value);
+    const paid = coerceFormNumber(this.form.controls.paid.value);
+    const currentCash = coerceFormNumber(this.form.controls.paidCash.value);
+    const currentBank = coerceFormNumber(this.form.controls.paidBank.value);
 
     this.syncingSplitAmounts = true;
     try {
       if (paymentType === 1) {
         this.form.controls.paidCash.disable({ emitEvent: false });
         this.form.controls.paidBank.disable({ emitEvent: false });
-        this.setSplitAmounts(paid, 0);
+        if (paidEmpty) {
+          this.setSplitAmounts(null, null);
+        } else {
+          this.setSplitAmounts(paid, 0);
+        }
         return;
       }
 
       if ([2, 3, 4].includes(paymentType)) {
         this.form.controls.paidCash.disable({ emitEvent: false });
         this.form.controls.paidBank.disable({ emitEvent: false });
-        this.setSplitAmounts(0, paid);
+        if (paidEmpty) {
+          this.setSplitAmounts(null, null);
+        } else {
+          this.setSplitAmounts(0, paid);
+        }
         return;
       }
 
@@ -832,9 +870,15 @@ export class PaymentCountFormComponent implements OnInit {
     }
   }
 
-  private setSplitAmounts(cash: number, bank: number): void {
-    this.form.controls.paidCash.setValue(Number(cash.toFixed(2)), { emitEvent: false });
-    this.form.controls.paidBank.setValue(Number(bank.toFixed(2)), { emitEvent: false });
+  private setSplitAmounts(cash: number | null, bank: number | null): void {
+    this.form.controls.paidCash.setValue(
+      cash === null ? null : Number(cash.toFixed(2)),
+      { emitEvent: false },
+    );
+    this.form.controls.paidBank.setValue(
+      bank === null ? null : Number(bank.toFixed(2)),
+      { emitEvent: false },
+    );
   }
 
   private applyBookingStatusRules(): void {

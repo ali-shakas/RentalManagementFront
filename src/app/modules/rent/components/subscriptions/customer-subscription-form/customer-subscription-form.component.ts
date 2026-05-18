@@ -1,11 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { Component, ElementRef, inject, OnInit, signal } from '@angular/core';
-import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { SHARED_FORM_FIELD_DIRECTIVES } from '../../../../../shared/forms/shared-form-field.imports';
+import { coerceFormNumber, requiredNumber } from '../../../../../shared/validators/required-number.validator';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { AuthStateService } from '../../../../../core/auth/auth-state.service';
-import { FieldValueStateDirective } from '../../../../../shared/directives/field-value-state.directive';
 import { ToastService } from '../../../../../shared/services/toast.service';
 import { PageHeaderComponent } from '../../../../../shared/ui/page-header/page-header.component';
 import {
@@ -23,7 +24,7 @@ import { focusFirstInvalidControl } from '../../../../../shared/utils/focus-firs
     ReactiveFormsModule,
     RouterLink,
     TranslateModule,
-    FieldValueStateDirective,
+    ...SHARED_FORM_FIELD_DIRECTIVES,
     PageHeaderComponent,
   ],
   templateUrl: './customer-subscription-form.component.html',
@@ -34,6 +35,7 @@ export class CustomerSubscriptionFormComponent implements OnInit {
   private static readonly ENGLISH_NAME_REGEX = /^[A-Za-z\s.'-]{2,255}$/;
 
   private fb = inject(NonNullableFormBuilder);
+  private readonly nullableFb = inject(FormBuilder);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private authState = inject(AuthStateService);
@@ -64,8 +66,8 @@ export class CustomerSubscriptionFormComponent implements OnInit {
       ],
     ],
     description: ['', [Validators.maxLength(500)]],
-    discount: [0, [Validators.required, Validators.min(0), Validators.max(100)]],
-    subscriptionApprovedAfter: [0, [Validators.required, Validators.min(0)]],
+    discount: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0, max: 100 })]),
+    subscriptionApprovedAfter: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
     isOld: [false],
   });
 
@@ -119,8 +121,8 @@ export class CustomerSubscriptionFormComponent implements OnInit {
     }
 
     const raw = this.form.getRawValue();
-    const discount = Number(raw.discount ?? 0);
-    const subscriptionApprovedAfter = Number(raw.subscriptionApprovedAfter ?? 0);
+    const discount = coerceFormNumber(raw.discount);
+    const subscriptionApprovedAfter = coerceFormNumber(raw.subscriptionApprovedAfter);
     const businessRuleMessage = this.validateSequenceRules(
       subscriptionApprovedAfter,
       discount,

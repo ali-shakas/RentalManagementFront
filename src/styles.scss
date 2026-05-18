@@ -1113,8 +1113,8 @@ thead th,
 .app-filters-toolbar {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 0.85rem;
-  margin-bottom: 1rem;
+  gap: 0.55rem;
+  margin-bottom: 0.75rem;
   align-items: end;
   /* Stacking: following .table-responsive paints later; keep toolbar + its overflow menus above table */
   position: relative;
@@ -1127,6 +1127,50 @@ thead th,
   position: relative;
   z-index: 110;
   overflow: visible;
+}
+
+/* Date range calendar extends into the row below — lift the cell above later grid siblings. */
+.app-filters-toolbar .app-filter-field:has(.date-picker-host--open),
+.app-filters-toolbar .finance-filter-range:has(.date-picker-host--open) {
+  position: relative;
+  z-index: 300;
+  overflow: visible;
+}
+
+/* Compact list/search toolbars (all pages using app-filters-toolbar) */
+.app-filters-toolbar .app-soft-select__trigger {
+  min-height: 36px;
+  padding: 0.32rem 0.58rem;
+  border-radius: 10px;
+  font-size: 0.78rem;
+}
+
+.app-filters-toolbar .app-soft-select__label {
+  font-size: 0.78rem;
+}
+
+.app-filters-toolbar .app-soft-select__trigger:hover:not(:disabled) {
+  transform: none;
+}
+
+.app-filters-toolbar .app-date-range-filter {
+  gap: 0.45rem;
+}
+
+.app-filters-toolbar .date-picker--compact .date-label {
+  margin-bottom: 0.2rem;
+  font-size: 0.65rem;
+}
+
+.app-filters-toolbar .date-picker--compact .date-trigger {
+  min-height: 36px;
+  padding-inline: 0.55rem;
+}
+
+.app-filters-toolbar .date-picker--compact .date-icon {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
 }
 
 .app-filter-field {
@@ -1145,9 +1189,9 @@ thead th,
     0 12px 20px -14px rgba(15, 23, 42, 0.14),
     inset 0 1px 0 rgba(255, 255, 255, 0.78);
   grid-column: span 1;
-  padding: 0.72rem;
+  padding: 0.28rem 0.36rem;
   border: 1px solid rgba(148, 163, 184, 0.14);
-  border-radius: 16px;
+  border-radius: 12px;
   background: linear-gradient(160deg, rgba(255, 255, 255, 0.45), rgba(241, 245, 249, 0.2));
   box-shadow: 0 8px 18px -14px rgba(15, 23, 42, 0.1);
   overflow: visible;
@@ -1155,8 +1199,11 @@ thead th,
   .form-select,
   .form-control,
   .btn {
-    min-height: 44px;
-    border-radius: 14px;
+    min-height: 36px;
+    height: 36px;
+    padding-block: 0.22rem;
+    border-radius: 10px;
+    font-size: 0.78rem;
   }
 
   .form-control {
@@ -1248,8 +1295,9 @@ thead th,
 
 .app-filter-label {
   display: inline-block;
-  margin-bottom: 0.45rem;
-  font-size: 0.72rem;
+  margin-bottom: 0.2rem;
+  font-size: 0.65rem;
+  line-height: 1.1;
   font-weight: var(--font-weight-semibold);
   letter-spacing: 0.02em;
   opacity: 0.86;
@@ -1258,11 +1306,17 @@ thead th,
 .app-search-control {
   display: grid;
   grid-template-columns: 1fr auto;
-  gap: 0.55rem;
+  gap: 0.4rem;
 }
 
 .app-search-btn {
-  min-width: 96px;
+  min-width: 92px;
+  min-height: 36px;
+  height: 36px;
+  padding-block: 0.22rem;
+  padding-inline: 0.65rem;
+  font-size: 0.78rem;
+  border-radius: 10px;
   border: 1px solid rgba(59, 130, 246, 0.42);
   color: #fff;
   background: linear-gradient(135deg, #2f7cf2, #1d5fcb);
@@ -1281,6 +1335,21 @@ thead th,
 
 .app-search-btn:active {
   transform: translateY(0);
+}
+
+/* Standalone search rows (e.g. counting tree) */
+.counting-tree__search .form-label {
+  margin-bottom: 0.2rem;
+  font-size: 0.65rem;
+  line-height: 1.1;
+}
+
+.counting-tree__search .form-control {
+  min-height: 36px;
+  height: 36px;
+  padding-block: 0.22rem;
+  border-radius: 10px;
+  font-size: 0.78rem;
 }
 
 .sidebar-wrapper .sidebar-link,

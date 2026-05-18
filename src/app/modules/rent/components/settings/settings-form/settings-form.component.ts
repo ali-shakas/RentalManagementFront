@@ -1,6 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, ElementRef, OnInit, inject, signal } from '@angular/core';
-import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { SHARED_FORM_FIELD_DIRECTIVES } from '../../../../../shared/forms/shared-form-field.imports';
+import { coerceFormNumber, requiredNumber } from '../../../../../shared/validators/required-number.validator';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { AuthStateService } from '../../../../../core/auth/auth-state.service';
@@ -13,13 +15,14 @@ import { focusFirstInvalidControl } from '../../../../../shared/utils/focus-firs
 @Component({
   selector: 'app-settings-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslateModule, PageHeaderComponent],
+  imports: [CommonModule, ReactiveFormsModule, TranslateModule, PageHeaderComponent, ...SHARED_FORM_FIELD_DIRECTIVES],
   templateUrl: './settings-form.component.html',
   styleUrl: './settings-form.component.scss',
 })
 export class SettingsFormComponent implements OnInit {
   private readonly hostEl = inject(ElementRef<HTMLElement>);
   private fb = inject(NonNullableFormBuilder);
+  private readonly nullableFb = inject(FormBuilder);
   private authState = inject(AuthStateService);
   private settingsApi = inject(SettingService);
   private toast = inject(ToastService);
@@ -30,12 +33,12 @@ export class SettingsFormComponent implements OnInit {
   settingsId = signal<number>(0);
 
   form = this.fb.group({
-    number_hour_latefree: [0, [Validators.required, Validators.min(0)]],
-    number_mints_late_forr_finshcontract: [0, [Validators.required, Validators.min(0)]],
-    number_hour_late_forr_finshinday: [0, [Validators.required, Validators.min(0)]],
-    number_incres_km_for_finshcontract: [0, [Validators.required, Validators.min(0)]],
-    minValue: [0, [Validators.required, Validators.min(0)]],
-    tax: [0, [Validators.required, Validators.min(0)]],
+    number_hour_latefree: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
+    number_mints_late_forr_finshcontract: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
+    number_hour_late_forr_finshinday: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
+    number_incres_km_for_finshcontract: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
+    minValue: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
+    tax: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
     dateOfExp: [false],
     dateOfExpWithNation: [false],
     expDateAndInsuranceExp: [false],

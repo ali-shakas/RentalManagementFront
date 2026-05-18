@@ -1,12 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { Component, ElementRef, OnInit, inject, signal } from '@angular/core';
-import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { SHARED_FORM_FIELD_DIRECTIVES } from '../../../../../shared/forms/shared-form-field.imports';
+import { coerceFormNumber, requiredNumber } from '../../../../../shared/validators/required-number.validator';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { catchError, finalize, forkJoin, of } from 'rxjs';
 
 import { AuthStateService } from '../../../../../core/auth/auth-state.service';
-import { FieldValueStateDirective } from '../../../../../shared/directives/field-value-state.directive';
 import { DatePickerComponent } from '../../../../../shared/ui/date-picker/date-picker.component';
 import { ToastService } from '../../../../../shared/services/toast.service';
 import { PageHeaderComponent } from '../../../../../shared/ui/page-header/page-header.component';
@@ -30,7 +31,7 @@ import { VehicleService } from '../../../services/vehicles/vehicle.service';
     ReactiveFormsModule,
     RouterLink,
     TranslateModule,
-    FieldValueStateDirective,
+    ...SHARED_FORM_FIELD_DIRECTIVES,
     PageHeaderComponent,
     SmoothSelectComponent,
     DatePickerComponent,
@@ -41,6 +42,7 @@ import { VehicleService } from '../../../services/vehicles/vehicle.service';
 export class TrafficViolationFormComponent implements OnInit {
   private readonly hostEl = inject(ElementRef<HTMLElement>);
   private fb = inject(NonNullableFormBuilder);
+  private readonly nullableFb = inject(FormBuilder);
   private authState = inject(AuthStateService);
   private trafficViolationService = inject(TrafficViolationService);
   private bookingService = inject(BookingService);
@@ -68,9 +70,9 @@ export class TrafficViolationFormComponent implements OnInit {
     idBooking: this.fb.control<number | null>(null),
     idVehicle: this.fb.control<number | null>(null, [Validators.required]),
     dateViolation: ['', [Validators.required]],
-    violationFine: [0, [Validators.required, Validators.min(0)]],
+    violationFine: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
     description: [''],
-    numberViolation: [1, [Validators.required, Validators.min(1)]],
+    numberViolation: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 1 })]),
   });
 
   get idBookingCtrl() {
@@ -191,9 +193,9 @@ export class TrafficViolationFormComponent implements OnInit {
       idBooking,
       idVehicle,
       dateViolation: dateIso,
-      violationFine: Number(raw.violationFine),
+      violationFine: coerceFormNumber(raw.violationFine),
       description: raw.description.trim() || undefined,
-      numberViolation: Number(raw.numberViolation),
+      numberViolation: coerceFormNumber(raw.numberViolation, 1),
     };
 
     this.saving.set(true);

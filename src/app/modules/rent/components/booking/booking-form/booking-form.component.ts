@@ -2,7 +2,13 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, ElementRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { SHARED_FORM_FIELD_DIRECTIVES } from '../../../../../shared/forms/shared-form-field.imports';
+import {
+  coerceFormNumber,
+  isEmptyNumericValue,
+  requiredNumber,
+} from '../../../../../shared/validators/required-number.validator';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -67,6 +73,7 @@ import {
     PageHeaderComponent,
     SmoothSelectComponent,
     DatePickerComponent,
+    ...SHARED_FORM_FIELD_DIRECTIVES,
   ],
   templateUrl: './booking-form.component.html',
   styleUrl: './booking-form.component.scss',
@@ -83,6 +90,7 @@ export class BookingFormComponent implements OnInit {
   private static readonly BASAME_NUMBER_REGEX = /^[A-Za-z0-9-]{0,10}$/;
 
   private fb = inject(NonNullableFormBuilder);
+  private readonly nullableFb = inject(FormBuilder);
   private authState = inject(AuthStateService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
@@ -274,42 +282,42 @@ export class BookingFormComponent implements OnInit {
       '',
       [Validators.maxLength(100), Validators.pattern(BookingFormComponent.GPS_DISTANCE_REGEX)],
     ],
-    numberOfHoursExcess: [0, [Validators.required, Validators.min(0)]],
-    numberKmExcess: [0, [Validators.required, Validators.min(0)]],
-    dayExcess: [0, [Validators.required, Validators.min(0)]],
+    numberOfHoursExcess: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
+    numberKmExcess: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
+    dayExcess: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
     discountType: ['amount' as 'amount' | 'percent'],
-    discount: [0, [Validators.required, Validators.min(0)]],
-    checkoutCounter: [0, [Validators.required, Validators.min(0)]],
-    checkinCounter: [0, [Validators.required, Validators.min(0)]],
-    countOfDay: [0, [Validators.required, Validators.min(0)]],
-    priceInDay: [0, [Validators.required, Validators.min(0)]],
+    discount: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
+    checkoutCounter: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
+    checkinCounter: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
+    countOfDay: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 1 })]),
+    priceInDay: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
     /** Category / policy daily band — editable; contract daily defaults to upper band when no vehicle rate. */
-    priceDayBandLow: [0, [Validators.required, Validators.min(0)]],
-    priceDayBandHigh: [0, [Validators.required, Validators.min(0)]],
-    priceInMonth: [0, [Validators.required, Validators.min(0)]],
-    allowTo: [0, [Validators.required, Validators.min(0)]],
-    countKMExtra: [0, [Validators.required, Validators.min(0)]],
-    priceHoureExtra: [0, [Validators.required, Validators.min(0)]],
-    priceHourExtraBandLow: [0, [Validators.required, Validators.min(0)]],
-    priceHourExtraBandHigh: [0, [Validators.required, Validators.min(0)]],
-    priceKmExtra: [0, [Validators.required, Validators.min(0)]],
-    priceKmExtraBandLow: [0, [Validators.required, Validators.min(0)]],
-    priceKmExtraBandHigh: [0, [Validators.required, Validators.min(0)]],
-    otherExpenses: [0, [Validators.required, Validators.min(0)]],
-    total: [0, [Validators.required, Validators.min(0)]],
+    priceDayBandLow: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
+    priceDayBandHigh: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
+    priceInMonth: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
+    allowTo: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
+    countKMExtra: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
+    priceHoureExtra: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
+    priceHourExtraBandLow: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
+    priceHourExtraBandHigh: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
+    priceKmExtra: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
+    priceKmExtraBandLow: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
+    priceKmExtraBandHigh: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
+    otherExpenses: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
+    total: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
     note: ['', [Validators.maxLength(500), Validators.pattern(BookingFormComponent.NOTE_REGEX)]],
     placeUSE: [
       '',
       [Validators.maxLength(200), Validators.pattern(BookingFormComponent.PLACE_USE_REGEX)],
     ],
-    totalTrafic: [0, [Validators.required, Validators.min(0)]],
-    totalMaintance: [0, [Validators.required, Validators.min(0)]],
-    totalReceivedVehicle: [0, [Validators.required, Validators.min(0)]],
-    transportationFees: [0, [Validators.required, Validators.min(0)]],
-    totaltax: [0, [Validators.required, Validators.min(0)]],
-    paid: [0, [Validators.required, Validators.min(0)]],
-    paidCash: [0, [Validators.required, Validators.min(0)]],
-    paidBank: [0, [Validators.required, Validators.min(0)]],
+    totalTrafic: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
+    totalMaintance: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
+    totalReceivedVehicle: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
+    transportationFees: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
+    totaltax: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
+    paid: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
+    paidCash: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
+    paidBank: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
     paymentType: [1, [Validators.required, Validators.min(1)]],
     idBank: [''],
     idCash: [''],
@@ -763,22 +771,22 @@ export class BookingFormComponent implements OnInit {
       dateDrivinglicense: drivingLicenseApi,
       nationality: nationalityOut,
       idVehicle,
-      checkoutCounter: raw.checkoutCounter,
-      total: raw.total,
+      checkoutCounter: coerceFormNumber(raw.checkoutCounter),
+      total: coerceFormNumber(raw.total),
       startDate: startApi,
       endDate: endApi,
-      countOfDay: raw.countOfDay,
+      countOfDay: coerceFormNumber(raw.countOfDay, 1),
       dateReturnVehical: returnApi,
-      priceInDay: raw.priceInDay,
-      allowTo: raw.allowTo,
-      countKMExtra: raw.countKMExtra,
-      priceHoureExtra: raw.priceHoureExtra,
+      priceInDay: coerceFormNumber(raw.priceInDay),
+      allowTo: coerceFormNumber(raw.allowTo),
+      countKMExtra: coerceFormNumber(raw.countKMExtra),
+      priceHoureExtra: coerceFormNumber(raw.priceHoureExtra),
       idBank,
       idCash,
       note: raw.note.trim() || undefined,
       placeUSE: raw.placeUSE.trim() || undefined,
-      paidCash: raw.paidCash,
-      paidBank: raw.paidBank,
+      paidCash: coerceFormNumber(raw.paidCash),
+      paidBank: coerceFormNumber(raw.paidBank),
       paymentType: raw.paymentType,
       idCountingCustVehicle,
       birthDay: birthDayOut,
@@ -789,20 +797,20 @@ export class BookingFormComponent implements OnInit {
       distancetraveledgps: this.showBookingDistanceGpsEnabled()
         ? raw.distancetraveledgps.trim() || undefined
         : undefined,
-      numberOfHoursExcess: raw.numberOfHoursExcess,
-      numberKmExcess: raw.numberKmExcess,
-      dayExcess: raw.dayExcess,
-      discount: raw.discount,
-      checkinCounter: raw.checkinCounter,
-      priceInMonth: raw.priceInMonth,
-      priceKmExtra: raw.priceKmExtra,
-      otherExpenses: raw.otherExpenses,
-      totalTrafic: raw.totalTrafic,
-      totalMaintance: raw.totalMaintance,
-      totalReceivedVehicle: raw.totalReceivedVehicle,
-      transportationFees: raw.transportationFees,
-      totaltax: raw.totaltax,
-      paid: raw.paid,
+      numberOfHoursExcess: coerceFormNumber(raw.numberOfHoursExcess),
+      numberKmExcess: coerceFormNumber(raw.numberKmExcess),
+      dayExcess: coerceFormNumber(raw.dayExcess),
+      discount: coerceFormNumber(raw.discount),
+      checkinCounter: coerceFormNumber(raw.checkinCounter),
+      priceInMonth: coerceFormNumber(raw.priceInMonth),
+      priceKmExtra: coerceFormNumber(raw.priceKmExtra),
+      otherExpenses: coerceFormNumber(raw.otherExpenses),
+      totalTrafic: coerceFormNumber(raw.totalTrafic),
+      totalMaintance: coerceFormNumber(raw.totalMaintance),
+      totalReceivedVehicle: coerceFormNumber(raw.totalReceivedVehicle),
+      transportationFees: coerceFormNumber(raw.transportationFees),
+      totaltax: coerceFormNumber(raw.totaltax),
+      paid: coerceFormNumber(raw.paid),
     };
 
     if (this.editMode() && this.editBookingId()) {
@@ -859,19 +867,19 @@ export class BookingFormComponent implements OnInit {
       idCustomer: ids.idCustomer > 0 ? ids.idCustomer : undefined,
       idVehicle: ids.idVehicle,
       idBranch: ids.idBranch,
-      checkoutCounter: raw.checkoutCounter,
-      checkinCounter: raw.checkinCounter,
-      countOfDay: raw.countOfDay,
-      total: raw.total,
-      discount: raw.discount,
-      priceInDay: raw.priceInDay,
-      priceInMonth: raw.priceInMonth,
-      allowTo: raw.allowTo,
-      countKMExtra: raw.countKMExtra,
-      priceHoureExtra: raw.priceHoureExtra,
-      priceKmExtra: raw.priceKmExtra,
-      otherExpenses: raw.otherExpenses,
-      totaltax: raw.totaltax,
+      checkoutCounter: coerceFormNumber(raw.checkoutCounter),
+      checkinCounter: coerceFormNumber(raw.checkinCounter),
+      countOfDay: coerceFormNumber(raw.countOfDay, 1),
+      total: coerceFormNumber(raw.total),
+      discount: coerceFormNumber(raw.discount),
+      priceInDay: coerceFormNumber(raw.priceInDay),
+      priceInMonth: coerceFormNumber(raw.priceInMonth),
+      allowTo: coerceFormNumber(raw.allowTo),
+      countKMExtra: coerceFormNumber(raw.countKMExtra),
+      priceHoureExtra: coerceFormNumber(raw.priceHoureExtra),
+      priceKmExtra: coerceFormNumber(raw.priceKmExtra),
+      otherExpenses: coerceFormNumber(raw.otherExpenses),
+      totaltax: coerceFormNumber(raw.totaltax),
       startDate: this.bookingCalendarDateToApi(raw.startDate),
       endDate: this.bookingCalendarDateToApi(raw.endDate),
       dateReturnVehical: this.bookingCalendarDateToApi(raw.dateReturnVehical),
@@ -879,18 +887,18 @@ export class BookingFormComponent implements OnInit {
       placeUSE: raw.placeUSE.trim() || undefined,
       numberBookingINBasame: raw.numberBookingINBasame.trim() || undefined,
       distancetraveledgps: raw.distancetraveledgps.trim() || undefined,
-      totalTrafic: raw.totalTrafic,
-      totalMaintance: raw.totalMaintance,
-      totalReceivedVehicle: raw.totalReceivedVehicle,
-      transportationFees: raw.transportationFees,
+      totalTrafic: coerceFormNumber(raw.totalTrafic),
+      totalMaintance: coerceFormNumber(raw.totalMaintance),
+      totalReceivedVehicle: coerceFormNumber(raw.totalReceivedVehicle),
+      transportationFees: coerceFormNumber(raw.transportationFees),
       idCountingCustVehicle: ids.idCountingCustVehicle,
-      paid: paidForBookingUpdateRequest(raw.paid, this.originalPaidSnapshot()),
+      paid: paidForBookingUpdateRequest(coerceFormNumber(raw.paid), this.originalPaidSnapshot()),
       paymentType: raw.paymentType,
       bondType: 1,
       idCash: ids.idCash,
       idBank: ids.idBank,
-      paidCash: raw.paidCash,
-      paidBank: raw.paidBank,
+      paidCash: coerceFormNumber(raw.paidCash),
+      paidBank: coerceFormNumber(raw.paidBank),
     };
 
     this.loading.set(true);
@@ -2190,11 +2198,14 @@ export class BookingFormComponent implements OnInit {
     this.form.patchValue({ endDate: computed, dateReturnVehical: computed }, { emitEvent: false });
   }
 
-  private pickNumeric(currentValue: number, incoming: number | null | undefined): number {
+  private pickNumeric(currentValue: number | null, incoming: number | null | undefined): number {
+    if (!isEmptyNumericValue(currentValue) && Number.isFinite(Number(currentValue))) {
+      return Number(currentValue);
+    }
     if (typeof incoming === 'number' && Number.isFinite(incoming)) {
       return incoming;
     }
-    return currentValue;
+    return 0;
   }
 
   private valueOf(value: unknown): string {

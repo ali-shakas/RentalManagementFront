@@ -1,16 +1,22 @@
 .app-date-range-filter {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.7rem;
+  grid-template-columns: repeat(2, minmax(9.5rem, 1fr));
+  gap: 0.65rem;
+  width: 100%;
+  min-width: 0;
 }
 
 .app-date-range-filter__field {
   min-width: 0;
+  overflow: visible;
 }
 
-.app-date-range-filter__field .form-control {
-  min-height: 44px;
-  border-radius: 14px;
+:host ::ng-deep .app-date-range-filter__field .date-picker {
+  width: 100%;
+}
+
+:host ::ng-deep .app-date-range-filter__field .date-picker-host--open {
+  z-index: 220;
 }
 
 @media (max-width: 767.98px) {

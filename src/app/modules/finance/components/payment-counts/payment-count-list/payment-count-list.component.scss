@@ -9,9 +9,12 @@
 
 :host ::ng-deep .finance-list-shell__card .app-filter-field,
 :host ::ng-deep .finance-list-shell__card .app-filter-field--search,
-:host ::ng-deep .finance-list-shell__card .app-filter-field--narrow,
-:host ::ng-deep .finance-list-shell__card .finance-filter-range {
+:host ::ng-deep .finance-list-shell__card .app-filter-field--narrow {
   grid-column: span 1 !important;
+}
+
+:host ::ng-deep .finance-list-shell__card .finance-filter-range {
+  grid-column: span 2 !important;
 }
 
 @media (max-width: 767.98px) {

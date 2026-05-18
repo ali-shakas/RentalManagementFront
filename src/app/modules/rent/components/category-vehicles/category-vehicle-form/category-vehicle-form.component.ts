@@ -1,11 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { Component, ElementRef, OnInit, inject, signal } from '@angular/core';
-import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { SHARED_FORM_FIELD_DIRECTIVES } from '../../../../../shared/forms/shared-form-field.imports';
+import { coerceFormNumber, requiredNumber } from '../../../../../shared/validators/required-number.validator';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { AuthStateService } from '../../../../../core/auth/auth-state.service';
-import { FieldValueStateDirective } from '../../../../../shared/directives/field-value-state.directive';
 import { CategoryVehicleUpsertRequest } from '../../../models';
 import { CategoryVehicleService } from '../../../services/category-vehicles/category-vehicle.service';
 import { ToastService } from '../../../../../shared/services/toast.service';
@@ -20,7 +21,7 @@ import { focusFirstInvalidControl } from '../../../../../shared/utils/focus-firs
     ReactiveFormsModule,
     RouterLink,
     TranslateModule,
-    FieldValueStateDirective,
+    ...SHARED_FORM_FIELD_DIRECTIVES,
     PageHeaderComponent,
   ],
   templateUrl: './category-vehicle-form.component.html',
@@ -32,6 +33,7 @@ export class CategoryVehicleFormComponent implements OnInit {
   private static readonly ENGLISH_NAME_REGEX = /^[A-Za-z0-9\s.'-]{0,255}$/;
 
   private fb = inject(NonNullableFormBuilder);
+  private readonly nullableFb = inject(FormBuilder);
   private authState = inject(AuthStateService);
   private categoryVehicleService = inject(CategoryVehicleService);
   private toast = inject(ToastService);
@@ -47,16 +49,16 @@ export class CategoryVehicleFormComponent implements OnInit {
   form = this.fb.group({
     nameAr: ['', [Validators.required, Validators.maxLength(255), Validators.pattern(CategoryVehicleFormComponent.ARABIC_NAME_REGEX)]],
     nameEn: ['', [Validators.maxLength(255), Validators.pattern(CategoryVehicleFormComponent.ENGLISH_NAME_REGEX)]],
-    price_day_low: [0, [Validators.required, Validators.min(0)]],
-    price_day_high: [0, [Validators.required, Validators.min(0)]],
-    price_month_low: [0, [Validators.required, Validators.min(0)]],
-    price_month_high: [0, [Validators.required, Validators.min(0)]],
-    priceHoureExtraLow: [0, [Validators.required, Validators.min(0)]],
-    priceHoureExtraHigh: [0, [Validators.required, Validators.min(0)]],
-    countKMExtraLow: [0, [Validators.required, Validators.min(0)]],
-    countKMExtraHigh: [0, [Validators.required, Validators.min(0)]],
-    allowToLow: [0, [Validators.required, Validators.min(0)]],
-    allowToHigh: [0, [Validators.required, Validators.min(0)]],
+    price_day_low: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
+    price_day_high: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
+    price_month_low: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
+    price_month_high: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
+    priceHoureExtraLow: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
+    priceHoureExtraHigh: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
+    countKMExtraLow: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
+    countKMExtraHigh: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
+    allowToLow: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
+    allowToHigh: this.nullableFb.control<number | null>(null, [requiredNumber({ min: 0 })]),
   });
 
   ngOnInit(): void {
@@ -120,16 +122,16 @@ export class CategoryVehicleFormComponent implements OnInit {
       fleetId,
       nameAr: raw.nameAr.trim(),
       nameEn: raw.nameEn.trim() || undefined,
-      price_day_low: raw.price_day_low,
-      price_day_high: raw.price_day_high,
-      price_month_low: raw.price_month_low,
-      price_month_high: raw.price_month_high,
-      priceHoureExtraLow: raw.priceHoureExtraLow,
-      priceHoureExtraHigh: raw.priceHoureExtraHigh,
-      countKMExtraLow: raw.countKMExtraLow,
-      countKMExtraHigh: raw.countKMExtraHigh,
-      allowToLow: raw.allowToLow,
-      allowToHigh: raw.allowToHigh,
+      price_day_low: coerceFormNumber(raw.price_day_low),
+      price_day_high: coerceFormNumber(raw.price_day_high),
+      price_month_low: coerceFormNumber(raw.price_month_low),
+      price_month_high: coerceFormNumber(raw.price_month_high),
+      priceHoureExtraLow: coerceFormNumber(raw.priceHoureExtraLow),
+      priceHoureExtraHigh: coerceFormNumber(raw.priceHoureExtraHigh),
+      countKMExtraLow: coerceFormNumber(raw.countKMExtraLow),
+      countKMExtraHigh: coerceFormNumber(raw.countKMExtraHigh),
+      allowToLow: coerceFormNumber(raw.allowToLow),
+      allowToHigh: coerceFormNumber(raw.allowToHigh),
     };
 
     this.loading.set(true);

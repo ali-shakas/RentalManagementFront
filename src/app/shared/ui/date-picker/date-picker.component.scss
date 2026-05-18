@@ -6,12 +6,52 @@
 }
 
 :host(.date-picker-host--open) {
-  z-index: 160;
+  z-index: 220;
 }
 
 .date-picker {
   position: relative;
   width: 100%;
+}
+
+.date-picker--compact .date-label {
+  margin-bottom: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: var(--font-weight-semibold, 600);
+}
+
+.date-picker--compact .date-trigger {
+  min-height: 36px;
+  padding-inline: 0.55rem;
+  gap: 0.45rem;
+}
+
+.date-picker--compact .date-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  flex-shrink: 0;
+}
+
+.date-picker--compact .date-value {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.date-picker--compact .chevron {
+  flex-shrink: 0;
+  font-size: 12px;
+}
+
+.date-picker--compact .calendar-panel {
+  width: min(340px, calc(100vw - 24px));
+  inset-inline-end: 0;
+  inset-inline-start: auto;
 }
 
 .date-label {
@@ -88,8 +128,8 @@
   position: absolute;
   top: calc(100% + 12px);
   inset-inline-end: 0;
-  z-index: 160;
-  width: min(340px, calc(100vw - 24px));
+  z-index: 400;
+  width: min(380px, calc(100vw - 24px));
   padding: 16px;
   border-radius: 22px;
   background:
@@ -119,12 +159,37 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
   margin-bottom: 14px;
 }
 
-.calendar-header strong {
+.calendar-header__selects {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.calendar-header__select {
+  flex: 1;
+  min-width: 0;
+  max-width: 9.5rem;
+  height: 38px;
+  padding-inline: 10px;
+  border-radius: 11px;
+  border: 1px solid rgba(34, 211, 238, 0.24);
+  background: rgba(11, 28, 40, 0.92);
   color: #eaf6ff;
-  font-size: 16px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.calendar-header__select--year {
+  flex: 0 1 5.5rem;
+  max-width: 5.5rem;
 }
 
 .nav-btn {
@@ -386,7 +451,12 @@
     box-shadow: 0 24px 50px -20px rgba(15, 23, 42, 0.2);
   }
 
-  .calendar-header strong,
+  .calendar-header__select {
+    background: #fff;
+    color: #0f172a;
+    border-color: rgba(148, 163, 184, 0.32);
+  }
+
   .day {
     color: #0f172a;
   }

@@ -37,10 +37,6 @@
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
-.finance-list-shell__card .app-filter-field {
-  padding: 0.58rem;
-}
-
 .finance-list-shell__card .app-filter-field--search {
   grid-column: span 1;
 }
@@ -50,7 +46,13 @@
 }
 
 .finance-list-shell__card .finance-filter-range {
-  grid-column: span 1;
+  grid-column: span 2;
+  min-width: 0;
+  overflow: visible;
+}
+
+.finance-list-shell__card .finance-filter-range .app-date-range-filter {
+  width: 100%;
 }
 
 @media (max-width: 767.98px) {
@@ -72,8 +74,11 @@
     width: 100%;
   }
 
-  .finance-list-shell__card .app-filter-field--narrow,
-  .finance-list-shell__card .finance-filter-range {
+  .finance-list-shell__card .app-filter-field--narrow {
     grid-column: span 1;
+  }
+
+  .finance-list-shell__card .finance-filter-range {
+    grid-column: span 2;
   }
 }

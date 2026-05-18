@@ -3,6 +3,7 @@ import { Component, DestroyRef, ElementRef, OnInit, computed, inject, signal } f
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   AbstractControl,
+  FormBuilder,
   NonNullableFormBuilder,
   ReactiveFormsModule,
   ValidationErrors,
@@ -16,6 +17,7 @@ import { forkJoin } from 'rxjs';
 
 import { AuthStateService } from '../../../../../core/auth/auth-state.service';
 import { ToastService } from '../../../../../shared/services/toast.service';
+import { SHARED_FORM_FIELD_DIRECTIVES } from '../../../../../shared/forms/shared-form-field.imports';
 import { focusFirstInvalidControl } from '../../../../../shared/utils/focus-first-invalid-control.util';
 import { DatePickerComponent } from '../../../../../shared/ui/date-picker/date-picker.component';
 import { PageHeaderComponent } from '../../../../../shared/ui/page-header/page-header.component';
@@ -50,6 +52,7 @@ import { BranchService } from '../../../../rent/services/branches/branch.service
     PageHeaderComponent,
     SmoothSelectComponent,
     DatePickerComponent,
+    ...SHARED_FORM_FIELD_DIRECTIVES,
   ],
   templateUrl: './journal-entry-form.component.html',
   styleUrl: './journal-entry-form.component.scss',
@@ -57,6 +60,7 @@ import { BranchService } from '../../../../rent/services/branches/branch.service
 export class JournalEntryFormComponent implements OnInit {
   private readonly hostEl = inject(ElementRef<HTMLElement>);
   private fb = inject(NonNullableFormBuilder);
+  private readonly nullableFb = inject(FormBuilder);
   private authState = inject(AuthStateService);
   private destroyRef = inject(DestroyRef);
   private countingService = inject(CountingEntryService);
@@ -252,8 +256,8 @@ export class JournalEntryFormComponent implements OnInit {
       vehicleName: '',
       idCustomer: '',
       customerName: '',
-      debtir: 0,
-      credit: 0,
+      debtir: null,
+      credit: null,
       node: '',
     });
   }
@@ -270,7 +274,7 @@ export class JournalEntryFormComponent implements OnInit {
   onDraftDebitInput(): void {
     const debit = this.toPositiveNumber(this.detailDraft.controls.debtir.value);
     if (debit > 0 && this.toPositiveNumber(this.detailDraft.controls.credit.value) > 0) {
-      this.detailDraft.patchValue({ credit: 0 }, { emitEvent: false });
+      this.detailDraft.patchValue({ credit: null }, { emitEvent: false });
     }
     this.detailDraft.updateValueAndValidity();
   }
@@ -278,7 +282,7 @@ export class JournalEntryFormComponent implements OnInit {
   onDraftCreditInput(): void {
     const credit = this.toPositiveNumber(this.detailDraft.controls.credit.value);
     if (credit > 0 && this.toPositiveNumber(this.detailDraft.controls.debtir.value) > 0) {
-      this.detailDraft.patchValue({ debtir: 0 }, { emitEvent: false });
+      this.detailDraft.patchValue({ debtir: null }, { emitEvent: false });
     }
     this.detailDraft.updateValueAndValidity();
   }
@@ -475,8 +479,8 @@ export class JournalEntryFormComponent implements OnInit {
         vehicleName: [''],
         idCustomer: [''],
         customerName: [''],
-        debtir: [0, [Validators.min(0)]],
-        credit: [0, [Validators.min(0)]],
+        debtir: this.nullableFb.control<number | null>(null, [Validators.min(0)]),
+        credit: this.nullableFb.control<number | null>(null, [Validators.min(0)]),
         node: ['', [Validators.maxLength(250)]],
       },
       { validators: this.detailLineValidator },

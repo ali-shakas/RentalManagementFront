@@ -538,9 +538,9 @@ export class PaymentCountListComponent implements OnInit {
       item.status === 1 ? this.translate.instant('Confirmed') : this.translate.instant('Pending');
     const bondTypeLabel =
       item.bondType === 1
-        ? this.translate.instant('Payment Count')
+        ? this.translate.instant('Payment Voucher')
         : item.bondType === 2
-          ? this.translate.instant('Receipt Count')
+          ? this.translate.instant('Receipt Voucher')
           : '-';
 
     return `
