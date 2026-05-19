@@ -86,10 +86,19 @@ export function normalizeVehicle(raw: unknown): Vehicle {
       : pick<string | number>(source, 'idCategoryVehicle', 'IdCategoryVehicle');
 
   const rawImage = pick<string>(source, 'imageUrl', 'ImageUrl', 'url', 'Url');
-  const imageUrl =
-    rawImage && !/[\\/]/.test(rawImage) && /\.(png|jpe?g|webp|gif|bmp|svg)$/i.test(rawImage)
-      ? `uploads/vehicle/${rawImage}`
-      : rawImage;
+  let imageUrl = rawImage;
+  if (rawImage) {
+    const trimmed = String(rawImage).trim().replace(/\\/g, '/');
+    if (/^files\/vehicle\//i.test(trimmed)) {
+      imageUrl = `uploads/vehicle/${trimmed.slice('files/vehicle/'.length)}`;
+    } else if (/^files\//i.test(trimmed)) {
+      imageUrl = trimmed.replace(/^files\//i, 'uploads/');
+    } else if (!/[\\/]/.test(trimmed) && /\.(png|jpe?g|webp|gif|bmp|svg)$/i.test(trimmed)) {
+      imageUrl = `uploads/vehicle/${trimmed}`;
+    } else {
+      imageUrl = trimmed;
+    }
+  }
 
   return {
     id: String(pick(source, 'id', 'Id') ?? ''),

@@ -14,23 +14,29 @@
           <use href="assets/svg/icon-sprite.svg#stroke-animation"></use>
         </svg>
       </button>
-      <div class="header-datetime-panel" [attr.dir]="isArabicLanguage ? 'rtl' : 'ltr'" aria-live="polite">
-        <div class="header-datetime-row">
-          <span class="header-datetime-item">
-            <span class="header-datetime-label">{{ isArabicLanguage ? 'ميلادي' : 'Gregorian' }}</span>
-            <span class="header-datetime-value" [hidden]="!isArabicLanguage">{{ gregorianDate }}</span>
-            <span class="header-datetime-value header-datetime-value--numeric">{{ gregorianNumericDate }}</span>
-          </span>
-          <span class="header-datetime-separator">•</span>
-          <span class="header-datetime-item">
-            <span class="header-datetime-label">{{ isArabicLanguage ? 'هجري' : 'Hijri' }}</span>
-            <span class="header-datetime-value" [hidden]="!isArabicLanguage">{{ hijriDate }}</span>
-            <span class="header-datetime-value header-datetime-value--numeric">{{ hijriNumericDate }}</span>
-          </span>
+      <div
+        class="modern-date-widget header-datetime-panel"
+        [attr.dir]="isArabicLanguage ? 'rtl' : 'ltr'"
+        aria-live="polite"
+      >
+        <div class="time-box">
+          <span class="time">{{ time12 }}</span>
         </div>
-        <div class="header-time-row">
-          <i class="fa-regular fa-clock"></i>
-          <span>{{ time12 }}</span>
+        <div class="date-box">
+          <div class="date-row">
+            <span class="badge">{{ isArabicLanguage ? 'ميلادي' : 'Gregorian' }}</span>
+            <span class="date-row-text">
+              <span [hidden]="!isArabicLanguage">{{ gregorianDate }}</span>
+              <span class="date-row-text--numeric">{{ gregorianNumericDate }}</span>
+            </span>
+          </div>
+          <div class="date-row muted">
+            <span class="badge hijri">{{ isArabicLanguage ? 'هجري' : 'Hijri' }}</span>
+            <span class="date-row-text">
+              <span [hidden]="!isArabicLanguage">{{ hijriDate }}</span>
+              <span class="date-row-text--numeric">{{ hijriNumericDate }}</span>
+            </span>
+          </div>
         </div>
       </div>
     </div>

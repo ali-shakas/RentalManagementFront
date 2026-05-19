@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 
 import { Observable, catchError, from, map, of, switchMap, throwError } from 'rxjs';
@@ -101,33 +102,53 @@ export class CustomerService {
     );
   }
 
+  /**
+   * `GetCustomerByNationalIdQuery` → `GET Customer/ByNationalId/{nationalId}/{fleetId}`.
+   * Treats 404 / `Result.NotFound` as «no customer» (null), not a hard error.
+   */
   getByNationalId(nationalId: string, fleetId?: string | null): Observable<Customer | null> {
     const id = String(nationalId ?? '').trim();
     const normalizedFleetId = normalizeFleetId(fleetId);
     if (!id || !normalizedFleetId) {
-      return throwError(() => new Error('Invalid nationalId or fleetId'));
+      return of(null);
     }
 
-    const byPath = this.api
-      .getData<unknown>(`${this.base}/ByNationalId/${id}/${normalizedFleetId}`, undefined, {
-        suppressErrorToast: true,
-      })
-      .pipe(map(raw => this.normalizeCustomerLookupResponse(raw)));
+    const encodedId = encodeURIComponent(id);
+    const encodedFleetId = encodeURIComponent(normalizedFleetId);
+    const path = `${this.base}/ByNationalId/${encodedId}/${encodedFleetId}`;
 
-    const byQuery = this.api
-      .getData<unknown>(`${this.base}/ByNationalId`, {
-        NationalId: id,
-        FleetId: normalizedFleetId,
-        fleetid: normalizedFleetId,
-      }, {
-        suppressErrorToast: true,
-      })
-      .pipe(map(raw => this.normalizeCustomerLookupResponse(raw)));
-
-    return byPath.pipe(
-      catchError(() => byQuery),
+    return this.lookupCustomerByNationalIdRequest(path).pipe(
+      catchError(() =>
+        this.lookupCustomerByNationalIdRequest(`${this.base}/ByNationalId`, {
+          NationalId: id,
+          FleetId: normalizedFleetId,
+          fleetid: normalizedFleetId,
+        }),
+      ),
       catchError(() => this.getByNationalIdFromList(id, normalizedFleetId)),
       catchError(() => of(null)),
+    );
+  }
+
+  private lookupCustomerByNationalIdRequest(
+    endpoint: string,
+    query?: Record<string, string | number | boolean | undefined>,
+  ): Observable<Customer | null> {
+    return this.api.get<unknown>(endpoint, query, { suppressErrorToast: true }).pipe(
+      map(envelope => {
+        if (envelope.succeeded === false && (envelope.data === null || envelope.data === undefined)) {
+          return null;
+        }
+        return this.normalizeCustomerLookupResponse(
+          this.unwrapResultPayload(envelope.data ?? envelope),
+        );
+      }),
+      catchError((err: unknown) => {
+        if (err instanceof HttpErrorResponse && err.status === 404) {
+          return of(null);
+        }
+        return throwError(() => err);
+      }),
     );
   }
 

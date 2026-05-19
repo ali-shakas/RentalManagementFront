@@ -21,6 +21,7 @@ import {
   map,
   merge,
   of,
+  startWith,
   switchMap,
 } from 'rxjs';
 
@@ -89,6 +90,53 @@ export class BookingFormComponent implements OnInit {
   private static readonly NOTE_REGEX = /^[\u0600-\u06FFA-Za-z0-9\s.,!?'"\-_/()]{0,500}$/;
   private static readonly BASAME_NUMBER_REGEX = /^[A-Za-z0-9-]{0,10}$/;
 
+  /** Not shown on create UI — empty `null` blocks submit via `requiredNumber`. */
+  private static readonly HIDDEN_NUMERIC_DEFAULT_KEYS = [
+    'numberOfHoursExcess',
+    'numberKmExcess',
+    'dayExcess',
+    'discount',
+    'checkinCounter',
+    'priceInMonth',
+    'allowTo',
+    'countKMExtra',
+    'otherExpenses',
+    'totalTrafic',
+    'totalMaintance',
+    'totalReceivedVehicle',
+    'transportationFees',
+    'totaltax',
+    'paid',
+    'paidCash',
+    'paidBank',
+    'priceDayBandLow',
+    'priceDayBandHigh',
+    'priceHourExtraBandLow',
+    'priceHourExtraBandHigh',
+    'priceKmExtraBandLow',
+    'priceKmExtraBandHigh',
+  ] as const;
+
+  private static readonly FORM_CONTROL_LABEL_KEYS: Record<string, string> = {
+    customerIqama: 'Identity Number',
+    vehicleId: 'Vehicle',
+    startDate: 'Start Date',
+    endDate: 'End Date',
+    dateReturnVehical: 'Return Vehicle Date',
+    countOfDay: 'Count Of Days',
+    checkoutCounter: 'Checkout Counter',
+    priceInDay: 'Price Per Day',
+    priceHoureExtra: 'Extra Hour Price',
+    priceKmExtra: 'Extra KM Price',
+    numberBookingINBasame: 'Rental Contract Number',
+    paid: 'Paid',
+    idBank: 'Bank Account',
+    idCash: 'Cash Account',
+    distancetraveledgps: 'Travelled Distance GPS',
+    note: 'Notes',
+    placeUSE: 'Place Of Use',
+  };
+
   private fb = inject(NonNullableFormBuilder);
   private readonly nullableFb = inject(FormBuilder);
   private authState = inject(AuthStateService);
@@ -118,6 +166,14 @@ export class BookingFormComponent implements OnInit {
   contractPriceBandHintKm = signal<string | null>(null);
 
   customers = signal<Customer[]>([]);
+  private readonly selectedCustomerId = signal('');
+  readonly selectedCustomer = computed(() => {
+    const id = this.selectedCustomerId();
+    if (!id) {
+      return null;
+    }
+    return this.customers().find(customer => String(customer.id) === id) ?? null;
+  });
   vehicles = signal<Vehicle[]>([]);
   categories = signal<CategoryVehicle[]>([]);
   banks = signal<Bank[]>([]);
@@ -141,16 +197,21 @@ export class BookingFormComponent implements OnInit {
   editBookingId = signal<number | null>(null);
   originalPaidSnapshot = signal<number | null | undefined>(undefined);
   editMode = computed(() => this.editBookingId() !== null);
-  customerSelectOptions = computed<SmoothSelectOption[]>(() => [
-    { label: 'Select customer', value: '' },
+  private readonly i18nTick = signal(0);
+  customerSelectOptions = computed<SmoothSelectOption[]>(() => {
+    this.i18nTick();
+    return [
+    { label: this.translate.instant('Select customer'), value: '' },
     ...this.customers().map(customer => ({
       label: customer.fullName || customer.nameAr || customer.nameEn || '-',
       value: String(customer.id),
     })),
-  ]);
+  ];
+  });
   vehicleSelectOptions = computed<SmoothSelectOption[]>(() => {
+    this.i18nTick();
     const baseOptions: SmoothSelectOption[] = [
-      { label: 'Select vehicle', value: '' },
+      { label: this.translate.instant('Select vehicle'), value: '' },
       ...this.vehicles().map(vehicle => ({
         label: vehicle.plateNumber || vehicle.serialNumber || vehicle.make || '-',
         value: String(vehicle.id),
@@ -173,38 +234,53 @@ export class BookingFormComponent implements OnInit {
       },
     ];
   });
-  bankSelectOptions = computed<SmoothSelectOption[]>(() => [
-    { label: 'Select bank', value: '' },
+  bankSelectOptions = computed<SmoothSelectOption[]>(() => {
+    this.i18nTick();
+    return [
+    { label: this.translate.instant('Select bank'), value: '' },
     ...this.banks().map(bank => ({
       label: bank.name || '-',
       value: String(bank.id),
     })),
-  ]);
-  cashSelectOptions = computed<SmoothSelectOption[]>(() => [
-    { label: 'Select cash account', value: '' },
+  ];
+  });
+  cashSelectOptions = computed<SmoothSelectOption[]>(() => {
+    this.i18nTick();
+    return [
+    { label: this.translate.instant('Select cash account'), value: '' },
     ...this.cashAccounts().map(cash => ({
       label: cash.name || '-',
       value: String(cash.id),
     })),
-  ]);
-  paymentTypeSelectOptions = computed<SmoothSelectOption[]>(() => [
+  ];
+  });
+  paymentTypeSelectOptions = computed<SmoothSelectOption[]>(() => {
+    this.i18nTick();
+    return [
     { label: this.translate.instant('Cash'), value: 1 },
     { label: this.translate.instant('Network/POS'), value: 2 },
     { label: this.translate.instant('Cheque'), value: 3 },
     { label: this.translate.instant('Bank Transfer'), value: 4 },
     { label: this.translate.instant('Bank/Cash'), value: 5 },
-  ]);
-  discountTypeSelectOptions = computed<SmoothSelectOption[]>(() => [
+  ];
+  });
+  discountTypeSelectOptions = computed<SmoothSelectOption[]>(() => {
+    this.i18nTick();
+    return [
     { label: this.translate.instant('Fixed Amount'), value: 'amount' },
     { label: this.translate.instant('Percentage'), value: 'percent' },
-  ]);
-  countingSelectOptions = computed<SmoothSelectOption[]>(() => [
-    { label: 'Select customer vehicle counting', value: '' },
+  ];
+  });
+  countingSelectOptions = computed<SmoothSelectOption[]>(() => {
+    this.i18nTick();
+    return [
+    { label: this.translate.instant('Select customer vehicle counting'), value: '' },
     ...this.countingEntries().map(counting => ({
       label: [counting.nameAr, counting.nameEn].filter(Boolean).join(' - ') || String(counting.id),
       value: String(counting.id),
     })),
-  ]);
+  ];
+  });
   nationalitySuggestions = signal<BookingNationalitySuggestion[]>([]);
   nationalitySuggestionsOpen = signal(false);
 
@@ -336,7 +412,16 @@ export class BookingFormComponent implements OnInit {
     const routeId = Number(this.route.snapshot.paramMap.get('id'));
     this.editBookingId.set(Number.isFinite(routeId) && routeId > 0 ? routeId : null);
 
+    this.form.controls.dateReturnVehical.disable({ emitEvent: false });
+    this.form.controls.customerId.valueChanges
+      .pipe(
+        startWith(this.form.controls.customerId.value),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(id => this.selectedCustomerId.set(String(id ?? '').trim()));
+
     this.translate.onLangChange.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.i18nTick.update(v => v + 1);
       this.refreshNationalitySuggestionList();
     });
 
@@ -497,10 +582,12 @@ export class BookingFormComponent implements OnInit {
         switchMap(iqama => {
           if (!iqama) {
             this.form.patchValue({ customerId: '' }, { emitEvent: false });
+            this.selectedCustomerId.set('');
             return of<Customer[]>([]);
           }
           if (iqama.length < BookingFormComponent.NATIONAL_ID_LENGTH) {
             this.form.patchValue({ customerId: '' }, { emitEvent: false });
+            this.selectedCustomerId.set('');
             return of<Customer[]>([]);
           }
           if (iqama.length > BookingFormComponent.NATIONAL_ID_LENGTH) {
@@ -538,13 +625,20 @@ export class BookingFormComponent implements OnInit {
 
     this.applyPaymentTypeRules(this.form.controls.paymentType.value);
     this.applyAutoTaxFromSettings();
+    this.seedHiddenNumericDefaults();
     this.syncBookingTotals();
     this.refreshContractLimitWarnings();
   }
 
   save(): void {
+    this.prepareFormBeforeSave();
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      const fieldLabel = this.firstInvalidControlLabel();
+      const base = this.translate.instant(
+        'Booking data is incomplete. Please fill in the required fields.',
+      );
+      this.toast.error(fieldLabel ? `${base} (${fieldLabel})` : base);
       focusFirstInvalidControl(this.hostEl.nativeElement);
       return;
     }
@@ -670,7 +764,11 @@ export class BookingFormComponent implements OnInit {
         const nationalityExpiryIso = nationalityExpiryIsoPrimary || nationalityExpiryIsoFallback;
         customerNationalityExpired = this.isIsoDateExpired(nationalityExpiryIso);
       }
-      idCustomerOut = this.parseFormNumber(raw.customerId);
+      const parsedCustomerId = this.parseFormNumber(raw.customerId);
+      idCustomerOut =
+        Number.isFinite(parsedCustomerId) && parsedCustomerId > 0
+          ? parsedCustomerId
+          : Number(selectedCustomer.id) || 0;
     } else {
       const manualNameAr = raw.customerNameAr.trim();
       const manualMobile = this.normalizeSaudiMobile(
@@ -1243,12 +1341,36 @@ export class BookingFormComponent implements OnInit {
     return d.getTime() < Date.now();
   }
 
-  selectedCustomer(): Customer | null {
-    const customerId = this.form.controls.customerId.value;
-    if (!customerId) {
-      return null;
+  private patchCustomerLookup(patch: Record<string, string>, emitEvent = false): void {
+    queueMicrotask(() => {
+      this.form.patchValue(patch, { emitEvent });
+      if (Object.prototype.hasOwnProperty.call(patch, 'customerId')) {
+        this.selectedCustomerId.set(String(patch['customerId'] ?? '').trim());
+      }
+    });
+  }
+
+  private customerHasProfile(customer: Customer): boolean {
+    return Boolean(
+      (customer.nameAr || customer.fullName || customer.firstMobileNumber || customer.phoneNumber || '')
+        .trim(),
+    );
+  }
+
+  private applyExistingCustomerFromLookup(customer: Customer): void {
+    if (!this.customers().some(item => String(item.id) === String(customer.id))) {
+      this.customers.update(list => [...list, customer]);
     }
-    return this.customers().find(customer => String(customer.id) === String(customerId)) ?? null;
+    this.patchCustomerLookup({
+      customerId: String(customer.id),
+      customerNameAr: '',
+      customerFirstMobileNumber: '',
+      customerAddress: '',
+      customerNationality: '',
+      customerDrivingLicenseNumber: '',
+      customerDateDrivinglicense: '',
+      customerBirthDay: '',
+    });
   }
 
   // customerIqamaSuggestionsEnabled(): boolean {
@@ -1260,11 +1382,11 @@ export class BookingFormComponent implements OnInit {
       iqamaInput ?? this.form.controls.customerIqama.value.trim(),
     );
     if (!iqama) {
-      this.form.patchValue({ customerId: '' }, { emitEvent: false });
+      this.patchCustomerLookup({ customerId: '' });
       return;
     }
     if (iqama.length !== BookingFormComponent.NATIONAL_ID_LENGTH) {
-      this.form.patchValue({ customerId: '' }, { emitEvent: false });
+      this.patchCustomerLookup({ customerId: '' });
       return;
     }
     const localMatch = this.customers().find(customer => {
@@ -1274,7 +1396,7 @@ export class BookingFormComponent implements OnInit {
       return candidate === iqama;
     });
     if (localMatch) {
-      this.form.patchValue({ customerId: String(localMatch.id) }, { emitEvent: false });
+      this.patchCustomerLookup({ customerId: String(localMatch.id) });
       return;
     }
     const fleetId =
@@ -1288,7 +1410,10 @@ export class BookingFormComponent implements OnInit {
         takeUntilDestroyed(this.destroyRef),
         switchMap(match => {
           if (!match?.id) {
-            return of(null);
+            return of<Customer | null>(null);
+          }
+          if (this.customerHasProfile(match)) {
+            return of(match);
           }
           return this.customerService
             .getById(String(match.id), fleetId)
@@ -1298,23 +1423,7 @@ export class BookingFormComponent implements OnInit {
       .subscribe({
         next: customer => {
           if (customer) {
-            const exists = this.customers().some(item => String(item.id) === String(customer.id));
-            if (!exists) {
-              this.customers.set([...this.customers(), customer]);
-            }
-            this.form.patchValue(
-              {
-                customerId: String(customer.id),
-                customerNameAr: '',
-                customerFirstMobileNumber: '',
-                customerAddress: '',
-                customerNationality: '',
-                customerDrivingLicenseNumber: '',
-                customerDateDrivinglicense: '',
-                customerBirthDay: '',
-              },
-              { emitEvent: false },
-            );
+            this.applyExistingCustomerFromLookup(customer);
             return;
           }
           // No customer from backend — new customer will be created on save: default license number to national ID.
@@ -1328,9 +1437,11 @@ export class BookingFormComponent implements OnInit {
           if (currentSelectedIqama !== iqama) {
             patch['customerId'] = '';
           }
-          this.form.patchValue(patch, { emitEvent: false });
+          this.patchCustomerLookup(patch);
         },
-        error: () => {},
+        error: () => {
+          this.toast.error(this.translate.instant('Booking customer lookup failed'));
+        },
       });
   }
 
@@ -1681,6 +1792,38 @@ export class BookingFormComponent implements OnInit {
 
   private syncBookingTotals(): void {
     this.form.patchValue({ total: this.amountAfterTaxAndDiscount() }, { emitEvent: false });
+  }
+
+  /** Sync hidden numerics, contract dates, and totals immediately before validation/submit. */
+  private prepareFormBeforeSave(): void {
+    this.seedHiddenNumericDefaults();
+    this.syncDatesFromStartAndDays();
+    this.applyAutoTaxFromSettings();
+    this.syncBookingTotals();
+  }
+
+  private seedHiddenNumericDefaults(): void {
+    const patch: Record<string, number> = {};
+    for (const key of BookingFormComponent.HIDDEN_NUMERIC_DEFAULT_KEYS) {
+      const ctrl = this.form.get(key);
+      if (ctrl && isEmptyNumericValue(ctrl.value)) {
+        patch[key] = 0;
+      }
+    }
+    if (Object.keys(patch).length > 0) {
+      this.form.patchValue(patch, { emitEvent: false });
+    }
+  }
+
+  private firstInvalidControlLabel(): string | null {
+    for (const [name, ctrl] of Object.entries(this.form.controls)) {
+      if (!ctrl.invalid) {
+        continue;
+      }
+      const labelKey = BookingFormComponent.FORM_CONTROL_LABEL_KEYS[name];
+      return labelKey ? this.translate.instant(labelKey) : name;
+    }
+    return null;
   }
 
   private applyAutoTaxFromSettings(): void {

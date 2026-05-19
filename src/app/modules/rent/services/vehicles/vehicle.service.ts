@@ -117,22 +117,21 @@ export class VehicleService {
       BranchId: params.branchId ?? undefined,
     });
 
-    // Prefer the explicit endpoint that maps to GetVehicleStatusCountsQuery.
-    return this.api.getData<VehicleStatusCountsResponse>(
-      `${this.base}/GetVehicleStatusCounts`,
-      requestParams,
-      { suppressErrorToast: true },
-    ).pipe(
-      // Backward compatibility for older API routes.
-      catchError(() =>
-        this.api.getData<VehicleStatusCountsResponse>(
-          `${this.base}/StatusCounts`,
-          requestParams,
-          { suppressErrorToast: true },
+    // Canonical route: `VehicleRouting.StatusCounts` → GET `Vehicle/StatusCounts`.
+    return this.api
+      .getData<VehicleStatusCountsResponse>(`${this.base}/StatusCounts`, requestParams, {
+        suppressErrorToast: true,
+      })
+      .pipe(
+        catchError(() =>
+          this.api.getData<VehicleStatusCountsResponse>(
+            `${this.base}/GetVehicleStatusCounts`,
+            requestParams,
+            { suppressErrorToast: true },
+          ),
         ),
-      ),
-      catchError(() => of({ totalCount: 0, statusCounts: [] })),
-    );
+        catchError(() => of({ totalCount: 0, statusCounts: [] })),
+      );
   }
 
   getById(id: string, fleetId?: string | null): Observable<Vehicle> {

@@ -96,11 +96,11 @@
                       />
                     </div>
                     <div class="extend-payment-field">
-                      <label class="form-label">الصندوق</label>
+                      <label class="form-label">{{ 'Cash Account' | translate }}</label>
                       <app-smooth-select
                         [value]="extendBankCashAccount()"
                         [ariaLabel]="'Cash Account' | translate"
-                        placeholder="اختر الصندوق"
+                        [placeholder]="'Select cash account'"
                         [options]="extendCashAccountOptions()"
                         [disabled]="extendPaymentTypeIsBankOnly()"
                         (valueChange)="onExtendCashAccountChange('' + $any($event))"
@@ -126,7 +126,7 @@
                       }
                     </div>
                     <div class="extend-payment-field extend-payment-field--span-2">
-                      <label class="form-label">الحساب البنكي</label>
+                      <label class="form-label">{{ 'Bank Account' | translate }}</label>
                       <app-smooth-select
                         [value]="extendBankAccount()"
                         [ariaLabel]="'Bank Account' | translate"

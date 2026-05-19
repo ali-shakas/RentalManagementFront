@@ -483,7 +483,7 @@ export class JournalEntryFormComponent implements OnInit {
         credit: this.nullableFb.control<number | null>(null, [Validators.min(0)]),
         node: ['', [Validators.maxLength(250)]],
       },
-      { validators: this.detailLineValidator },
+      { validators: (control: AbstractControl) => this.detailLineValidator(control) },
     );
   }
 
@@ -627,7 +627,7 @@ export class JournalEntryFormComponent implements OnInit {
     return Number(value ?? 1);
   }
 
-  private readonly detailLineValidator = (control: AbstractControl): ValidationErrors | null => {
+  private detailLineValidator(control: AbstractControl): ValidationErrors | null {
     const debit = this.toPositiveNumber(control.get('debtir')?.value);
     const credit = this.toPositiveNumber(control.get('credit')?.value);
     const hasDebit = debit > 0;
@@ -638,7 +638,7 @@ export class JournalEntryFormComponent implements OnInit {
     }
 
     return null;
-  };
+  }
 
   private loadActiveAccounts(): void {
     const fleetId = this.authState.fleetId();

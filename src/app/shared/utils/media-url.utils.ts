@@ -18,6 +18,12 @@ function normalizeMediaPath(input: string): string | null {
   }
 
   const cleaned = normalized.replace(/^\/+/, '');
+  if (/^files\/vehicle\//i.test(cleaned)) {
+    return `uploads/vehicle/${cleaned.slice('files/vehicle/'.length)}`;
+  }
+  if (/^files\//i.test(cleaned)) {
+    return cleaned.replace(/^files\//i, 'uploads/');
+  }
   if (/^(customer|vehicle|subscriptionsofcustomer)\//i.test(cleaned)) {
     return `uploads/${cleaned}`;
   }
