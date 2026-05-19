@@ -92,7 +92,21 @@
             "polyfills": ["zone.js", "zone.js/testing"],
             "tsConfig": "tsconfig.spec.json",
             "inlineStyleLanguage": "scss",
-            "include": ["src/app/modules/rent/models/users/user.normalizer.spec.ts"],
+            "include": [
+              "src/app/modules/finance/components/counting-entry/counting-entry-list/counting-entry-list.component.spec.ts",
+              "src/app/modules/finance/components/counting-entry/counting-entry-form/counting-entry-form.component.spec.ts",
+              "src/app/modules/finance/components/journal-entry/journal-entry-form/journal-entry-form.component.spec.ts",
+              "src/app/modules/finance/components/journal-entry/journal-entry-list/journal-entry-list.component.spec.ts",
+              "src/app/modules/finance/components/payment-count/payment-count-form/payment-count-form.component.spec.ts",
+              "src/app/modules/finance/components/payment-count/payment-count-list/payment-count-list.component.spec.ts",
+              "src/app/modules/finance/services/bank/bank-account.service.spec.ts",
+              "src/app/modules/finance/services/cash/cash-account.service.spec.ts",
+              "src/app/modules/finance/services/counting/counting-entry.service.spec.ts",
+              "src/app/modules/finance/services/financial-year/financial-year.service.spec.ts",
+              "src/app/modules/finance/services/journal-entry/journal-entry.service.spec.ts",
+              "src/app/modules/finance/services/payment-count/payment-count.service.spec.ts",
+              "src/app/modules/rent/models/users/user.normalizer.spec.ts"
+            ],
             "assets": [
               {
                 "glob": "**/*",

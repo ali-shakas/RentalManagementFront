@@ -426,12 +426,6 @@ export class PaymentCountFormComponent implements OnInit {
       return;
     }
 
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      focusFirstInvalidControl(this.hostEl.nativeElement);
-      return;
-    }
-
     const raw = this.form.getRawValue() as any;
     const idCustomer = this.toOptionalPositiveInteger(raw.idCustomer);
     const idVehicle = this.toOptionalPositiveInteger(raw.idVehicle);
@@ -442,6 +436,12 @@ export class PaymentCountFormComponent implements OnInit {
 
     if (Number(raw.bondType) === 1 && !expenseCategory) {
       this.toast.error(this.translate.instant('Expense category is required for payment voucher'));
+      return;
+    }
+
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      focusFirstInvalidControl(this.hostEl.nativeElement);
       return;
     }
 
@@ -463,8 +463,8 @@ export class PaymentCountFormComponent implements OnInit {
       paymentType: raw.paymentType,
       bondType: raw.bondType,
       status: raw.status,
-      idCash: raw.idCash || undefined,
-      idBank: raw.idBank || undefined,
+      idCash: [1, 5].includes(paymentType) ? raw.idCash || undefined : undefined,
+      idBank: [2, 3, 4, 5].includes(paymentType) ? raw.idBank || undefined : undefined,
       paidCash: coerceFormNumber(raw.paidCash),
       paidBank: coerceFormNumber(raw.paidBank),
       expenseCategory,

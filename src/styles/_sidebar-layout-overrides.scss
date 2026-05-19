@@ -3,6 +3,17 @@ $sidebar-width: 246px;
 $sidebar-collapsed-width: 78px;
 
 .page-wrapper.compact-wrapper {
+  --app-compact-header-offset: 68px;
+
+  .page-header .header-wrapper {
+    padding: 9px 20px !important;
+  }
+
+  .page-body-wrapper .page-body {
+    margin-top: var(--app-compact-header-offset) !important;
+    min-height: calc(100vh - var(--app-compact-header-offset)) !important;
+  }
+
   .page-header {
     .header-wrapper {
       .nav-right {
@@ -19,8 +30,8 @@ $sidebar-collapsed-width: 78px;
             position: relative;
             overflow: hidden;
             isolation: isolate;
-            min-width: 44px;
-            height: 44px;
+            min-width: 38px;
+            height: 38px;
             padding: 0 !important;
             border: 1px solid rgba(148, 163, 184, 0.18) !important;
             border-radius: 14px !important;
@@ -127,8 +138,8 @@ $sidebar-collapsed-width: 78px;
           display: inline-flex;
           align-items: center;
           gap: 12px;
-          min-height: 48px;
-          padding: 6px 10px;
+          min-height: 40px;
+          padding: 4px 9px;
           border: 1px solid rgba(148, 163, 184, 0.16);
           border-radius: 16px;
           background:
@@ -202,9 +213,9 @@ $sidebar-collapsed-width: 78px;
         align-items: center;
         justify-content: center;
         gap: 8px;
-        min-width: 40px;
-        height: 40px;
-        padding-inline: 12px;
+        min-width: 36px;
+        height: 36px;
+        padding-inline: 10px;
         margin: 0 12px 0 0 !important;
         position: relative !important;
         overflow: hidden;
@@ -860,101 +871,96 @@ body.light-only .page-wrapper.compact-wrapper .page-header.close_icon .header-wr
   border-style: solid;
 }
 
-/* Hard override to guarantee clear state colors for sidebar toggle */
-.page-wrapper.compact-wrapper .page-header .header-wrapper .toggle-sidebar[data-state='expanded'] {
-  --sidebar-toggle-fg: #9a3412 !important;
-  --sidebar-toggle-bg:
-    linear-gradient(135deg, rgba(251, 146, 60, 0.24) 0%, rgba(234, 88, 12, 0.12) 100%) !important;
-  --sidebar-toggle-border: rgba(194, 65, 12, 0.46) !important;
-  --sidebar-toggle-shadow:
-    0 18px 32px -24px rgba(194, 65, 12, 0.74),
-    inset 0 1px 0 rgba(255, 255, 255, 0.16) !important;
-  --sidebar-toggle-hover-bg:
-    linear-gradient(135deg, rgba(251, 146, 60, 0.32) 0%, rgba(234, 88, 12, 0.18) 100%) !important;
-  --sidebar-toggle-hover-border: rgba(194, 65, 12, 0.58) !important;
-  --sidebar-toggle-hover-shadow:
-    0 22px 36px -22px rgba(194, 65, 12, 0.82),
-    0 0 0 4px rgba(234, 88, 12, 0.12) !important;
-  --sidebar-toggle-focus-outline: rgba(234, 88, 12, 0.48) !important;
-  --sidebar-toggle-active-shadow:
-    0 10px 20px -18px rgba(194, 65, 12, 0.7),
-    0 0 0 3px rgba(234, 88, 12, 0.12) !important;
+/* Sidebar toggle states — aligned with header date widget (cyan glass, not brown/orange) */
+@mixin sidebar-toggle-state-apply {
   color: var(--sidebar-toggle-fg) !important;
   border-color: var(--sidebar-toggle-border) !important;
   background: var(--sidebar-toggle-bg) !important;
   box-shadow: var(--sidebar-toggle-shadow) !important;
+}
+
+.page-wrapper.compact-wrapper .page-header .header-wrapper .toggle-sidebar[data-state='expanded'] {
+  --sidebar-toggle-fg: #0369a1 !important;
+  --sidebar-toggle-bg:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.92) 0%, rgba(224, 242, 254, 0.88) 100%) !important;
+  --sidebar-toggle-border: rgba(14, 165, 233, 0.38) !important;
+  --sidebar-toggle-shadow:
+    0 16px 30px -22px rgba(14, 165, 233, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85) !important;
+  --sidebar-toggle-hover-bg:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.98) 0%, rgba(186, 230, 253, 0.9) 100%) !important;
+  --sidebar-toggle-hover-border: rgba(14, 165, 233, 0.52) !important;
+  --sidebar-toggle-hover-shadow:
+    0 20px 34px -22px rgba(14, 165, 233, 0.42),
+    0 0 0 4px rgba(14, 165, 233, 0.1) !important;
+  --sidebar-toggle-focus-outline: rgba(14, 165, 233, 0.45) !important;
+  --sidebar-toggle-active-shadow:
+    0 10px 20px -18px rgba(14, 165, 233, 0.28),
+    0 0 0 3px rgba(14, 165, 233, 0.1) !important;
+  @include sidebar-toggle-state-apply;
 }
 
 .page-wrapper.compact-wrapper .page-header .header-wrapper .toggle-sidebar[data-state='collapsed'] {
-  --sidebar-toggle-fg: #0f766e !important;
+  --sidebar-toggle-fg: #0c4a6e !important;
   --sidebar-toggle-bg:
-    linear-gradient(135deg, rgba(16, 185, 129, 0.22) 0%, rgba(16, 185, 129, 0.11) 100%) !important;
-  --sidebar-toggle-border: rgba(16, 185, 129, 0.46) !important;
+    linear-gradient(145deg, rgba(14, 165, 233, 0.14) 0%, rgba(241, 245, 249, 0.9) 100%) !important;
+  --sidebar-toggle-border: rgba(37, 99, 235, 0.28) !important;
   --sidebar-toggle-shadow:
-    0 18px 32px -24px rgba(5, 150, 105, 0.76),
-    inset 0 1px 0 rgba(255, 255, 255, 0.16) !important;
+    0 16px 30px -22px rgba(37, 99, 235, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.75) !important;
   --sidebar-toggle-hover-bg:
-    linear-gradient(135deg, rgba(16, 185, 129, 0.3) 0%, rgba(16, 185, 129, 0.15) 100%) !important;
-  --sidebar-toggle-hover-border: rgba(5, 150, 105, 0.58) !important;
+    linear-gradient(145deg, rgba(14, 165, 233, 0.22) 0%, rgba(241, 245, 249, 0.95) 100%) !important;
+  --sidebar-toggle-hover-border: rgba(37, 99, 235, 0.4) !important;
   --sidebar-toggle-hover-shadow:
-    0 22px 36px -22px rgba(5, 150, 105, 0.82),
-    0 0 0 4px rgba(16, 185, 129, 0.12) !important;
-  --sidebar-toggle-focus-outline: rgba(16, 185, 129, 0.5) !important;
+    0 20px 34px -22px rgba(37, 99, 235, 0.3),
+    0 0 0 4px rgba(14, 165, 233, 0.08) !important;
+  --sidebar-toggle-focus-outline: rgba(37, 99, 235, 0.4) !important;
   --sidebar-toggle-active-shadow:
-    0 10px 20px -18px rgba(5, 150, 105, 0.68),
-    0 0 0 3px rgba(16, 185, 129, 0.12) !important;
-  color: var(--sidebar-toggle-fg) !important;
-  border-color: var(--sidebar-toggle-border) !important;
-  background: var(--sidebar-toggle-bg) !important;
-  box-shadow: var(--sidebar-toggle-shadow) !important;
+    0 10px 20px -18px rgba(37, 99, 235, 0.22),
+    0 0 0 3px rgba(14, 165, 233, 0.08) !important;
+  @include sidebar-toggle-state-apply;
 }
 
 body.dark-only .page-wrapper.compact-wrapper .page-header .header-wrapper .toggle-sidebar[data-state='expanded'] {
-  --sidebar-toggle-fg: rgba(254, 215, 170, 0.98) !important;
+  --sidebar-toggle-fg: #a5f3fc !important;
   --sidebar-toggle-bg:
-    linear-gradient(135deg, rgba(90, 42, 18, 0.82) 0%, rgba(124, 45, 18, 0.68) 100%) !important;
-  --sidebar-toggle-border: rgba(251, 146, 60, 0.65) !important;
+    linear-gradient(145deg, rgba(16, 36, 54, 0.88) 0%, rgba(6, 182, 212, 0.22) 100%) !important;
+  --sidebar-toggle-border: rgba(103, 232, 249, 0.38) !important;
   --sidebar-toggle-shadow:
-    0 20px 34px -22px rgba(0, 0, 0, 0.55),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+    0 18px 32px -22px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
   --sidebar-toggle-hover-bg:
-    linear-gradient(135deg, rgba(154, 52, 18, 0.78) 0%, rgba(194, 65, 12, 0.62) 100%) !important;
-  --sidebar-toggle-hover-border: rgba(253, 186, 116, 0.72) !important;
+    linear-gradient(145deg, rgba(6, 182, 212, 0.28) 0%, rgba(16, 36, 54, 0.82) 100%) !important;
+  --sidebar-toggle-hover-border: rgba(103, 232, 249, 0.55) !important;
   --sidebar-toggle-hover-shadow:
-    0 24px 38px -22px rgba(0, 0, 0, 0.5),
-    0 0 0 4px rgba(234, 88, 12, 0.16) !important;
-  --sidebar-toggle-focus-outline: rgba(251, 146, 60, 0.75) !important;
+    0 22px 36px -22px rgba(6, 182, 212, 0.28),
+    0 0 0 4px rgba(6, 182, 212, 0.12) !important;
+  --sidebar-toggle-focus-outline: rgba(6, 182, 212, 0.55) !important;
   --sidebar-toggle-active-shadow:
-    0 10px 20px -18px rgba(0, 0, 0, 0.45),
-    0 0 0 3px rgba(234, 88, 12, 0.18) !important;
-  color: var(--sidebar-toggle-fg) !important;
-  border-color: var(--sidebar-toggle-border) !important;
-  background: var(--sidebar-toggle-bg) !important;
-  box-shadow: var(--sidebar-toggle-shadow) !important;
+    0 10px 20px -18px rgba(0, 0, 0, 0.42),
+    0 0 0 3px rgba(6, 182, 212, 0.14) !important;
+  @include sidebar-toggle-state-apply;
 }
 
 body.dark-only .page-wrapper.compact-wrapper .page-header .header-wrapper .toggle-sidebar[data-state='collapsed'] {
-  --sidebar-toggle-fg: rgba(236, 254, 255, 0.98) !important;
+  --sidebar-toggle-fg: #ecfeff !important;
   --sidebar-toggle-bg:
-    linear-gradient(135deg, rgba(16, 36, 54, 0.88) 0%, rgba(16, 185, 129, 0.35) 100%) !important;
-  --sidebar-toggle-border: rgba(6, 182, 212, 0.45) !important;
+    linear-gradient(145deg, rgba(6, 182, 212, 0.2) 0%, rgba(10, 25, 41, 0.82) 100%) !important;
+  --sidebar-toggle-border: rgba(6, 182, 212, 0.42) !important;
   --sidebar-toggle-shadow:
-    0 20px 34px -22px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+    0 18px 32px -22px rgba(0, 0, 0, 0.48),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07) !important;
   --sidebar-toggle-hover-bg:
-    linear-gradient(135deg, rgba(6, 182, 212, 0.28) 0%, rgba(16, 185, 129, 0.42) 100%) !important;
-  --sidebar-toggle-hover-border: rgba(45, 212, 191, 0.55) !important;
+    linear-gradient(145deg, rgba(6, 182, 212, 0.32) 0%, rgba(16, 36, 54, 0.78) 100%) !important;
+  --sidebar-toggle-hover-border: rgba(45, 212, 191, 0.5) !important;
   --sidebar-toggle-hover-shadow:
-    0 24px 38px -22px rgba(6, 182, 212, 0.2),
+    0 22px 36px -22px rgba(6, 182, 212, 0.24),
     0 0 0 4px rgba(6, 182, 212, 0.12) !important;
-  --sidebar-toggle-focus-outline: rgba(45, 212, 191, 0.65) !important;
+  --sidebar-toggle-focus-outline: rgba(45, 212, 191, 0.55) !important;
   --sidebar-toggle-active-shadow:
-    0 10px 20px -18px rgba(0, 0, 0, 0.42),
-    0 0 0 3px rgba(16, 185, 129, 0.16) !important;
-  color: var(--sidebar-toggle-fg) !important;
-  border-color: var(--sidebar-toggle-border) !important;
-  background: var(--sidebar-toggle-bg) !important;
-  box-shadow: var(--sidebar-toggle-shadow) !important;
+    0 10px 20px -18px rgba(0, 0, 0, 0.4),
+    0 0 0 3px rgba(6, 182, 212, 0.14) !important;
+  @include sidebar-toggle-state-apply;
 }
 
 /* Performance mode for dark theme: reduce jank while opening/collapsing sidebar */
@@ -1114,16 +1120,16 @@ body.dark-only .page-wrapper.compact-wrapper .page-header .header-wrapper .toggl
           display: flex;
           align-items: center;
           justify-content: center;
-          flex: 0 0 48px;
-          min-width: 48px;
+          flex: 0 0 42px;
+          min-width: 42px;
         }
 
         .toggle-sidebar {
           display: grid !important;
           place-items: center;
-          width: 48px;
-          min-width: 48px;
-          height: 48px;
+          width: 42px;
+          min-width: 42px;
+          height: 42px;
           padding: 0 !important;
           margin: 0 !important;
           gap: 0;

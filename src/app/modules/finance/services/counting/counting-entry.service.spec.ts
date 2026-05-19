@@ -1,217 +1,234 @@
 import { TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+
 import { CountingEntryService } from './counting-entry.service';
-import { BaseService } from '../../../../shared/services/base/base.service';
-import { of, throwError } from 'rxjs';
+import {
+  CreateCountingEntryRequest,
+  UpdateCountingEntryRequest,
+} from '../../models/counting/counting-entry.model';
 
 describe('CountingEntryService', () => {
   let service: CountingEntryService;
-  let baseServiceSpy: jasmine.SpyObj<BaseService>;
+  let httpMock: HttpTestingController;
 
-  const mockCountingEntry = {
-    id: 'count-1',
-    accountCode: 'CASH-001',
-    debit: 5000,
-    credit: 0,
-    balance: 5000,
-    description: 'Cash inflow',
-    entryDate: '2024-01-01',
-    reference: 'INV-001',
-    isPosted: true,
+  const apiBase = '/Api/V1/CarRentalManagament';
+  const fleetId = '11111111-0000-0000-0000-000000000001';
+  const entryId = '99999999-0000-0000-0000-000000001101';
+
+  const apiEntry = {
+    Id: entryId,
+    CountingNumber: 1101,
+    CountingMain: 1000,
+    CountingType: 1,
+    ReportNumber: 1,
+    CountingLevel: 2,
+    Debtir: 500,
+    Credit: 0,
+    Balannce: 500,
+    NameAr: 'الصندوق',
+    NameEn: 'Cash',
+    IsDeleted: false,
   };
 
-  const mockCountingEntryList = [
-    mockCountingEntry,
-    { id: 'count-2', accountCode: 'CASH-002', debit: 0, credit: 1000, balance: -1000, description: 'Cash outflow', entryDate: '2024-01-02', isPosted: true },
-    { id: 'count-3', accountCode: 'BANK-001', debit: 10000, credit: 0, balance: 10000, description: 'Bank deposit', entryDate: '2024-01-03', isPosted: false },
-  ];
+  const createPayload: CreateCountingEntryRequest = {
+    countingNumber: 1101,
+    countingMain: 1000,
+    countingType: 1,
+    reportNumber: 1,
+    countingLevel: 2,
+    debtir: 500,
+    credit: 0,
+    balannce: 500,
+    nameAr: 'الصندوق',
+    nameEn: 'Cash',
+    fleetId,
+  };
+
+  const updatePayload: UpdateCountingEntryRequest = {
+    id: entryId,
+    ...createPayload,
+    nameAr: 'الصندوق الرئيسي',
+    debtir: 750,
+    credit: 25,
+  };
 
   beforeEach(() => {
-    const baseServiceMock = jasmine.createSpyObj('BaseService', ['getData', 'postData', 'putData']);
     TestBed.configureTestingModule({
-      providers: [CountingEntryService, { provide: BaseService, useValue: baseServiceMock }],
+      providers: [
+        CountingEntryService,
+        provideHttpClient(),
+        provideHttpClientTesting(),
+      ],
     });
+
     service = TestBed.inject(CountingEntryService);
-    baseServiceSpy = TestBed.inject(BaseService) as jasmine.SpyObj<BaseService>;
+    httpMock = TestBed.inject(HttpTestingController);
   });
 
-  describe('getList', () => {
-    it('should retrieve all counting entries', (done) => {
-      baseServiceSpy.getData.and.returnValue(of(mockCountingEntryList));
-
-      service.getList().subscribe((entries) => {
-        expect(entries.length).toBe(3);
-        expect(entries[0].accountCode).toBe('CASH-001');
-        done();
-      });
-    });
-
-    it('should handle empty entry list', (done) => {
-      baseServiceSpy.getData.and.returnValue(of(null));
-
-      service.getList().subscribe((entries) => {
-        expect(entries).toEqual([]);
-        done();
-      });
-    });
-
-    it('should filter posted entries', (done) => {
-      const postedEntries = mockCountingEntryList.filter((e) => e.isPosted);
-      baseServiceSpy.getData.and.returnValue(of(postedEntries));
-
-      service.getList().subscribe((entries) => {
-        expect(entries.every((e) => e.isPosted)).toBe(true);
-        done();
-      });
-    });
+  afterEach(() => {
+    httpMock.verify();
   });
 
-  describe('create', () => {
-    const createRequest = {
-      accountCode: 'CASH-003',
-      debit: 7500,
-      credit: 0,
-      description: 'New cash entry',
-      reference: 'REF-001',
-      entryDate: '2024-01-04',
-    };
-
-    it('should create new counting entry', (done) => {
-      baseServiceSpy.postData.and.returnValue(of({ id: 'count-new', ...createRequest }));
-
-      service.create(createRequest).subscribe((response) => {
-        expect(response).toBeDefined();
-        done();
-      });
+  it('gets all counting entries and sends fleet query params correctly', () => {
+    service.getList(fleetId).subscribe(entries => {
+      expect(entries).toEqual([
+        jasmine.objectContaining({
+          id: entryId,
+          countingNumber: 1101,
+          nameAr: 'الصندوق',
+          isDeleted: false,
+        }),
+      ]);
     });
 
-    it('should include debit and credit', (done) => {
-      baseServiceSpy.postData.and.returnValue(of({}));
+    const req = httpMock.expectOne(request =>
+      request.method === 'GET' &&
+      request.url === `${apiBase}/Counting/List` &&
+      request.params.get('FleetId') === fleetId &&
+      request.params.get('IdFleet') === fleetId &&
+      request.params.get('Fleetid') === null,
+    );
 
-      service.create(createRequest).subscribe(() => {
-        const callArgs = baseServiceSpy.postData.calls.mostRecent().args;
-        const payload = callArgs[1];
-        expect(payload.debit).toBe(7500);
-        expect(payload.credit).toBe(0);
-        done();
-      });
-    });
+    req.flush({ data: [apiEntry], succeeded: true, errors: [], propertyErrors: {}, httpStatusCode: 200 });
   });
 
-  describe('calculations', () => {
-    it('should calculate total debits', (done) => {
-      baseServiceSpy.getData.and.returnValue(of(mockCountingEntryList));
-
-      service.getList().subscribe((entries) => {
-        const totalDebits = entries.reduce((sum, e) => sum + (e.debit || 0), 0);
-        expect(totalDebits).toBe(15000);
-        done();
+  it('gets paginated counting entries with pagination, search, and ordering params', () => {
+    service
+      .getPaginated({
+        fleetId: ` ${fleetId} `,
+        pageNumber: 2,
+        pageSize: 25,
+        search: 'cash',
+        orderBy: 'CountingNumber',
+        orderByDirection: 'ASC',
+      })
+      .subscribe(response => {
+        expect(response).toEqual(jasmine.objectContaining({ items: [apiEntry], totalCount: 1 }));
       });
-    });
 
-    it('should calculate total credits', (done) => {
-      baseServiceSpy.getData.and.returnValue(of(mockCountingEntryList));
+    const req = httpMock.expectOne(request =>
+      request.method === 'GET' &&
+      request.url === `${apiBase}/Counting/Paginated` &&
+      request.params.get('FleetId') === fleetId &&
+      request.params.get('PageNumber') === '2' &&
+      request.params.get('PageSize') === '25' &&
+      request.params.get('Search') === 'cash' &&
+      request.params.get('OrderBy') === 'CountingNumber' &&
+      request.params.get('OrderByDirection') === 'ASC',
+    );
 
-      service.getList().subscribe((entries) => {
-        const totalCredits = entries.reduce((sum, e) => sum + (e.credit || 0), 0);
-        expect(totalCredits).toBe(1000);
-        done();
-      });
-    });
-
-    it('should calculate net balance', (done) => {
-      baseServiceSpy.getData.and.returnValue(of(mockCountingEntryList));
-
-      service.getList().subscribe((entries) => {
-        const totalDebits = entries.reduce((sum, e) => sum + (e.debit || 0), 0);
-        const totalCredits = entries.reduce((sum, e) => sum + (e.credit || 0), 0);
-        const netBalance = totalDebits - totalCredits;
-        expect(netBalance).toBe(14000);
-        done();
-      });
-    });
-
-    it('should validate debit credit balance', (done) => {
-      baseServiceSpy.getData.and.returnValue(of(mockCountingEntryList));
-
-      service.getList().subscribe((entries) => {
-        entries.forEach((entry) => {
-          if (entry.debit && entry.credit) {
-            expect(entry.balance).toBe(entry.debit - entry.credit);
-          }
-        });
-        done();
-      });
+    req.flush({
+      data: { items: [apiEntry], pageNumber: 2, pageSize: 25, totalCount: 1, totalPages: 1 },
+      succeeded: true,
+      errors: [],
+      propertyErrors: {},
+      httpStatusCode: 200,
     });
   });
 
-  describe('filtering', () => {
-    it('should filter by account code', (done) => {
-      const filtered = mockCountingEntryList.filter((e) => e.accountCode === 'CASH-001');
-      baseServiceSpy.getData.and.returnValue(of(filtered));
-
-      service.getList().subscribe((entries) => {
-        expect(entries.every((e) => e.accountCode === 'CASH-001')).toBe(true);
-        done();
-      });
+  it('gets a counting entry by id and fleet id using the backend URL shape', () => {
+    service.getById(entryId, fleetId).subscribe(entry => {
+      expect(entry).toEqual(jasmine.objectContaining({ id: entryId, nameEn: 'Cash' }));
     });
 
-    it('should filter by date range', (done) => {
-      const startDate = new Date('2024-01-02');
-      const endDate = new Date('2024-01-03');
-      const filtered = mockCountingEntryList.filter((e) => {
-        const entryDate = new Date(e.entryDate);
-        return entryDate >= startDate && entryDate <= endDate;
-      });
-      baseServiceSpy.getData.and.returnValue(of(filtered));
-
-      service.getList().subscribe((entries) => {
-        expect(entries.length).toBeGreaterThan(0);
-        done();
-      });
-    });
-
-    it('should sort by entry date', (done) => {
-      const sorted = [...mockCountingEntryList].sort((a, b) =>
-        new Date(a.entryDate).getTime() - new Date(b.entryDate).getTime(),
-      );
-      baseServiceSpy.getData.and.returnValue(of(sorted));
-
-      service.getList().subscribe((entries) => {
-        expect(new Date(entries[0].entryDate) <= new Date(entries[entries.length - 1].entryDate)).toBe(true);
-        done();
-      });
-    });
+    const req = httpMock.expectOne(`${apiBase}/Counting/${entryId}/${fleetId}`);
+    expect(req.request.method).toBe('GET');
+    req.flush({ data: apiEntry, succeeded: true, errors: [], propertyErrors: {}, httpStatusCode: 200 });
   });
 
-  describe('edge cases', () => {
-    it('should handle zero amount entries', (done) => {
-      const zeroEntry = { ...mockCountingEntry, debit: 0, credit: 0, balance: 0 };
-      baseServiceSpy.getData.and.returnValue(of([zeroEntry]));
-
-      service.getList().subscribe((entries) => {
-        expect(entries[0].balance).toBe(0);
-        done();
-      });
+  it('creates a counting entry with camelCase and PascalCase payload keys expected by the API', () => {
+    service.create(createPayload).subscribe(response => {
+      expect(response).toEqual(jasmine.objectContaining({ id: entryId }));
     });
 
-    it('should handle negative balances', (done) => {
-      const negativeEntry = { ...mockCountingEntry, balance: -5000 };
-      baseServiceSpy.getData.and.returnValue(of([negativeEntry]));
+    const req = httpMock.expectOne(`${apiBase}/Counting`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual(jasmine.objectContaining({
+      countingNumber: 1101,
+      CountingNumber: 1101,
+      countingMain: 1000,
+      CountingMain: 1000,
+      nameAr: 'الصندوق',
+      NameAr: 'الصندوق',
+      fleetId,
+      FleetId: fleetId,
+    }));
+    req.flush({ data: { id: entryId }, succeeded: true, errors: [], propertyErrors: {}, httpStatusCode: 200 });
+  });
 
-      service.getList().subscribe((entries) => {
-        expect(entries[0].balance).toBeLessThan(0);
-        done();
-      });
+  it('updates a counting entry with encoded id and optional debit/credit fields', () => {
+    service.update(updatePayload).subscribe(response => {
+      expect(response).toEqual(jasmine.objectContaining({ id: entryId }));
     });
 
-    it('should handle large amounts', (done) => {
-      const largeEntry = { ...mockCountingEntry, debit: 999999999, credit: 0 };
-      baseServiceSpy.getData.and.returnValue(of([largeEntry]));
+    const req = httpMock.expectOne(`${apiBase}/Counting/${entryId}`);
+    expect(req.request.method).toBe('PUT');
+    expect(req.request.body).toEqual(jasmine.objectContaining({
+      id: entryId,
+      nameAr: 'الصندوق الرئيسي',
+      NameAr: 'الصندوق الرئيسي',
+      debtir: 750,
+      Debtir: 750,
+      credit: 25,
+      Credit: 25,
+    }));
+    req.flush({ data: { id: entryId }, succeeded: true, errors: [], propertyErrors: {}, httpStatusCode: 200 });
+  });
 
-      service.getList().subscribe((entries) => {
-        expect(entries[0].debit).toBe(999999999);
-        done();
-      });
+  it('soft deletes using the primary delete URL with id query parameter', () => {
+    service.softDelete(entryId).subscribe(deleted => {
+      expect(deleted).toBeTrue();
     });
+
+    const req = httpMock.expectOne(`${apiBase}/Counting/${entryId}?id=${entryId}`);
+    expect(req.request.method).toBe('DELETE');
+    req.flush({ data: true, succeeded: true, errors: [], propertyErrors: {}, httpStatusCode: 200 });
+  });
+
+  it('falls back through alternate soft-delete URLs when the API rejects earlier shapes', () => {
+    service.softDelete(entryId).subscribe(deleted => {
+      expect(deleted).toBeTrue();
+    });
+
+    httpMock
+      .expectOne(`${apiBase}/Counting/${entryId}?id=${entryId}`)
+      .flush({ message: 'Method not allowed' }, { status: 405, statusText: 'Method Not Allowed' });
+
+    httpMock
+      .expectOne(`${apiBase}/Counting/${entryId}`)
+      .flush({ message: 'Bad request' }, { status: 400, statusText: 'Bad Request' });
+
+    httpMock
+      .expectOne(`${apiBase}/Counting?id=${entryId}`)
+      .flush({ message: 'Method not allowed' }, { status: 405, statusText: 'Method Not Allowed' });
+
+    httpMock
+      .expectOne(`${apiBase}/Counting/SoftDelete/${entryId}`)
+      .flush({ message: 'Method not allowed' }, { status: 405, statusText: 'Method Not Allowed' });
+
+    const patchReq = httpMock.expectOne(`${apiBase}/Counting/SoftDelete/${entryId}`);
+    expect(patchReq.request.method).toBe('PATCH');
+    expect(patchReq.request.body).toEqual({});
+    patchReq.flush({ data: true, succeeded: true, errors: [], propertyErrors: {}, httpStatusCode: 200 });
+  });
+
+  it('propagates API errors to the subscriber', () => {
+    service.getList(fleetId).subscribe({
+      next: () => fail('Expected getList to fail'),
+      error: error => {
+        expect(error.status).toBe(500);
+        expect(error.error.errors).toEqual(['API failure']);
+      },
+    });
+
+    const req = httpMock.expectOne(request =>
+      request.method === 'GET' && request.url === `${apiBase}/Counting/List`,
+    );
+
+    req.flush(
+      { data: null, succeeded: false, errors: ['API failure'], propertyErrors: {}, httpStatusCode: 500 },
+      { status: 500, statusText: 'Server Error' },
+    );
   });
 });
