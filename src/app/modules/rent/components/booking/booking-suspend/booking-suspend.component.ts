@@ -19,7 +19,7 @@ import { BankService } from '../../../../finance/services/banks/bank.service';
 import { CashAccount } from '../../../../finance/models/cash/cash-account.model';
 import { CashAccountService } from '../../../../finance/services/cash/cash-account.service';
 import { PaymentCountService } from '../../../../finance/services/payment-counts/payment-count.service';
-import { Booking, FinshBookingRequest } from '../../../models';
+import { Booking, BookingSuspendedStatus, SuspendedBookingRequest } from '../../../models';
 import { normalizeSetting } from '../../../models/settings/setting.normalizer';
 import { Setting } from '../../../models/settings/setting.model';
 import { BookingService } from '../../../services/booking/booking.service';
@@ -28,7 +28,7 @@ import {
   FinishBillingResult,
   computeFinishBilling,
   parseFinishWallTimeMs,
-} from './booking-finish-billing.util';
+} from '../booking-finish/booking-finish-billing.util';
 import {
   bookingCheckoutMs,
   bookingCheckoutOdometer,
@@ -44,13 +44,16 @@ import {
 } from '../booking-settlement-payment.util';
 
 @Component({
-  selector: 'app-booking-finish',
+  selector: 'app-booking-suspend',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink, TranslateModule, PageHeaderComponent, SmoothSelectComponent, DatePickerComponent],
-  templateUrl: './booking-finish.component.html',
-  styleUrl: './booking-finish.component.scss',
+  templateUrl: './booking-suspend.component.html',
+  styleUrl: './booking-suspend.component.scss',
 })
-export class BookingFinishComponent implements OnInit {
+export class BookingSuspendComponent implements OnInit {
+  /** `BondTypePaymentcountEnum.Receipt` — matches backend suspend receipt flow. */
+  private static readonly BOND_TYPE_RECEIPT = 2;
+
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private authState = inject(AuthStateService);
@@ -72,6 +75,9 @@ export class BookingFinishComponent implements OnInit {
   repairs = signal(0);
   traffic = signal(0);
   notes = signal('');
+  /** Required — sent as `Note` on `SuspendedBookingCommand`. */
+  suspendReason = signal('');
+  suspendStatus = signal<BookingSuspendedStatus>('Suspended_due_to_sum_money');
 
   paymentMethod = signal(1);
   bankAccount = signal('');
@@ -93,6 +99,17 @@ export class BookingFinishComponent implements OnInit {
 
   /** Fleet settings: grace minutes, free late hours, late-hours-per-day threshold. */
   settings = signal<Setting | null>(null);
+
+  suspendStatusOptions = computed<SmoothSelectOption[]>(() => [
+    {
+      label: this.translate.instant('Booking status.Suspended_due_to_accident'),
+      value: 'Suspended_due_to_accident',
+    },
+    {
+      label: this.translate.instant('Booking status.Suspended_due_to_sum_money'),
+      value: 'Suspended_due_to_sum_money',
+    },
+  ]);
 
   paymentTypeOptions = computed<SmoothSelectOption[]>(() => [
     { label: this.translate.instant('Cash'), value: 1 },
@@ -205,7 +222,7 @@ export class BookingFinishComponent implements OnInit {
 
   returnOdometerViolationHint = computed((): string | null => {
     const b = this.booking();
-    if (!b || this.finishLocked()) {
+    if (!b || this.suspendLocked()) {
       return null;
     }
     const ret = this.returnOdometerParsed();
@@ -226,8 +243,11 @@ export class BookingFinishComponent implements OnInit {
     return this.translate.instant('Contract finish return before checkout');
   });
 
-  finishSubmitBlocked = computed((): boolean => {
-    if (this.finishLocked() || this.saving()) {
+  suspendSubmitBlocked = computed((): boolean => {
+    if (this.suspendLocked() || this.saving()) {
+      return true;
+    }
+    if (!this.suspendReason().trim()) {
       return true;
     }
     const v = this.returnAgainstCheckout();
@@ -336,7 +356,7 @@ export class BookingFinishComponent implements OnInit {
 
   constructor() {
     effect(() => {
-      if (this.finishLocked()) {
+      if (this.suspendLocked()) {
         return;
       }
       this.balanceDisplay();
@@ -364,16 +384,25 @@ export class BookingFinishComponent implements OnInit {
     this.loadBooking(id);
   }
 
-  canFinish(item: Booking | null): boolean {
+  canSuspend(item: Booking | null): boolean {
     if (!item) {
       return false;
     }
-    return item.status !== 'finsh' && item.status !== 'close';
+    if (item.status === 'finsh' || item.status === 'close') {
+      return false;
+    }
+    if (
+      item.status === 'Suspended_due_to_accident' ||
+      item.status === 'Suspended_due_to_sum_money'
+    ) {
+      return false;
+    }
+    return true;
   }
 
   /** عقد منتهٍ أو مغلق — تعطيل الحقول وزر الإرسال (التنبيه الظاهر في القالب). */
-  finishLocked(): boolean {
-    return !this.canFinish(this.booking());
+  suspendLocked(): boolean {
+    return !this.canSuspend(this.booking());
   }
 
   pageSubtitle(item: Booking): string {
@@ -451,6 +480,17 @@ export class BookingFinishComponent implements OnInit {
     this.notes.set(String(value ?? ''));
   }
 
+  onSuspendReasonChange(value: string): void {
+    this.suspendReason.set(String(value ?? ''));
+  }
+
+  onSuspendStatusChange(value: string): void {
+    const v = String(value ?? '').trim() as BookingSuspendedStatus;
+    if (v === 'Suspended_due_to_accident' || v === 'Suspended_due_to_sum_money') {
+      this.suspendStatus.set(v);
+    }
+  }
+
   onPaymentMethodChange(value: string): void {
     const parsed = Number(value);
     const next = Number.isFinite(parsed) && parsed >= 1 && parsed <= 5 ? parsed : 1;
@@ -460,7 +500,7 @@ export class BookingFinishComponent implements OnInit {
   }
 
   useBalanceAsSettlement(): void {
-    if (this.finishLocked()) {
+    if (this.suspendLocked()) {
       return;
     }
     this.settlementUserEdited.set(false);
@@ -507,7 +547,7 @@ export class BookingFinishComponent implements OnInit {
 
   /** يوزّع مبلغ التصفية على النقد/البنك حسب طريقة الدفع. */
   onSettlementPaidInput(value: string): void {
-    if (this.finishLocked()) {
+    if (this.suspendLocked()) {
       return;
     }
     this.settlementUserEdited.set(true);
@@ -553,10 +593,16 @@ export class BookingFinishComponent implements OnInit {
 
   submit(): void {
     const item = this.booking();
-    if (!item || !this.canFinish(item)) {
+    if (!item || !this.canSuspend(item)) {
       return;
     }
-    const ok = window.confirm(this.translate.instant('Contract finish confirm'));
+    const reason = this.suspendReason().trim();
+    if (!reason) {
+      this.toast.error(this.translate.instant('Contract suspend reason required'));
+      return;
+    }
+
+    const ok = window.confirm(this.translate.instant('Contract suspend confirm'));
     if (!ok) {
       return;
     }
@@ -590,7 +636,7 @@ export class BookingFinishComponent implements OnInit {
       return;
     }
     if (!validation.timeOk) {
-      this.toast.error(this.translate.instant('Contract finish return before checkout'));
+      this.toast.error(this.translate.instant('Contract suspend return before checkout'));
       return;
     }
 
@@ -626,14 +672,6 @@ export class BookingFinishComponent implements OnInit {
         this.toast.error(this.translate.instant('Contract finish mixed amounts required'));
         return;
       }
-      if (!bankId && paidBank > 0) {
-        this.toast.error(this.translate.instant('Contract finish bank required'));
-        return;
-      }
-      if (!cashId && paidCash > 0) {
-        this.toast.error(this.translate.instant('Contract finish cash required'));
-        return;
-      }
       if (paidTotal !== settlementTotal) {
         this.toast.error(this.translate.instant('Paid cash and bank must equal paid amount'));
         return;
@@ -655,13 +693,15 @@ export class BookingFinishComponent implements OnInit {
     const billedDays = this.billingElapsedDays();
     const grandTotal = this.computedGrandTotal();
 
-    const finishPayload: FinshBookingRequest = {
+    const suspendPayload: SuspendedBookingRequest = {
       id: idBooking,
       dateReturnVehical: returnIso,
       numberOfHoursExcess: nHr,
       numberKmExcess: nKm,
       dayExcess: dEx,
-      note: this.notes().trim() || undefined,
+      note: reason,
+      bondType: BookingSuspendComponent.BOND_TYPE_RECEIPT,
+      stutus: this.suspendStatus(),
       allowToall: Number(item.allowTo ?? 0) || 0,
       pricekmAllExcess,
       priceoAllHoure,
@@ -694,9 +734,9 @@ export class BookingFinishComponent implements OnInit {
     };
 
     this.saving.set(true);
-    this.bookingService.finish(finishPayload).subscribe({
+    this.bookingService.suspend(suspendPayload).subscribe({
       next: () => {
-        this.toast.success(this.translate.instant('Contract finish success'));
+        this.toast.success(this.translate.instant('Contract suspend success'));
         this.router.navigate(['/booking', item.id, 'details']);
       },
       error: (err: unknown) => {
@@ -706,10 +746,10 @@ export class BookingFinishComponent implements OnInit {
             String((err.error as { message?: string })?.message ?? '').trim() ||
             String((err.error as { title?: string })?.title ?? '').trim() ||
             err.message;
-          this.toast.error(msg || this.translate.instant('Contract finish failed'));
+          this.toast.error(msg || this.translate.instant('Contract suspend failed'));
           return;
         }
-        this.toast.error(this.translate.instant('Contract finish failed'));
+        this.toast.error(this.translate.instant('Contract suspend failed'));
       },
       complete: () => this.saving.set(false),
     });

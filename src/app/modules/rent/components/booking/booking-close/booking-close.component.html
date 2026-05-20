@@ -88,6 +88,11 @@
                   {{ 'Contract close date locked hint' | translate }}
                 </p>
               }
+              @if (returnDateViolationHint(); as timeHint) {
+                <p class="contract-close-field-hint contract-close-field-hint--danger text-pre-wrap">
+                  {{ timeHint }}
+                </p>
+              }
             </div>
           </div>
         </div>

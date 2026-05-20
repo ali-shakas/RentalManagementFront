@@ -182,13 +182,46 @@ export class BookingListComponent implements OnInit {
     return booking.branchId ? `#${booking.branchId}` : '—';
   }
 
+  bookingTotalLabel(booking: Booking): string {
+    return this.moneyOrDash(booking.totalAmount);
+  }
+
+  moneyOrDash(value: unknown): string {
+    if (value === null || value === undefined || value === '') {
+      return '—';
+    }
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) {
+      return '—';
+    }
+    const lang = this.translate.currentLang || this.translate.getDefaultLang() || 'ar';
+    return new Intl.NumberFormat(lang, { maximumFractionDigits: 2 }).format(parsed);
+  }
+
   canFinishBooking(booking: Booking): boolean {
     return booking.status !== 'finsh' && booking.status !== 'close';
+  }
+
+  canSuspendBooking(booking: Booking): boolean {
+    if (booking.status === 'finsh' || booking.status === 'close') {
+      return false;
+    }
+    if (
+      booking.status === 'Suspended_due_to_accident' ||
+      booking.status === 'Suspended_due_to_sum_money'
+    ) {
+      return false;
+    }
+    return true;
   }
 
   /** عقد مصفى أو مغلق — يبقى العرض والطباعة فقط. */
   bookingCardActionsLocked(booking: Booking): boolean {
     return !this.canFinishBooking(booking);
+  }
+
+  suspendMenuLocked(booking: Booking): boolean {
+    return !this.canSuspendBooking(booking);
   }
 
   closeBookingCardMore(panel: HTMLDetailsElement | null): void {
@@ -198,17 +231,25 @@ export class BookingListComponent implements OnInit {
   }
 
   updateCustomerTooltip(container: HTMLElement, booking: Booking): void {
-    const valueEl = container.querySelector('.booking-meta__value') as HTMLElement | null;
+    this.updateFactTooltip(container, this.customerCardLabel(booking));
+  }
+
+  updateBranchTooltip(container: HTMLElement, booking: Booking): void {
+    this.updateFactTooltip(container, this.branchCardLabel(booking));
+  }
+
+  private updateFactTooltip(container: HTMLElement, fullText: string): void {
+    const valueEl = container.querySelector('.booking-fact__value') as HTMLElement | null;
     if (!valueEl) {
       container.removeAttribute('data-tooltip');
       return;
     }
-    const isTruncated = valueEl.scrollWidth > valueEl.clientWidth;
+    const isTruncated = valueEl.scrollHeight > valueEl.clientHeight + 1 || valueEl.scrollWidth > valueEl.clientWidth;
     if (!isTruncated) {
       container.removeAttribute('data-tooltip');
       return;
     }
-    container.setAttribute('data-tooltip', this.customerCardLabel(booking));
+    container.setAttribute('data-tooltip', fullText);
   }
 
   onBookingImageError(event: Event): void {
@@ -219,7 +260,7 @@ export class BookingListComponent implements OnInit {
     img.style.display = 'none';
     const fallback = img.nextElementSibling as HTMLElement | null;
     if (fallback) {
-      fallback.classList.remove('booking-card__media-not-found--hidden');
+      fallback.classList.remove('booking-card__media-placeholder--hidden');
     }
   }
 
@@ -242,29 +283,6 @@ export class BookingListComponent implements OnInit {
       return basameNumber;
     }
     return '—';
-  }
-
-  expectedStartDateLabel(booking: Booking): string {
-    return this.formatBookingDate(booking.startDate);
-  }
-
-  expectedEndDateLabel(booking: Booking): string {
-    return this.formatBookingDate(booking.endDate);
-  }
-
-  private formatBookingDate(iso: string | undefined): string {
-    if (!iso?.trim()) {
-      return '—';
-    }
-    const d = new Date(iso);
-    if (Number.isNaN(d.getTime())) {
-      return iso;
-    }
-    return d.toLocaleDateString(this.translate.currentLang || this.translate.getDefaultLang() || 'en', {
-      year: '2-digit',
-      month: 'numeric',
-      day: 'numeric',
-    });
   }
 
   ngOnInit(): void {

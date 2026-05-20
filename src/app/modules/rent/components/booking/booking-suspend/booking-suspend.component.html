@@ -1,21 +1,55 @@
 <div class="container-fluid contract-finish-page">
   @if (loading()) {
-    <app-page-header [title]="'Contract finish page title' | translate" [subtitle]="''" />
+    <app-page-header [title]="'Contract suspend page title' | translate" [subtitle]="''" />
     <div class="card">
       <div class="card-body text-center py-5">
         <div class="spinner-border text-primary"></div>
       </div>
     </div>
   } @else if (booking(); as item) {
-    <app-page-header [title]="'Contract finish page title' | translate" [subtitle]="pageSubtitle(item)" />
+    <app-page-header [title]="'Contract suspend page title' | translate" [subtitle]="pageSubtitle(item)" />
 
     <div class="card contract-finish-card">
       <div class="card-body">
-        @if (finishLocked()) {
+        @if (suspendLocked()) {
           <div class="alert alert-warning finish-closed-banner mb-3" role="alert">
-            {{ 'Contract finish not allowed' | translate }}
+            {{ 'Contract suspend not allowed' | translate }}
           </div>
         }
+
+        <div class="finish-payment-card">
+          <div class="finish-payment-card__title">{{ 'Contract suspend section reason' | translate }}</div>
+          <div class="finish-form-grid finish-form-grid--in-card">
+            <div class="finish-field finish-field--contract-input">
+              <label class="form-label">
+                {{ 'Contract suspend status' | translate }} <span class="text-danger">*</span>
+              </label>
+              <app-smooth-select
+                [value]="suspendStatus()"
+                [ariaLabel]="'Contract suspend status' | translate"
+                [placeholder]="'Contract suspend status' | translate"
+                [options]="suspendStatusOptions()"
+                [disabled]="suspendLocked()"
+                (valueChange)="onSuspendStatusChange('' + $any($event))"
+              />
+            </div>
+            <div class="finish-field finish-field--notes finish-field--span-2">
+              <label class="form-label">
+                {{ 'Contract suspend reason' | translate }} <span class="text-danger">*</span>
+              </label>
+              <textarea
+                class="form-control"
+                rows="3"
+                maxlength="500"
+                [disabled]="suspendLocked()"
+                [value]="suspendReason()"
+                [placeholder]="'Contract suspend reason placeholder' | translate"
+                (input)="onSuspendReasonChange($any($event.target).value)"
+              ></textarea>
+            </div>
+          </div>
+        </div>
+
         <div class="finish-form-grid">
           <div class="finish-field finish-field--readonly">
             <label class="form-label">{{ 'Contract finish customer identity' | translate }}</label>
@@ -48,7 +82,7 @@
               <app-date-picker
                 mode="datetime"
                 label="Contract finish return time"
-                [disabled]="finishLocked()"
+                [disabled]="suspendLocked()"
                 [value]="returnDateTime()"
                 (dateChange)="onReturnDateChange($event ?? '')"
               />
@@ -98,7 +132,7 @@
                 inputmode="numeric"
                 min="0"
                 step="1"
-                [disabled]="finishLocked()"
+                [disabled]="suspendLocked()"
                 [value]="returnOdometerText()"
                 (input)="onReturnOdometerInput($any($event.target).value)"
               />
@@ -161,7 +195,7 @@
               type="number"
               min="0"
               step="0.01"
-              [disabled]="finishLocked()"
+              [disabled]="suspendLocked()"
               [value]="repairs()"
               (input)="onRepairsChange($any($event.target).value)"
             />
@@ -173,7 +207,7 @@
               type="number"
               min="0"
               step="0.01"
-              [disabled]="finishLocked()"
+              [disabled]="suspendLocked()"
               [value]="traffic()"
               (input)="onTrafficChange($any($event.target).value)"
             />
@@ -210,7 +244,7 @@
                 min="0"
                 step="0.01"
                 [value]="settlementPaidAmount()"
-                [disabled]="finishLocked()"
+                [disabled]="suspendLocked()"
                 (input)="onSettlementPaidInput($any($event.target).value)"
               />
               <div class="finish-field-hint finish-field-hint--muted d-flex flex-wrap align-items-center gap-2">
@@ -218,7 +252,7 @@
                   {{ 'Contract finish settlement balance hint' | translate }}:
                   <strong>{{ moneyOrDash(balanceDisplay()) }}</strong>
                 </span>
-                @if (!finishLocked()) {
+                @if (!suspendLocked()) {
                   <button
                     type="button"
                     class="btn btn-link btn-sm p-0 finish-settlement-balance-btn"
@@ -238,7 +272,7 @@
                 [ariaLabel]="'Payment Type' | translate"
                 [placeholder]="'Payment Type' | translate"
                 [options]="paymentTypeOptions()"
-                [disabled]="finishLocked()"
+                [disabled]="suspendLocked()"
                 (valueChange)="onPaymentMethodChange('' + $any($event))"
               />
             </div>
@@ -251,7 +285,7 @@
                 [ariaLabel]="'Cash Account' | translate"
                 [placeholder]="'Select cash account'"
                 [options]="cashAccountOptions()"
-                [disabled]="!paymentTypeAllowsCashAccount() || finishLocked()"
+                [disabled]="!paymentTypeAllowsCashAccount() || suspendLocked()"
                 (valueChange)="onCashChange('' + $any($event))"
               />
             </div>
@@ -265,7 +299,7 @@
                 [placeholder]="'Select bank'"
                 [options]="bankAccountOptions()"
                 [searchable]="true"
-                [disabled]="!paymentTypeAllowsBankAccount() || finishLocked()"
+                [disabled]="!paymentTypeAllowsBankAccount() || suspendLocked()"
                 (valueChange)="onBankChange('' + $any($event))"
               />
             </div>
@@ -277,7 +311,7 @@
                 min="0"
                 step="0.01"
                 [value]="settlementMoneyField(paidCash())"
-                [disabled]="!paymentTypeAllowsCashAccount() || finishLocked()"
+                [disabled]="!paymentTypeAllowsCashAccount() || suspendLocked()"
                 (input)="onPaidCashChange($any($event.target).value)"
               />
             </div>
@@ -289,7 +323,7 @@
                 min="0"
                 step="0.01"
                 [value]="settlementMoneyField(paidBank())"
-                [disabled]="!paymentTypeAllowsBankAccount() || finishLocked()"
+                [disabled]="!paymentTypeAllowsBankAccount() || suspendLocked()"
                 (input)="onPaidBankChange($any($event.target).value)"
               />
             </div>
@@ -301,7 +335,7 @@
           <textarea
             class="form-control"
             rows="5"
-            [disabled]="finishLocked()"
+            [disabled]="suspendLocked()"
             [value]="notes()"
             (input)="onNotesChange($any($event.target).value)"
           ></textarea>
@@ -311,13 +345,13 @@
           <button
             type="button"
             class="btn btn-primary"
-            [disabled]="finishSubmitBlocked()"
+            [disabled]="suspendSubmitBlocked()"
             (click)="submit()"
           >
             @if (saving()) {
               <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
             }
-            {{ 'Contract finish submit' | translate }}
+            {{ 'Contract suspend submit' | translate }}
           </button>
           <a class="btn btn-cancel" [routerLink]="['/booking', item.id, 'details']">
             {{ 'Back' | translate }}
@@ -326,7 +360,7 @@
       </div>
     </div>
   } @else {
-    <app-page-header [title]="'Contract finish page title' | translate" [subtitle]="''" />
+    <app-page-header [title]="'Contract suspend page title' | translate" [subtitle]="''" />
     <div class="card">
       <div class="card-body">
         <p class="text-muted mb-3">{{ 'Failed to load booking' | translate }}</p>

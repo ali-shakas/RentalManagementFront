@@ -298,6 +298,14 @@ export interface FinshBookingRequest {
   paymentType: number;
 }
 
+/** POST `Booking/suspended` — `SuspendedBookingCommand` / `bookingSuspendedEnum`. */
+export type BookingSuspendedStatus = 'Suspended_due_to_accident' | 'Suspended_due_to_sum_money';
+
+export interface SuspendedBookingRequest extends FinshBookingRequest {
+  bondType: number;
+  stutus: BookingSuspendedStatus;
+}
+
 const BOOKING_MONEY_EPS = 1e-6;
 
 /**

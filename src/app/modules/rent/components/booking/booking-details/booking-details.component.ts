@@ -27,6 +27,11 @@ import {
   bookingStatusTranslationKey,
 } from '../../../models/booking/booking-status.utils';
 import { BookingService } from '../../../services/booking/booking.service';
+import {
+  bookingCheckoutMs,
+  isReturnTimeAfterCheckout,
+  parseReturnDateTimeLocalMs,
+} from '../booking-return-checkout.util';
 
 type BookingDetailsToolbarAction = 'suspend' | 'extend' | 'print' | 'finish' | 'closeContract';
 
@@ -461,6 +466,22 @@ export class BookingDetailsComponent implements OnInit {
     return String(days);
   }
 
+  extendPaymentDateViolationHint = computed((): string | null => {
+    const item = this.booking();
+    if (!item || !this.isExtendMode()) {
+      return null;
+    }
+    const checkoutMs = bookingCheckoutMs(item);
+    const paymentMs = parseReturnDateTimeLocalMs(this.extendPaymentDate());
+    if (checkoutMs === null || paymentMs === null) {
+      return null;
+    }
+    if (isReturnTimeAfterCheckout(paymentMs, checkoutMs)) {
+      return null;
+    }
+    return this.translate.instant('Contract payment date before checkout');
+  });
+
   extendPaidTotal(item: Booking): number {
     const fromVouchers = this.paymentCountSum();
     if (fromVouchers !== null && Number.isFinite(fromVouchers)) {
@@ -494,6 +515,13 @@ export class BookingDetailsComponent implements OnInit {
     }
     if (paid <= 0) {
       this.toast.error('الرجاء إدخال مبلغ دفعة أكبر من صفر');
+      return;
+    }
+
+    const checkoutMs = bookingCheckoutMs(item);
+    const paymentMs = parseReturnDateTimeLocalMs(this.extendPaymentDate());
+    if (checkoutMs !== null && paymentMs !== null && !isReturnTimeAfterCheckout(paymentMs, checkoutMs)) {
+      this.toast.error(this.translate.instant('Contract payment date before checkout'));
       return;
     }
 
@@ -872,6 +900,19 @@ export class BookingDetailsComponent implements OnInit {
     return booking.status !== 'finsh' && booking.status !== 'close';
   }
 
+  canSuspendBooking(booking: Booking): boolean {
+    if (booking.status === 'finsh' || booking.status === 'close') {
+      return false;
+    }
+    if (
+      booking.status === 'Suspended_due_to_accident' ||
+      booking.status === 'Suspended_due_to_sum_money'
+    ) {
+      return false;
+    }
+    return true;
+  }
+
   /** Toolbar actions: suspend, extend, print, close contract, finish (edit uses routerLink in template). */
   onDetailsToolbarAction(action: BookingDetailsToolbarAction, item: Booking): void {
     if (action === 'finish' && !this.canFinishBooking(item)) {
@@ -890,6 +931,10 @@ export class BookingDetailsComponent implements OnInit {
     }
     if (action === 'extend') {
       this.enterExtendModeFromToolbar(item);
+      return;
+    }
+    if (action === 'suspend') {
+      this.router.navigate(['/booking', item.id, 'suspend']);
       return;
     }
     if (action === 'print') {
