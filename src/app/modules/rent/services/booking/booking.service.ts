@@ -13,6 +13,7 @@ import {
   BookingFilters,
   BookingUpdateRequest,
   FinshBookingRequest,
+  SuspendedBookingRequest,
 } from '../../models';
 import { normalizeBooking } from '../../models/booking/booking.normalizer';
 import { TrafficBooking } from '../../models/booking/traffic-booking.model';
@@ -224,6 +225,17 @@ export class BookingService {
     const payload = this.toFinishBookingPayload(body);
     return this.api.postData(`${this.base}/finsh`, payload, { suppressErrorToast: true }).pipe(
       catchError(() => this.api.postData(`${this.base}/Finsh`, payload)),
+    );
+  }
+
+  /**
+   * `SuspendedBookingCommand` — try common route spellings for ASP.NET controllers.
+   */
+  suspend(body: SuspendedBookingRequest): Observable<unknown> {
+    const payload = this.toSuspendedBookingPayload(body);
+    return this.api.postData(`${this.base}/suspended`, payload, { suppressErrorToast: true }).pipe(
+      catchError(() => this.api.postData(`${this.base}/Suspended`, payload, { suppressErrorToast: true })),
+      catchError(() => this.api.postData(`${this.base}/suspend`, payload)),
     );
   }
 
@@ -442,6 +454,17 @@ export class BookingService {
     }
 
     return out;
+  }
+
+  /** `SuspendedBookingCommand` — finish fields plus `BondType` and `Stutus`. */
+  private toSuspendedBookingPayload(b: SuspendedBookingRequest): Record<string, unknown> {
+    return {
+      ...this.toFinishBookingPayload(b),
+      bondType: b.bondType,
+      BondType: b.bondType,
+      stutus: b.stutus,
+      Stutus: b.stutus,
+    };
   }
 
   /**

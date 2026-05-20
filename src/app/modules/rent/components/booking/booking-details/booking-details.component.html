@@ -42,6 +42,9 @@
                       [value]="extendPaymentDate()"
                       (dateChange)="onExtendPaymentDateChange($event ?? '')"
                     />
+                    @if (extendPaymentDateViolationHint(); as payDateHint) {
+                      <p class="extend-field-hint extend-field-hint--danger text-pre-wrap">{{ payDateHint }}</p>
+                    }
                   </div>
                   <div class="extend-payment-date-row__days">
                     <label class="form-label">عدد الأيام</label>
@@ -569,6 +572,7 @@
               <button
                 type="button"
                 class="btn btn-sm btn-outline-secondary contract-details__toolbar-btn"
+                [disabled]="!canSuspendBooking(item)"
                 (click)="onDetailsToolbarAction('suspend', item)"
               >
                 <i class="fa-solid fa-comment-slash me-1" aria-hidden="true"></i>

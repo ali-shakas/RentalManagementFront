@@ -22,6 +22,13 @@ import {
   resolvePlannedReturnEndMs,
   timeCloseViolated,
 } from './booking-close-rules.util';
+import {
+  bookingCheckoutOdometer,
+  isReturnOdometerAboveCheckout,
+  parseReturnDateTimeLocalMs,
+  parseReturnOdometerInput,
+  validateReturnAgainstCheckout,
+} from '../booking-return-checkout.util';
 
 @Component({
   selector: 'app-booking-close',
@@ -147,12 +154,7 @@ export class BookingCloseComponent implements OnInit {
   }
 
   parsedReturnOdometer(): number | null {
-    const raw = String(this.returnOdometerText()).trim();
-    if (!raw) {
-      return null;
-    }
-    const n = Number(raw);
-    return Number.isFinite(n) ? n : null;
+    return parseReturnOdometerInput(this.returnOdometerText());
   }
 
   private closeRulesSettings(s: Setting | null): CloseRulesSettings {
@@ -181,7 +183,7 @@ export class BookingCloseComponent implements OnInit {
     };
   }
 
-  closeDisabledReason = computed((): 'locked' | 'invalid_odom' | null => {
+  closeDisabledReason = computed((): 'locked' | 'invalid_odom' | 'invalid_return_time' | null => {
     const item = this.booking();
     if (!item || !this.canClose(item)) {
       return 'locked';
@@ -189,10 +191,25 @@ export class BookingCloseComponent implements OnInit {
     if (!this.odometerKmTestPassed()) {
       return 'invalid_odom';
     }
+    if (!this.returnTimeAfterCheckoutPassed()) {
+      return 'invalid_return_time';
+    }
     return null;
   });
 
-  /** Valid return odometer and within km close margin from fleet settings. */
+  returnTimeAfterCheckoutPassed = computed((): boolean => {
+    const item = this.booking();
+    if (!item) {
+      return false;
+    }
+    return validateReturnAgainstCheckout(
+      item,
+      this.returnOdometerText(),
+      this.returnDateTime(),
+    ).timeOk;
+  });
+
+  /** Return odometer above checkout and within km close margin from fleet settings. */
   odometerKmTestPassed = computed((): boolean => {
     const item = this.booking();
     if (!item) {
@@ -202,8 +219,8 @@ export class BookingCloseComponent implements OnInit {
     if (ret === null) {
       return false;
     }
-    const exit = Math.max(0, Number(item.checkoutCounter) || 0);
-    if (ret < exit) {
+    const exit = bookingCheckoutOdometer(item);
+    if (!isReturnOdometerAboveCheckout(ret, exit)) {
       return false;
     }
     const rules = this.buildCloseRulesInput(item, Date.now(), ret);
@@ -227,8 +244,8 @@ export class BookingCloseComponent implements OnInit {
     if (ret === null) {
       return null;
     }
-    const exit = Math.max(0, Number(item.checkoutCounter) || 0);
-    if (ret < exit) {
+    const exit = bookingCheckoutOdometer(item);
+    if (!isReturnOdometerAboveCheckout(ret, exit)) {
       return this.translate.instant('Contract close odometer below checkout short');
     }
     const rules = this.buildCloseRulesInput(item, Date.now(), ret);
@@ -241,6 +258,22 @@ export class BookingCloseComponent implements OnInit {
       drivenKm: driven,
       allowedKm: this.allowedCloseKmMargin(),
     });
+  });
+
+  returnDateViolationHint = computed((): string | null => {
+    const item = this.booking();
+    if (!item || this.closeLocked() || !this.odometerKmTestPassed()) {
+      return null;
+    }
+    const v = validateReturnAgainstCheckout(
+      item,
+      this.returnOdometerText(),
+      this.returnDateTime(),
+    );
+    if (v.timeOk || v.checkoutMs === null) {
+      return null;
+    }
+    return this.translate.instant('Contract finish return before checkout');
   });
 
   dismissWarning(): void {
@@ -268,13 +301,16 @@ export class BookingCloseComponent implements OnInit {
     if (!item || !this.canClose(item)) {
       return;
     }
-    const ret = this.parsedReturnOdometer();
-    const exit = Math.max(0, Number(item.checkoutCounter) || 0);
-    if (ret === null) {
+    const validation = validateReturnAgainstCheckout(
+      item,
+      this.returnOdometerText(),
+      this.returnDateTime(),
+    );
+    if (validation.returnOdom === null) {
       this.toast.error(this.translate.instant('Contract close odometer required'));
       return;
     }
-    if (ret < exit) {
+    if (!validation.odometerOk) {
       this.toast.error(this.translate.instant('Contract close odometer below checkout'));
       return;
     }
@@ -284,17 +320,17 @@ export class BookingCloseComponent implements OnInit {
       this.toast.error(this.translate.instant('Contract close return time invalid'));
       return;
     }
-    const returnMs = this.parseReturnDateTimeMs(this.returnDateTime());
+    const returnMs = validation.returnMs ?? parseReturnDateTimeLocalMs(this.returnDateTime());
     if (returnMs === null) {
       this.toast.error(this.translate.instant('Contract close return time invalid'));
       return;
     }
-    const rules = this.buildCloseRulesInput(item, returnMs, ret);
+    const rules = this.buildCloseRulesInput(item, returnMs, validation.returnOdom);
     if (!rules) {
       this.toast.error(this.translate.instant('Contract finish missing context'));
       return;
     }
-    if (returnMs < rules.checkoutMs) {
+    if (!validation.timeOk) {
       this.toast.error(this.translate.instant('Contract finish return before checkout'));
       return;
     }
@@ -331,7 +367,7 @@ export class BookingCloseComponent implements OnInit {
       idVehicle: idVehicle ?? undefined,
       idBranch,
       checkoutCounter: item.checkoutCounter,
-      checkinCounter: ret,
+      checkinCounter: validation.returnOdom,
       countOfDay: item.countOfDay,
       total: item.totalAmount,
       discount: item.discount,

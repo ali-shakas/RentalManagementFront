@@ -240,6 +240,12 @@ const routes: Routes = [
         data: { title: 'Contract finish page title', breadcrumb: 'Contract finish page title' },
       },
       {
+        path: ':id/suspend',
+        loadComponent: () =>
+          import('./components/booking/booking-suspend/booking-suspend.component').then(m => m.BookingSuspendComponent),
+        data: { title: 'Contract suspend page title', breadcrumb: 'Contract suspend page title' },
+      },
+      {
         path: ':id/close',
         loadComponent: () =>
           import('./components/booking/booking-close/booking-close.component').then(m => m.BookingCloseComponent),
